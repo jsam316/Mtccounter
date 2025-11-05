@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MTC Counter">
+  <meta name="description" content="MTC church attendance counter app">
+  <title>MTC Church Counter</title>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+      font-size: 28px;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border 0.3s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .total-box {
+      background: #f5f5f5;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .total-title {
+      font-weight: 500;
+      margin-bottom: 15px;
+      color: #666;
+    }
+    .total-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+    .total-item {
+      text-align: center;
+    }
+    .total-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .total-number {
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .male-total { color: #3b82f6; }
+    .female-total { color: #a855f7; }
+    .grand-total { color: #333; }
+    .counter-box {
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 15px;
+    }
+    .male-box {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border: 2px solid #93c5fd;
+    }
+    .female-box {
+      background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+      border: 2px solid #d8b4fe;
+    }
+    .counter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .counter-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .male-title { color: #1e40af; }
+    .female-title { color: #7c3aed; }
+    .counter-value {
+      font-size: 36px;
+      font-weight: bold;
+    }
+    .counter-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    button {
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active {
+      transform: scale(0.95);
+    }
+    .male-minus {
+      background: white;
+      color: #3b82f6;
+      border: 2px solid #3b82f6;
+    }
+    .male-plus {
+      background: #3b82f6;
+      color: white;
+    }
+    .female-minus {
+      background: white;
+      color: #a855f7;
+      border: 2px solid #a855f7;
+    }
+    .female-plus {
+      background: #a855f7;
+      color: white;
+    }
+    .reset-btn {
+      width: 100%;
+      background: #e5e7eb;
+      color: #374151;
+      margin-bottom: 10px;
+    }
+    .reset-btn:hover {
+      background: #d1d5db;
+    }
+    .export-btn {
+      width: 100%;
+      background: #10b981;
+      color: white;
+    }
+    .export-btn:hover {
+      background: #059669;
+    }
+    .success-msg {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      margin-top: 15px;
+      font-weight: 500;
+      display: none;
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⛪ MTC Counter</h1>
+
+```
+<div class="input-group">
+  <label>🎨 Theme</label>
+  <select id="theme">
+    <option value="default">Purple & Blue</option>
+    <option value="ocean">Ocean (Cyan & Teal)</option>
+    <option value="sunset">Sunset (Orange & Pink)</option>
+    <option value="forest">Forest (Green & Emerald)</option>
+  </select>
+</div>
+
+<div class="input-group">
+  <label>📅 Date</label>
+  <input type="date" id="date">
+</div>
+
+<div class="input-group">
+  <label>👤 Celebrant Name</label>
+  <input type="text" id="celebrant" placeholder="Enter celebrant name">
+</div>
+
+<div class="input-group">
+  <label>📖 Sermon</label>
+  <input type="text" id="sermon" placeholder="Enter sermon title">
+</div>
+
+<div class="total-box">
+  <div class="total-title">Total Attendance</div>
+  <div class="total-grid">
+    <div class="total-item">
+      <div class="total-label">Male</div>
+      <div class="total-number male-total" id="maleTotal">0</div>
+    </div>
+    <div class="total-item">
+      <div class="total-label">Female</div>
+      <div class="total-number female-total" id="femaleTotal">0</div>
+    </div>
+    <div class="total-item">
+      <div class="total-label">Total</div>
+      <div class="total-number grand-total" id="grandTotal">0</div>
+    </div>
+  </div>
+</div>
+
+<div class="counter-box male-box">
+  <div class="counter-header">
+    <span class="counter-title male-title">👨 Male</span>
+    <span class="counter-value male-total" id="maleCount">0</span>
+  </div>
+  <div class="counter-buttons">
+    <button class="male-minus" onclick="changeMale(-1)">−</button>
+    <button class="male-plus" onclick="changeMale(1)">+</button>
+  </div>
+</div>
+
+<div class="counter-box female-box">
+  <div class="counter-header">
+    <span class="counter-title female-title">👩 Female</span>
+    <span class="counter-value female-total" id="femaleCount">0</span>
+  </div>
+  <div class="counter-buttons">
+    <button class="female-minus" onclick="changeFemale(-1)">−</button>
+    <button class="female-plus" onclick="changeFemale(1)">+</button>
+  </div>
+</div>
+
+<button class="reset-btn" onclick="reset()">🔄 Reset Counters</button>
+<button class="export-btn" onclick="exportData()">📤 Export as Text</button>
+
+<div id="successMsg" class="success-msg">
+  ✓ Copied to clipboard!
+</div>
+```
+
+  </div>
+
+  <script>
+    var male = 0;
+    var female = 0;
+
+    // Set today's date
+    document.getElementById('date').valueAsDate = new Date();
+
+    function changeMale(amount) {
+      male = Math.max(0, male + amount);
+      updateDisplay();
+    }
+
+    function changeFemale(amount) {
+      female = Math.max(0, female + amount);
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      document.getElementById('maleCount').textContent = male;
+      document.getElementById('femaleCount').textContent = female;
+      document.getElementById('maleTotal').textContent = male;
+      document.getElementById('femaleTotal').textContent = female;
+      document.getElementById('grandTotal').textContent = male + female;
+    }
+
+    function reset() {
+      if (confirm('Reset both counters to 0?')) {
+        male = 0;
+        female = 0;
+        updateDisplay();
+      }
+    }
+
+    function exportData() {
+      var date = document.getElementById('date').value;
+      var celebrant = document.getElementById('celebrant').value || 'Not specified';
+      var sermon = document.getElementById('sermon').value || 'Not specified';
+      
+      var dateObj = new Date(date + 'T00:00:00');
+      var formattedDate = dateObj.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      var text = 'Service Details - ' + formattedDate + '\n\n' +
+                 'Celebrant: ' + celebrant + '\n' +
+                 'Sermon: ' + sermon + '\n\n' +
+                 'Attendance Summary:\n' +
+                 '• Male: ' + male + '\n' +
+                 '• Female: ' + female + '\n' +
+                 '• Total Attendance: ' + (male + female);
+
+      navigator.clipboard.writeText(text).then(function() {
+        var msg = document.getElementById('successMsg');
+        msg.style.display = 'block';
+        setTimeout(function() {
+          msg.style.display = 'none';
+        }, 3000);
+      }).catch(function(err) {
+        // Fallback for browsers that don't support clipboard
+        alert('Copy this text:\n\n' + text);
+      });
+    }
+
+    // Theme change functionality
+    document.getElementById('theme').addEventListener('change', function(e) {
+      var theme = e.target.value;
+      var themes = {
+        ocean: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+        sunset: 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
+        forest: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      };
+      
+      document.body.style.background = themes[theme];
+    });
+  </script>
+
+</body>
+</html>
