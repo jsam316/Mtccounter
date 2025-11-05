@@ -38,6 +38,33 @@
       margin-bottom: 25px;
       font-size: 28px;
     }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .tab {
+      flex: 1;
+      padding: 12px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-weight: 600;
+      color: #6b7280;
+      transition: all 0.3s;
+    }
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
     .input-group {
       margin-bottom: 20px;
     }
@@ -55,10 +82,17 @@
       border-radius: 10px;
       font-size: 16px;
       transition: border 0.3s;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     input:focus, select:focus {
       outline: none;
       border-color: #667eea;
+    }
+    .verse-group {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 10px;
     }
     .total-box {
       background: #f5f5f5;
@@ -157,6 +191,15 @@
       background: #a855f7;
       color: white;
     }
+    .save-btn {
+      width: 100%;
+      background: #3b82f6;
+      color: white;
+      margin-bottom: 10px;
+    }
+    .save-btn:hover {
+      background: #2563eb;
+    }
     .reset-btn {
       width: 100%;
       background: #e5e7eb;
@@ -184,6 +227,56 @@
       font-weight: 500;
       display: none;
     }
+    .history-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .history-item {
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .history-item:hover {
+      background: #f3f4f6;
+      border-color: #667eea;
+    }
+    .history-date {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .history-details {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+    .history-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .history-btn {
+      flex: 1;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .load-btn {
+      background: #3b82f6;
+      color: white;
+    }
+    .delete-btn {
+      background: #ef4444;
+      color: white;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #9ca3af;
+    }
     @media (max-width: 768px) {
       body {
         padding: 10px;
@@ -199,76 +292,177 @@
     <h1>⛪ MTC Counter</h1>
 
 ```
-<div class="input-group">
-  <label>🎨 Theme</label>
-  <select id="theme">
-    <option value="default">Purple & Blue</option>
-    <option value="ocean">Ocean (Cyan & Teal)</option>
-    <option value="sunset">Sunset (Orange & Pink)</option>
-    <option value="forest">Forest (Green & Emerald)</option>
-  </select>
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('counter')">📊 Counter</button>
+  <button class="tab" onclick="switchTab('history')">📅 History</button>
 </div>
 
-<div class="input-group">
-  <label>📅 Date</label>
-  <input type="date" id="date">
-</div>
+<!-- Counter Tab -->
+<div id="counterTab" class="tab-content active">
+  <div class="input-group">
+    <label>⛪ MarThoma Church Parish Name</label>
+    <input type="text" id="parishName" placeholder="Enter parish name">
+  </div>
 
-<div class="input-group">
-  <label>👤 Celebrant Name</label>
-  <input type="text" id="celebrant" placeholder="Enter celebrant name">
-</div>
+  <div class="input-group">
+    <label>🎨 Theme</label>
+    <select id="theme">
+      <option value="default">Purple & Blue</option>
+      <option value="ocean">Ocean (Cyan & Teal)</option>
+      <option value="sunset">Sunset (Orange & Pink)</option>
+      <option value="forest">Forest (Green & Emerald)</option>
+    </select>
+  </div>
 
-<div class="input-group">
-  <label>📖 Sermon</label>
-  <input type="text" id="sermon" placeholder="Enter sermon title">
-</div>
+  <div class="input-group">
+    <label>📅 Date</label>
+    <input type="date" id="date">
+  </div>
 
-<div class="total-box">
-  <div class="total-title">Total Attendance</div>
-  <div class="total-grid">
-    <div class="total-item">
-      <div class="total-label">Male</div>
-      <div class="total-number male-total" id="maleTotal">0</div>
+  <div class="input-group">
+    <label>👤 Celebrant Name</label>
+    <input type="text" id="celebrant" placeholder="Enter celebrant name">
+  </div>
+
+  <div class="input-group">
+    <label>📖 Sermon Title</label>
+    <input type="text" id="sermon" placeholder="Enter sermon title">
+  </div>
+
+  <div class="input-group">
+    <label>📜 Scripture Reference</label>
+    <div class="verse-group">
+      <select id="book">
+        <option value="">Select Book</option>
+        <option value="Genesis">Genesis</option>
+        <option value="Exodus">Exodus</option>
+        <option value="Leviticus">Leviticus</option>
+        <option value="Numbers">Numbers</option>
+        <option value="Deuteronomy">Deuteronomy</option>
+        <option value="Joshua">Joshua</option>
+        <option value="Judges">Judges</option>
+        <option value="Ruth">Ruth</option>
+        <option value="1 Samuel">1 Samuel</option>
+        <option value="2 Samuel">2 Samuel</option>
+        <option value="1 Kings">1 Kings</option>
+        <option value="2 Kings">2 Kings</option>
+        <option value="1 Chronicles">1 Chronicles</option>
+        <option value="2 Chronicles">2 Chronicles</option>
+        <option value="Ezra">Ezra</option>
+        <option value="Nehemiah">Nehemiah</option>
+        <option value="Esther">Esther</option>
+        <option value="Job">Job</option>
+        <option value="Psalms">Psalms</option>
+        <option value="Proverbs">Proverbs</option>
+        <option value="Ecclesiastes">Ecclesiastes</option>
+        <option value="Song of Solomon">Song of Solomon</option>
+        <option value="Isaiah">Isaiah</option>
+        <option value="Jeremiah">Jeremiah</option>
+        <option value="Lamentations">Lamentations</option>
+        <option value="Ezekiel">Ezekiel</option>
+        <option value="Daniel">Daniel</option>
+        <option value="Hosea">Hosea</option>
+        <option value="Joel">Joel</option>
+        <option value="Amos">Amos</option>
+        <option value="Obadiah">Obadiah</option>
+        <option value="Jonah">Jonah</option>
+        <option value="Micah">Micah</option>
+        <option value="Nahum">Nahum</option>
+        <option value="Habakkuk">Habakkuk</option>
+        <option value="Zephaniah">Zephaniah</option>
+        <option value="Haggai">Haggai</option>
+        <option value="Zechariah">Zechariah</option>
+        <option value="Malachi">Malachi</option>
+        <option value="Matthew">Matthew</option>
+        <option value="Mark">Mark</option>
+        <option value="Luke">Luke</option>
+        <option value="John">John</option>
+        <option value="Acts">Acts</option>
+        <option value="Romans">Romans</option>
+        <option value="1 Corinthians">1 Corinthians</option>
+        <option value="2 Corinthians">2 Corinthians</option>
+        <option value="Galatians">Galatians</option>
+        <option value="Ephesians">Ephesians</option>
+        <option value="Philippians">Philippians</option>
+        <option value="Colossians">Colossians</option>
+        <option value="1 Thessalonians">1 Thessalonians</option>
+        <option value="2 Thessalonians">2 Thessalonians</option>
+        <option value="1 Timothy">1 Timothy</option>
+        <option value="2 Timothy">2 Timothy</option>
+        <option value="Titus">Titus</option>
+        <option value="Philemon">Philemon</option>
+        <option value="Hebrews">Hebrews</option>
+        <option value="James">James</option>
+        <option value="1 Peter">1 Peter</option>
+        <option value="2 Peter">2 Peter</option>
+        <option value="1 John">1 John</option>
+        <option value="2 John">2 John</option>
+        <option value="3 John">3 John</option>
+        <option value="Jude">Jude</option>
+        <option value="Revelation">Revelation</option>
+      </select>
+      <input type="number" id="chapter" placeholder="Ch" min="1">
+      <input type="text" id="verse" placeholder="Verse">
     </div>
-    <div class="total-item">
-      <div class="total-label">Female</div>
-      <div class="total-number female-total" id="femaleTotal">0</div>
+  </div>
+
+  <div class="total-box">
+    <div class="total-title">Total Attendance</div>
+    <div class="total-grid">
+      <div class="total-item">
+        <div class="total-label">Male</div>
+        <div class="total-number male-total" id="maleTotal">0</div>
+      </div>
+      <div class="total-item">
+        <div class="total-label">Female</div>
+        <div class="total-number female-total" id="femaleTotal">0</div>
+      </div>
+      <div class="total-item">
+        <div class="total-label">Total</div>
+        <div class="total-number grand-total" id="grandTotal">0</div>
+      </div>
     </div>
-    <div class="total-item">
-      <div class="total-label">Total</div>
-      <div class="total-number grand-total" id="grandTotal">0</div>
+  </div>
+
+  <div class="counter-box male-box">
+    <div class="counter-header">
+      <span class="counter-title male-title">👨 Male</span>
+      <span class="counter-value male-total" id="maleCount">0</span>
+    </div>
+    <div class="counter-buttons">
+      <button class="male-minus" onclick="changeMale(-1)">−</button>
+      <button class="male-plus" onclick="changeMale(1)">+</button>
     </div>
   </div>
-</div>
 
-<div class="counter-box male-box">
-  <div class="counter-header">
-    <span class="counter-title male-title">👨 Male</span>
-    <span class="counter-value male-total" id="maleCount">0</span>
+  <div class="counter-box female-box">
+    <div class="counter-header">
+      <span class="counter-title female-title">👩 Female</span>
+      <span class="counter-value female-total" id="femaleCount">0</span>
+    </div>
+    <div class="counter-buttons">
+      <button class="female-minus" onclick="changeFemale(-1)">−</button>
+      <button class="female-plus" onclick="changeFemale(1)">+</button>
+    </div>
   </div>
-  <div class="counter-buttons">
-    <button class="male-minus" onclick="changeMale(-1)">−</button>
-    <button class="male-plus" onclick="changeMale(1)">+</button>
-  </div>
-</div>
 
-<div class="counter-box female-box">
-  <div class="counter-header">
-    <span class="counter-title female-title">👩 Female</span>
-    <span class="counter-value female-total" id="femaleCount">0</span>
-  </div>
-  <div class="counter-buttons">
-    <button class="female-minus" onclick="changeFemale(-1)">−</button>
-    <button class="female-plus" onclick="changeFemale(1)">+</button>
+  <button class="save-btn" onclick="saveRecord()">💾 Save Record</button>
+  <button class="reset-btn" onclick="reset()">🔄 Reset Counters</button>
+  <button class="export-btn" onclick="exportData()">📤 Export as Text</button>
+  
+  <div id="successMsg" class="success-msg">
+    ✓ Saved successfully!
   </div>
 </div>
 
-<button class="reset-btn" onclick="reset()">🔄 Reset Counters</button>
-<button class="export-btn" onclick="exportData()">📤 Export as Text</button>
-
-<div id="successMsg" class="success-msg">
-  ✓ Copied to clipboard!
+<!-- History Tab -->
+<div id="historyTab" class="tab-content">
+  <div id="historyList" class="history-list">
+    <div class="empty-state">
+      <p>📋 No records yet</p>
+      <p style="font-size: 14px; margin-top: 10px;">Save your first service record to see it here!</p>
+    </div>
+  </div>
 </div>
 ```
 
@@ -280,6 +474,16 @@
 
     // Set today's date
     document.getElementById('date').valueAsDate = new Date();
+
+    // Load saved records from localStorage
+    function getHistory() {
+      var history = localStorage.getItem('mtcHistory');
+      return history ? JSON.parse(history) : [];
+    }
+
+    function saveHistory(records) {
+      localStorage.setItem('mtcHistory', JSON.stringify(records));
+    }
 
     function changeMale(amount) {
       male = Math.max(0, male + amount);
@@ -300,17 +504,187 @@
     }
 
     function reset() {
-      if (confirm('Reset both counters to 0?')) {
+      if (confirm('Reset all counters to 0?')) {
         male = 0;
         female = 0;
         updateDisplay();
       }
     }
 
-    function exportData() {
+    function saveRecord() {
       var date = document.getElementById('date').value;
+      if (!date) {
+        alert('Please select a date first!');
+        return;
+      }
+
+      var parishName = document.getElementById('parishName').value || 'Not specified';
       var celebrant = document.getElementById('celebrant').value || 'Not specified';
       var sermon = document.getElementById('sermon').value || 'Not specified';
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = 'Not specified';
+      }
+
+      var record = {
+        date: date,
+        parishName: parishName,
+        celebrant: celebrant,
+        sermon: sermon,
+        scripture: scripture,
+        male: male,
+        female: female,
+        total: male + female,
+        timestamp: new Date().toISOString()
+      };
+
+      var history = getHistory();
+      // Remove existing record for same date if any
+      history = history.filter(function(r) { return r.date !== date; });
+      // Add new record
+      history.unshift(record);
+      saveHistory(history);
+
+      var msg = document.getElementById('successMsg');
+      msg.style.display = 'block';
+      setTimeout(function() {
+        msg.style.display = 'none';
+      }, 3000);
+
+      displayHistory();
+    }
+
+    function displayHistory() {
+      var history = getHistory();
+      var listEl = document.getElementById('historyList');
+      
+      if (history.length === 0) {
+        listEl.innerHTML = '<div class="empty-state"><p>📋 No records yet</p><p style="font-size: 14px; margin-top: 10px;">Save your first service record to see it here!</p></div>';
+        return;
+      }
+
+      var html = '';
+      history.forEach(function(record, index) {
+        var dateObj = new Date(record.date + 'T00:00:00');
+        var formattedDate = dateObj.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        html += '<div class="history-item">';
+        html += '<div class="history-date">' + formattedDate + '</div>';
+        html += '<div class="history-details">';
+        html += '<strong>Parish:</strong> ' + record.parishName + '<br>';
+        html += '<strong>Celebrant:</strong> ' + record.celebrant + '<br>';
+        html += '<strong>Sermon:</strong> ' + record.sermon + '<br>';
+        html += '<strong>Scripture:</strong> ' + record.scripture + '<br>';
+        html += '<strong>Attendance:</strong> Male: ' + record.male + ', Female: ' + record.female + ', Total: ' + record.total;
+        html += '</div>';
+        html += '<div class="history-actions">';
+        html += '<button class="history-btn load-btn" onclick="loadRecord(' + index + ')">📥 Load</button>';
+        html += '<button class="history-btn delete-btn" onclick="deleteRecord(' + index + ')">🗑️ Delete</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+
+      listEl.innerHTML = html;
+    }
+
+    function loadRecord(index) {
+      var history = getHistory();
+      var record = history[index];
+      
+      document.getElementById('date').value = record.date;
+      document.getElementById('parishName').value = record.parishName === 'Not specified' ? '' : record.parishName;
+      document.getElementById('celebrant').value = record.celebrant === 'Not specified' ? '' : record.celebrant;
+      document.getElementById('sermon').value = record.sermon === 'Not specified' ? '' : record.sermon;
+      
+      // Parse scripture
+      if (record.scripture && record.scripture !== 'Not specified') {
+        var parts = record.scripture.split(' ');
+        var bookName = parts.slice(0, -1).join(' ');
+        var chapterVerse = parts[parts.length - 1];
+        
+        if (chapterVerse) {
+          var cv = chapterVerse.split(':');
+          document.getElementById('book').value = bookName;
+          document.getElementById('chapter').value = cv[0] || '';
+          document.getElementById('verse').value = cv[1] || '';
+        }
+      }
+      
+      male = record.male;
+      female = record.female;
+      updateDisplay();
+      
+      switchTab('counter');
+    }
+
+    function deleteRecord(index) {
+      if (confirm('Are you sure you want to delete this record?')) {
+        var history = getHistory();
+        history.splice(index, 1);
+        saveHistory(history);
+        displayHistory();
+      }
+    }
+
+    function switchTab(tab) {
+      // Update tab buttons
+      var tabs = document.querySelectorAll('.tab');
+      tabs.forEach(function(t) {
+        t.classList.remove('active');
+      });
+      
+      // Update tab content
+      document.getElementById('counterTab').classList.remove('active');
+      document.getElementById('historyTab').classList.remove('active');
+      
+      if (tab === 'counter') {
+        tabs[0].classList.add('active');
+        document.getElementById('counterTab').classList.add('active');
+      } else {
+        tabs[1].classList.add('active');
+        document.getElementById('historyTab').classList.add('active');
+        displayHistory();
+      }
+    }
+
+    function exportData() {
+      var date = document.getElementById('date').value;
+      var parishName = document.getElementById('parishName').value || 'Not specified';
+      var celebrant = document.getElementById('celebrant').value || 'Not specified';
+      var sermon = document.getElementById('sermon').value || 'Not specified';
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = 'Not specified';
+      }
       
       var dateObj = new Date(date + 'T00:00:00');
       var formattedDate = dateObj.toLocaleDateString('en-US', {
@@ -321,8 +695,10 @@
       });
 
       var text = 'Service Details - ' + formattedDate + '\n\n' +
+                 'Parish: ' + parishName + '\n' +
                  'Celebrant: ' + celebrant + '\n' +
-                 'Sermon: ' + sermon + '\n\n' +
+                 'Sermon: ' + sermon + '\n' +
+                 'Scripture: ' + scripture + '\n\n' +
                  'Attendance Summary:\n' +
                  '• Male: ' + male + '\n' +
                  '• Female: ' + female + '\n' +
@@ -330,12 +706,13 @@
 
       navigator.clipboard.writeText(text).then(function() {
         var msg = document.getElementById('successMsg');
+        msg.textContent = '✓ Copied to clipboard!';
         msg.style.display = 'block';
         setTimeout(function() {
           msg.style.display = 'none';
+          msg.textContent = '✓ Saved successfully!';
         }, 3000);
       }).catch(function(err) {
-        // Fallback for browsers that don't support clipboard
         alert('Copy this text:\n\n' + text);
       });
     }
@@ -352,6 +729,9 @@
       
       document.body.style.background = themes[theme];
     });
+
+    // Load history on page load
+    displayHistory();
   </script>
 
 </body>
