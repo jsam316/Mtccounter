@@ -38,6 +38,91 @@
       margin-bottom: 25px;
       font-size: 28px;
     }
+    .dark-mode-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.3s;
+    }
+    .dark-mode-toggle:hover {
+      transform: scale(1.1);
+    }
+    .dark-mode .dark-mode-toggle {
+      background: rgba(30, 41, 59, 0.9);
+    }
+    .dark-mode {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+    .dark-mode .container {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+    .dark-mode h1 {
+      color: #e2e8f0;
+    }
+    .dark-mode .tab {
+      color: #94a3b8;
+    }
+    .dark-mode .tab.active {
+      color: #818cf8;
+      border-bottom-color: #818cf8;
+    }
+    .dark-mode .tabs {
+      border-bottom-color: #334155;
+    }
+    .dark-mode label {
+      color: #94a3b8;
+    }
+    .dark-mode input,
+    .dark-mode select {
+      background: #334155;
+      border-color: #475569;
+      color: #e2e8f0;
+    }
+    .dark-mode input::placeholder {
+      color: #64748b;
+    }
+    .dark-mode input:focus,
+    .dark-mode select:focus {
+      border-color: #818cf8;
+    }
+    .dark-mode .total-box {
+      background: #334155;
+    }
+    .dark-mode .total-title {
+      color: #94a3b8;
+    }
+    .dark-mode .total-label {
+      color: #94a3b8;
+    }
+    .dark-mode .grand-total {
+      color: #e2e8f0;
+    }
+    .dark-mode .history-item {
+      background: #334155;
+      border-color: #475569;
+    }
+    .dark-mode .history-item:hover {
+      background: #3f4b5e;
+      border-color: #818cf8;
+    }
+    .dark-mode .history-date {
+      color: #e2e8f0;
+    }
+    .dark-mode .history-details {
+      color: #94a3b8;
+    }
+    .dark-mode .empty-state {
+      color: #64748b;
+    }
     .tabs {
       display: flex;
       gap: 10px;
@@ -288,6 +373,8 @@
   </style>
 </head>
 <body>
+  <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Dark Mode">🌙</button>
+
   <div class="container">
     <h1>⛪ MTC Counter</h1>
 
@@ -518,7 +605,6 @@
         return;
       }
 
-      var parishName = document.getElementById('parishName').value || 'Not specified';
       var celebrant = document.getElementById('celebrant').value || 'Not specified';
       var sermon = document.getElementById('sermon').value || 'Not specified';
       var book = document.getElementById('book').value;
@@ -540,7 +626,6 @@
 
       var record = {
         date: date,
-        parishName: parishName,
         celebrant: celebrant,
         sermon: sermon,
         scripture: scripture,
@@ -588,7 +673,6 @@
         html += '<div class="history-item">';
         html += '<div class="history-date">' + formattedDate + '</div>';
         html += '<div class="history-details">';
-        html += '<strong>Parish:</strong> ' + record.parishName + '<br>';
         html += '<strong>Celebrant:</strong> ' + record.celebrant + '<br>';
         html += '<strong>Sermon:</strong> ' + record.sermon + '<br>';
         html += '<strong>Scripture:</strong> ' + record.scripture + '<br>';
@@ -609,7 +693,6 @@
       var record = history[index];
       
       document.getElementById('date').value = record.date;
-      document.getElementById('parishName').value = record.parishName === 'Not specified' ? '' : record.parishName;
       document.getElementById('celebrant').value = record.celebrant === 'Not specified' ? '' : record.celebrant;
       document.getElementById('sermon').value = record.sermon === 'Not specified' ? '' : record.sermon;
       
@@ -666,7 +749,6 @@
 
     function exportData() {
       var date = document.getElementById('date').value;
-      var parishName = document.getElementById('parishName').value || 'Not specified';
       var celebrant = document.getElementById('celebrant').value || 'Not specified';
       var sermon = document.getElementById('sermon').value || 'Not specified';
       var book = document.getElementById('book').value;
@@ -695,7 +777,6 @@
       });
 
       var text = 'Service Details - ' + formattedDate + '\n\n' +
-                 'Parish: ' + parishName + '\n' +
                  'Celebrant: ' + celebrant + '\n' +
                  'Sermon: ' + sermon + '\n' +
                  'Scripture: ' + scripture + '\n\n' +
@@ -732,6 +813,21 @@
 
     // Load history on page load
     displayHistory();
+
+    // Dark mode functionality
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+      var isDark = document.body.classList.contains('dark-mode');
+      var btn = document.querySelector('.dark-mode-toggle');
+      btn.textContent = isDark ? '☀️' : '🌙';
+      localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+    }
+
+    // Load dark mode preference
+    if (localStorage.getItem('darkMode') === 'enabled') {
+      document.body.classList.add('dark-mode');
+      document.querySelector('.dark-mode-toggle').textContent = '☀️';
+    }
   </script>
 
 </body>
