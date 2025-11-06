@@ -5,9 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MTC Counter">
-  <meta name="description" content="MTC church attendance counter app">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="MarThoma Church attendance counter app - Track service attendance easily">
+  <meta name="theme-color" content="#1e293b">
+
+  <!-- Favicons and App Icons -->
+
+  <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231e293b' width='100' height='100'/><text y='70' font-size='70' fill='white' text-anchor='middle' x='50' font-family='Arial'>⛪</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%231e293b' width='180' height='180' rx='40'/><text y='125' font-size='100' fill='white' text-anchor='middle' x='90' font-family='Arial'>⛪</text></svg>">
+
   <title>MTC Church Counter</title>
   <style>
     * { 
@@ -705,9 +713,143 @@
   <script>
     var male = 0;
     var female = 0;
+    var deferredPrompt;
 
     // Set today's date
     document.getElementById('date').valueAsDate = new Date();
+
+    // PWA Install Prompt
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // Show install prompt after 3 seconds if not installed
+      setTimeout(function() {
+        if (!window.matchMedia('(display-mode: standalone)').matches) {
+          document.getElementById('installPrompt').classList.add('show');
+        }
+      }, 3000);
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choiceResult) {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('App installed');
+          }
+          deferredPrompt = null;
+          closeInstallPrompt();
+        });
+      }
+    }
+
+    function closeInstallPrompt() {
+      document.getElementById('installPrompt').classList.remove('show');
+      localStorage.setItem('installPromptDismissed', 'true');
+    }
+
+    // Don't show install prompt if previously dismissed
+    if (localStorage.getItem('installPromptDismissed') === 'true') {
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+      });
+    }
+
+    // Service Worker Registration for offline support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
+          const CACHE_NAME = 'mtc-counter-v2';
+          const urlsToCache = [
+            '/',
+            '/index.html'
+          ];
+          
+          self.addEventListener('install', event => {
+            console.log('Service Worker installing...');
+            event.waitUntil(
+              caches.open(CACHE_NAME).then(cache => {
+                console.log('Caching app shell');
+                return cache.addAll(urlsToCache);
+              })
+            );
+            self.skipWaiting();
+          });
+          
+          self.addEventListener('fetch', event => {
+            event.respondWith(
+              caches.match(event.request).then(response => {
+                if (response) {
+                  console.log('Serving from cache:', event.request.url);
+                  return response;
+                }
+                
+                return fetch(event.request).then(fetchResponse => {
+                  // Don't cache non-GET requests or external resources
+                  if (event.request.method !== 'GET' || 
+                      !event.request.url.startsWith(self.location.origin)) {
+                    return fetchResponse;
+                  }
+                  
+                  return caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, fetchResponse.clone());
+                    return fetchResponse;
+                  });
+                }).catch(error => {
+                  console.log('Fetch failed, serving offline page:', error);
+                  // Return the main page from cache as fallback
+                  return caches.match('/');
+                });
+              })
+            );
+          });
+          
+          self.addEventListener('activate', event => {
+            console.log('Service Worker activating...');
+            event.waitUntil(
+              caches.keys().then(cacheNames => {
+                return Promise.all(
+                  cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                      console.log('Deleting old cache:', cacheName);
+                      return caches.delete(cacheName);
+                    }
+                  })
+                );
+              })
+            );
+            self.clients.claim();
+          });
+          
+          // Listen for messages from the app
+          self.addEventListener('message', event => {
+            if (event.data && event.data.type === 'SKIP_WAITING') {
+              self.skipWaiting();
+            }
+          });
+        `)).then(function(registration) {
+          console.log('Service Worker registered successfully:', registration);
+          
+          // Check for updates every hour
+          setInterval(function() {
+            registration.update();
+          }, 3600000);
+        }).catch(function(error) {
+          console.log('Service Worker registration failed:', error);
+        });
+      });
+    }
+
+    // Show offline/online status
+    function updateOnlineStatus() {
+      var status = navigator.onLine ? '🟢 Online' : '🔴 Offline';
+      console.log('Connection status:', status);
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
 
     // Load saved records from localStorage
     function getHistory() {
@@ -752,6 +894,7 @@
         return;
       }
 
+      var parishName = document.getElementById('parishName').value || 'Not specified';
       var celebrant = document.getElementById('celebrant').value || 'Not specified';
       var sermon = document.getElementById('sermon').value || 'Not specified';
       var book = document.getElementById('book').value;
@@ -773,6 +916,7 @@
 
       var record = {
         date: date,
+        parishName: parishName,
         celebrant: celebrant,
         sermon: sermon,
         scripture: scripture,
@@ -820,6 +964,7 @@
         html += '<div class="history-item">';
         html += '<div class="history-date">' + formattedDate + '</div>';
         html += '<div class="history-details">';
+        html += '<strong>Parish:</strong> ' + record.parishName + '<br>';
         html += '<strong>Celebrant:</strong> ' + record.celebrant + '<br>';
         html += '<strong>Sermon:</strong> ' + record.sermon + '<br>';
         html += '<strong>Scripture:</strong> ' + record.scripture + '<br>';
@@ -840,6 +985,7 @@
       var record = history[index];
       
       document.getElementById('date').value = record.date;
+      document.getElementById('parishName').value = record.parishName === 'Not specified' ? '' : record.parishName;
       document.getElementById('celebrant').value = record.celebrant === 'Not specified' ? '' : record.celebrant;
       document.getElementById('sermon').value = record.sermon === 'Not specified' ? '' : record.sermon;
       
@@ -896,6 +1042,7 @@
 
     function exportData() {
       var date = document.getElementById('date').value;
+      var parishName = document.getElementById('parishName').value || 'Not specified';
       var celebrant = document.getElementById('celebrant').value || 'Not specified';
       var sermon = document.getElementById('sermon').value || 'Not specified';
       var book = document.getElementById('book').value;
@@ -924,6 +1071,7 @@
       });
 
       var text = 'Service Details - ' + formattedDate + '\n\n' +
+                 'Parish: ' + parishName + '\n' +
                  'Celebrant: ' + celebrant + '\n' +
                  'Sermon: ' + sermon + '\n' +
                  'Scripture: ' + scripture + '\n\n' +
@@ -977,5 +1125,17 @@
     }
   </script>
 
+  <!-- Install Prompt -->
+
+  <div id="installPrompt" class="install-prompt">
+    <div class="install-content">
+      <div class="install-title">📱 Install MTC Counter</div>
+      <div class="install-text">Add to home screen for quick access & offline use</div>
+    </div>
+    <div class="install-buttons">
+      <button class="install-btn" onclick="installApp()">Install</button>
+      <button class="install-btn install-close" onclick="closeInstallPrompt()">✕</button>
+    </div>
+  </div>
 </body>
 </html>
