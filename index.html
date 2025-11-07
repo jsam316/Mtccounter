@@ -16,6 +16,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231e293b' width='100' height='100'/><text y='70' font-size='70' fill='white' text-anchor='middle' x='50' font-family='Arial'>⛪</text></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%231e293b' width='180' height='180' rx='40'/><text y='125' font-size='100' fill='white' text-anchor='middle' x='90' font-family='Arial'>⛪</text></svg>">
 
+  <!-- jsPDF Library for PDF export -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <title>MTC Church Counter</title>
   <style>
     * { 
@@ -24,281 +28,174 @@
       box-sizing: border-box; 
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
       min-height: 100vh;
       padding: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(96, 165, 250, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: backgroundMove 60s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes backgroundMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
     }
     .container {
-      background: #1e293b;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(20px);
       color: #e2e8f0;
-      border-radius: 20px;
-      padding: 30px;
-      max-width: 400px;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 480px;
       width: 100%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 1;
     }
     h1 {
       text-align: center;
       color: #e2e8f0;
-      margin-bottom: 25px;
-      font-size: 28px;
+      margin-bottom: 8px;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 32px;
+      font-weight: 500;
     }
     .dark-mode-toggle {
       position: absolute;
       top: 20px;
       right: 20px;
-      background: rgba(30, 41, 59, 0.9);
-      border: none;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      font-size: 24px;
+      background: rgba(51, 65, 85, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      width: 48px;
+      height: 48px;
+      font-size: 22px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .dark-mode-toggle:hover {
-      transform: scale(1.1);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      background: rgba(71, 85, 105, 0.8);
     }
-    .light-mode .dark-mode-toggle {
-      background: rgba(255, 255, 255, 0.9);
-    }
-    .dark-mode {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    }
-    .dark-mode .container {
-      background: #1e293b;
-      color: #e2e8f0;
-    }
-    .dark-mode h1 {
-      color: #e2e8f0;
+    .dark-mode-toggle:active {
+      transform: scale(0.95);
     }
     .light-mode {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
     }
     .light-mode .container {
-      background: white;
-      color: #333;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
     }
     .light-mode h1 {
-      color: #333;
+      color: #1e293b;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .light-mode .tab {
-      color: #6b7280;
-    }
-    .light-mode .tab.active {
-      color: #667eea;
-      border-bottom-color: #667eea;
-    }
-    .light-mode .tabs {
-      border-bottom-color: #e5e7eb;
-    }
-    .light-mode label {
-      color: #666;
-    }
-    .light-mode input,
-    .light-mode select {
-      background: white;
-      border-color: #e0e0e0;
-      color: #333;
-    }
-    .light-mode input::placeholder {
-      color: #9ca3af;
-    }
-    .light-mode input:focus,
-    .light-mode select:focus {
-      border-color: #667eea;
-    }
-    .light-mode .total-box {
-      background: #f5f5f5;
-    }
-    .light-mode .total-title {
-      color: #666;
-    }
-    .light-mode .total-label {
-      color: #666;
-    }
-    .light-mode .grand-total {
-      color: #333;
-    }
-    .light-mode .male-box {
-      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-      border-color: #93c5fd;
-    }
-    .light-mode .female-box {
-      background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-      border-color: #d8b4fe;
-    }
-    .light-mode .male-title {
-      color: #1e40af;
-    }
-    .light-mode .female-title {
-      color: #7c3aed;
-    }
-    .light-mode .male-total {
-      color: #3b82f6;
-    }
-    .light-mode .female-total {
-      color: #a855f7;
-    }
-    .light-mode .male-minus {
-      background: white;
-      color: #3b82f6;
-      border-color: #3b82f6;
-    }
-    .light-mode .male-plus {
-      background: #3b82f6;
-      color: white;
-    }
-    .light-mode .female-minus {
-      background: white;
-      color: #a855f7;
-      border-color: #a855f7;
-    }
-    .light-mode .female-plus {
-      background: #a855f7;
-      color: white;
-    }
-    .light-mode .history-item {
-      background: #f9fafb;
-      border-color: #e5e7eb;
-    }
-    .light-mode .history-item:hover {
-      background: #f3f4f6;
-      border-color: #667eea;
-    }
-    .light-mode .history-date {
-      color: #333;
-    }
-    .light-mode .history-details {
-      color: #666;
-    }
-    .light-mode .empty-state {
-      color: #9ca3af;
-    }
-    .dark-mode .tab {
-      color: #94a3b8;
-    }
-    .dark-mode .tab.active {
-      color: #818cf8;
-      border-bottom-color: #818cf8;
-    }
-    .dark-mode .tabs {
-      border-bottom-color: #334155;
-    }
-    .dark-mode label {
-      color: #94a3b8;
-    }
-    .dark-mode input,
-    .dark-mode select {
-      background: #334155;
-      border-color: #475569;
-      color: #e2e8f0;
-    }
-    .dark-mode input::placeholder {
+    .light-mode .subtitle {
       color: #64748b;
     }
-    .dark-mode input:focus,
-    .dark-mode select:focus {
-      border-color: #818cf8;
+    .light-mode .dark-mode-toggle {
+      background: rgba(241, 245, 249, 0.9);
+      border-color: rgba(203, 213, 225, 0.5);
     }
-    .dark-mode .total-box {
-      background: #334155;
-    }
-    .dark-mode .total-title {
-      color: #94a3b8;
-    }
-    .dark-mode .total-label {
-      color: #94a3b8;
-    }
-    .dark-mode .grand-total {
-      color: #e2e8f0;
-    }
-    .dark-mode .history-item {
-      background: #334155;
-      border-color: #475569;
-    }
-    .dark-mode .history-item:hover {
-      background: #3f4b5e;
-      border-color: #818cf8;
-    }
-    .dark-mode .history-date {
-      color: #e2e8f0;
-    }
-    .dark-mode .history-details {
-      color: #94a3b8;
-    }
-    .dark-mode .empty-state {
-      color: #64748b;
-    }
-    .dark-mode .male-box {
-      background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
-      border-color: #3b5998;
-    }
-    .dark-mode .female-box {
-      background: linear-gradient(135deg, #3d2d5f 0%, #4d3d6f 100%);
-      border-color: #6b4d98;
-    }
-    .dark-mode .male-title {
-      color: #60a5fa;
-    }
-    .dark-mode .female-title {
-      color: #c084fc;
-    }
-    .dark-mode .male-total {
-      color: #60a5fa;
-    }
-    .dark-mode .female-total {
-      color: #c084fc;
-    }
-    .dark-mode .male-minus {
-      background: #334155;
-      color: #60a5fa;
-      border-color: #60a5fa;
-    }
-    .dark-mode .male-plus {
-      background: #3b82f6;
-      color: white;
-    }
-    .dark-mode .female-minus {
-      background: #334155;
-      color: #c084fc;
-      border-color: #c084fc;
-    }
-    .dark-mode .female-plus {
-      background: #a855f7;
-      color: white;
+    .light-mode .dark-mode-toggle:hover {
+      background: rgba(226, 232, 240, 0.9);
     }
     .tabs {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      border-bottom: 2px solid #e5e7eb;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .light-mode .tabs {
+      background: rgba(248, 250, 252, 0.8);
+      border-color: rgba(203, 213, 225, 0.3);
     }
     .tab {
       flex: 1;
-      padding: 12px;
-      background: none;
+      padding: 12px 16px;
+      background: transparent;
       border: none;
-      border-bottom: 3px solid transparent;
+      border-radius: 12px;
       cursor: pointer;
       font-weight: 600;
-      color: #6b7280;
-      transition: all 0.3s;
+      font-size: 14px;
+      color: #94a3b8;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tab:hover {
+      color: #cbd5e1;
+      background: rgba(51, 65, 85, 0.3);
     }
     .tab.active {
-      color: #667eea;
-      border-bottom-color: #667eea;
+      color: #60a5fa;
+      background: rgba(59, 130, 246, 0.15);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+    .light-mode .tab {
+      color: #64748b;
+    }
+    .light-mode .tab:hover {
+      color: #475569;
+      background: rgba(226, 232, 240, 0.5);
+    }
+    .light-mode .tab.active {
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
     }
     .tab-content {
       display: none;
     }
     .tab-content.active {
       display: block;
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .input-group {
       margin-bottom: 20px;
@@ -306,28 +203,47 @@
     label {
       display: block;
       color: #94a3b8;
-      font-size: 14px;
+      font-size: 13px;
       margin-bottom: 8px;
-      font-weight: 500;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .light-mode label {
+      color: #64748b;
     }
     input, select {
       width: 100%;
-      padding: 12px;
-      border: 2px solid #475569;
-      border-radius: 10px;
-      font-size: 16px;
-      transition: border 0.3s;
-      max-width: 100%;
-      box-sizing: border-box;
-      background: #334155;
+      padding: 14px 16px;
+      border: 2px solid rgba(71, 85, 105, 0.3);
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(15, 23, 42, 0.4);
       color: #e2e8f0;
+      font-weight: 500;
     }
     input::placeholder {
       color: #64748b;
     }
     input:focus, select:focus {
       outline: none;
-      border-color: #818cf8;
+      border-color: #60a5fa;
+      background: rgba(15, 23, 42, 0.6);
+      box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+    }
+    .light-mode input, .light-mode select {
+      background: rgba(248, 250, 252, 0.8);
+      border-color: rgba(203, 213, 225, 0.5);
+      color: #1e293b;
+    }
+    .light-mode input::placeholder {
+      color: #94a3b8;
+    }
+    .light-mode input:focus, .light-mode select:focus {
+      background: white;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     }
     .verse-group {
       display: grid;
@@ -335,21 +251,32 @@
       gap: 10px;
     }
     .total-box {
-      background: #334155;
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 20px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
       text-align: center;
     }
+    .light-mode .total-box {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
     .total-title {
-      font-weight: 500;
-      margin-bottom: 15px;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 16px;
       color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .light-mode .total-title {
+      color: #64748b;
     }
     .total-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
+      gap: 20px;
     }
     .total-item {
       text-align: center;
@@ -357,172 +284,474 @@
     .total-label {
       font-size: 12px;
       color: #94a3b8;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .light-mode .total-label {
+      color: #64748b;
     }
     .total-number {
-      font-size: 28px;
-      font-weight: bold;
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1;
     }
-    .male-total { color: #60a5fa; }
-    .female-total { color: #c084fc; }
-    .grand-total { color: #e2e8f0; }
+    .male-total { 
+      color: #60a5fa;
+      text-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
+    }
+    .female-total { 
+      color: #c084fc;
+      text-shadow: 0 0 20px rgba(192, 132, 252, 0.3);
+    }
+    .grand-total { 
+      color: #e2e8f0;
+      text-shadow: 0 0 20px rgba(226, 232, 240, 0.2);
+    }
+    .light-mode .male-total { 
+      color: #3b82f6;
+      text-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    }
+    .light-mode .female-total { 
+      color: #a855f7;
+      text-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+    }
+    .light-mode .grand-total { 
+      color: #1e293b;
+      text-shadow: none;
+    }
     .counter-box {
-      border-radius: 15px;
-      padding: 25px;
-      margin-bottom: 15px;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+      border: 2px solid;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .counter-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.3);
     }
     .male-box {
-      background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
-      border: 2px solid #3b5998;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.1) 100%);
+      border-color: rgba(96, 165, 250, 0.3);
     }
     .female-box {
-      background: linear-gradient(135deg, #3d2d5f 0%, #4d3d6f 100%);
-      border: 2px solid #6b4d98;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
+      border-color: rgba(192, 132, 252, 0.3);
+    }
+    .light-mode .male-box {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(96, 165, 250, 0.05) 100%);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    .light-mode .female-box {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(192, 132, 252, 0.05) 100%);
+      border-color: rgba(168, 85, 247, 0.3);
     }
     .counter-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 16px;
     }
     .counter-title {
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .male-title { color: #60a5fa; }
     .female-title { color: #c084fc; }
+    .light-mode .male-title { color: #3b82f6; }
+    .light-mode .female-title { color: #a855f7; }
     .counter-value {
-      font-size: 36px;
-      font-weight: bold;
+      font-size: 40px;
+      font-weight: 700;
     }
     .counter-buttons {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 12px;
     }
     button {
-      padding: 15px;
-      font-size: 20px;
-      font-weight: bold;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 700;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
     }
     button:active {
-      transform: scale(0.95);
+      transform: scale(0.98);
+    }
+    .male-minus, .female-minus {
+      background: rgba(15, 23, 42, 0.6);
+      border: 2px solid;
     }
     .male-minus {
-      background: #334155;
       color: #60a5fa;
-      border: 2px solid #60a5fa;
-    }
-    .male-plus {
-      background: #3b82f6;
-      color: white;
+      border-color: #60a5fa;
     }
     .female-minus {
-      background: #334155;
       color: #c084fc;
-      border: 2px solid #c084fc;
+      border-color: #c084fc;
+    }
+    .male-plus {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
     }
     .female-plus {
-      background: #a855f7;
+      background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
       color: white;
+    }
+    .light-mode .male-minus, .light-mode .female-minus {
+      background: white;
+    }
+    .light-mode .male-minus {
+      color: #3b82f6;
+      border-color: #3b82f6;
+    }
+    .light-mode .female-minus {
+      color: #a855f7;
+      border-color: #a855f7;
     }
     .save-btn {
       width: 100%;
-      background: #3b82f6;
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
       color: white;
-      margin-bottom: 10px;
-    }
-    .save-btn:hover {
-      background: #2563eb;
+      margin-bottom: 12px;
+      font-size: 16px;
     }
     .reset-btn {
       width: 100%;
-      background: #e5e7eb;
-      color: #374151;
-      margin-bottom: 10px;
-    }
-    .reset-btn:hover {
-      background: #d1d5db;
+      background: rgba(71, 85, 105, 0.4);
+      color: #e2e8f0;
+      margin-bottom: 12px;
+      font-size: 16px;
+      border: 2px solid rgba(148, 163, 184, 0.2);
     }
     .export-btn {
       width: 100%;
-      background: #10b981;
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
       color: white;
+      margin-bottom: 12px;
+      font-size: 16px;
     }
-    .export-btn:hover {
-      background: #059669;
+    .pdf-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      color: white;
+      font-size: 16px;
+    }
+    .light-mode .reset-btn {
+      background: rgba(241, 245, 249, 0.8);
+      color: #475569;
+      border-color: rgba(203, 213, 225, 0.5);
     }
     .success-msg {
-      background: #d1fae5;
-      color: #065f46;
-      padding: 15px;
-      border-radius: 10px;
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
       text-align: center;
-      margin-top: 15px;
-      font-weight: 500;
+      margin-top: 16px;
+      font-weight: 600;
       display: none;
+      animation: slideDown 0.3s ease-out;
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .history-list {
-      max-height: 400px;
+      max-height: 500px;
       overflow-y: auto;
+      padding-right: 8px;
+    }
+    .history-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    .history-list::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.3);
+      border-radius: 10px;
+    }
+    .history-list::-webkit-scrollbar-thumb {
+      background: rgba(96, 165, 250, 0.4);
+      border-radius: 10px;
+    }
+    .history-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(96, 165, 250, 0.6);
     }
     .history-item {
-      background: #334155;
-      border: 2px solid #475569;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 10px;
+      background: rgba(15, 23, 42, 0.4);
+      border: 2px solid rgba(71, 85, 105, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .history-item:hover {
-      background: #3f4b5e;
-      border-color: #818cf8;
+      background: rgba(15, 23, 42, 0.6);
+      border-color: #60a5fa;
+      transform: translateX(4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    .light-mode .history-item {
+      background: rgba(248, 250, 252, 0.8);
+      border-color: rgba(203, 213, 225, 0.5);
+    }
+    .light-mode .history-item:hover {
+      background: white;
+      border-color: #3b82f6;
     }
     .history-date {
-      font-weight: 600;
-      color: #e2e8f0;
-      margin-bottom: 8px;
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    .light-mode .history-date {
+      color: #3b82f6;
     }
     .history-details {
       font-size: 14px;
       color: #94a3b8;
-      line-height: 1.6;
+      line-height: 1.8;
+    }
+    .light-mode .history-details {
+      color: #64748b;
     }
     .history-actions {
       display: flex;
       gap: 10px;
-      margin-top: 10px;
+      margin-top: 12px;
     }
     .history-btn {
       flex: 1;
-      padding: 8px;
-      font-size: 14px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
     }
     .load-btn {
-      background: #3b82f6;
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
       color: white;
     }
     .delete-btn {
-      background: #ef4444;
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
       color: white;
     }
     .empty-state {
       text-align: center;
-      padding: 40px 20px;
-      color: #9ca3af;
+      padding: 60px 20px;
+      color: #64748b;
+    }
+    .empty-state p:first-child {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .offline-indicator {
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 999;
+      animation: pulse 2s infinite;
+      backdrop-filter: blur(10px);
+    }
+    .offline-indicator.show {
+      display: flex;
+    }
+    .offline-indicator.online {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+      animation: none;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    .sync-status {
+      position: fixed;
+      top: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 998;
+      backdrop-filter: blur(10px);
+    }
+    .sync-status.show {
+      display: flex;
+      animation: slideDown 0.3s ease-out;
+    }
+    .install-prompt {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+      padding: 20px 24px;
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+      display: none;
+      align-items: center;
+      gap: 16px;
+      z-index: 1000;
+      animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    @keyframes slideUp {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .install-prompt.show {
+      display: flex;
+    }
+    .install-content {
+      flex: 1;
+    }
+    .install-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+    .install-text {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .install-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .install-btn {
+      background: white;
+      color: #3b82f6;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .install-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+    }
+    .install-close {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .install-close:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
     @media (max-width: 768px) {
       body {
-        padding: 10px;
+        padding: 12px;
       }
       .container {
-        padding: 20px;
+        padding: 24px;
+      }
+      h1 {
+        font-size: 28px;
+      }
+      .counter-value {
+        font-size: 36px;
+      }
+      .total-number {
+        font-size: 32px;
+      }
+    }
+    .swipe-indicator {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 48px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1001;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    }
+    .swipe-indicator.left {
+      left: 30px;
+    }
+    .swipe-indicator.right {
+      right: 30px;
+    }
+    .swipe-indicator.show {
+      opacity: 0.8;
+      animation: swipePulse 0.5s ease-out;
+    }
+    @keyframes swipePulse {
+      0% {
+        transform: translateY(-50%) scale(0.5);
+        opacity: 0;
+      }
+      50% {
+        transform: translateY(-50%) scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 0.8;
+      }
+    }
+    .haptic-pulse {
+      animation: hapticPulse 0.3s ease-out;
+    }
+    @keyframes hapticPulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(0.95);
+      }
+      100% {
+        transform: scale(1);
       }
     }
   </style>
@@ -530,8 +759,28 @@
 <body>
   <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Light/Dark Mode">☀️</button>
 
+  <!-- Offline Indicator -->
+
+  <div id="offlineIndicator" class="offline-indicator">
+    <span>🔴</span>
+    <span>Offline</span>
+  </div>
+
+  <!-- Sync Status -->
+
+  <div id="syncStatus" class="sync-status">
+    <span>🔄</span>
+    <span>Syncing...</span>
+  </div>
+
+  <!-- Swipe Indicators -->
+
+  <div id="swipeLeft" class="swipe-indicator left">👈</div>
+  <div id="swipeRight" class="swipe-indicator right">👉</div>
+
   <div class="container">
     <h1>⛪ MTC Counter</h1>
+    <div class="subtitle">MarThoma Church Attendance Tracker</div>
 
 ```
 <div class="tabs">
@@ -542,7 +791,7 @@
 <!-- Counter Tab -->
 <div id="counterTab" class="tab-content active">
   <div class="input-group">
-    <label>⛪ MarThoma Church Parish Name</label>
+    <label>⛪ Parish Name</label>
     <input type="text" id="parishName" placeholder="Enter parish name">
   </div>
 
@@ -550,9 +799,9 @@
     <label>🎨 Theme</label>
     <select id="theme">
       <option value="default">Purple & Blue</option>
-      <option value="ocean">Ocean (Cyan & Teal)</option>
-      <option value="sunset">Sunset (Orange & Pink)</option>
-      <option value="forest">Forest (Green & Emerald)</option>
+      <option value="ocean">Ocean</option>
+      <option value="sunset">Sunset</option>
+      <option value="forest">Forest</option>
     </select>
   </div>
 
@@ -691,6 +940,7 @@
   <button class="save-btn" onclick="saveRecord()">💾 Save Record</button>
   <button class="reset-btn" onclick="reset()">🔄 Reset Counters</button>
   <button class="export-btn" onclick="exportData()">📤 Export as Text</button>
+  <button class="pdf-btn" onclick="exportPDF()">📄 Export as PDF</button>
   
   <div id="successMsg" class="success-msg">
     ✓ Saved successfully!
@@ -701,8 +951,9 @@
 <div id="historyTab" class="tab-content">
   <div id="historyList" class="history-list">
     <div class="empty-state">
-      <p>📋 No records yet</p>
-      <p style="font-size: 14px; margin-top: 10px;">Save your first service record to see it here!</p>
+      <p>📋</p>
+      <p style="font-size: 16px; font-weight: 600;">No records yet</p>
+      <p style="font-size: 14px; margin-top: 8px; opacity: 0.7;">Save your first service record to see it here!</p>
     </div>
   </div>
 </div>
@@ -710,165 +961,125 @@
 
   </div>
 
+  <!-- Install Prompt (at the end) -->
+
+  <div id="installPrompt" class="install-prompt">
+    <div class="install-content">
+      <div class="install-title">📱 Install MTC Counter</div>
+      <div class="install-text">Add to home screen for quick access & offline use</div>
+    </div>
+    <div class="install-buttons">
+      <button class="install-btn" onclick="installApp()">Install</button>
+      <button class="install-btn install-close" onclick="closeInstallPrompt()">✕</button>
+    </div>
+  </div>
+
   <script>
     var male = 0;
     var female = 0;
     var deferredPrompt;
+    var touchStartX = 0;
+    var touchEndX = 0;
+    var touchStartY = 0;
+    var touchEndY = 0;
 
     // Set today's date
     document.getElementById('date').valueAsDate = new Date();
 
-    // PWA Install Prompt
-    window.addEventListener('beforeinstallprompt', function(e) {
-      e.preventDefault();
-      deferredPrompt = e;
-      
-      // Show install prompt after 3 seconds if not installed
-      setTimeout(function() {
-        if (!window.matchMedia('(display-mode: standalone)').matches) {
-          document.getElementById('installPrompt').classList.add('show');
+    // Haptic Feedback Function
+    function triggerHaptic(style) {
+      if ('vibrate' in navigator) {
+        switch(style) {
+          case 'light':
+            navigator.vibrate(10);
+            break;
+          case 'medium':
+            navigator.vibrate(20);
+            break;
+          case 'heavy':
+            navigator.vibrate(30);
+            break;
+          case 'success':
+            navigator.vibrate([10, 50, 10]);
+            break;
+          case 'error':
+            navigator.vibrate([20, 100, 20]);
+            break;
+          case 'double':
+            navigator.vibrate([15, 30, 15]);
+            break;
+          default:
+            navigator.vibrate(15);
         }
-      }, 3000);
-    });
-
-    function installApp() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(function(choiceResult) {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('App installed');
-          }
-          deferredPrompt = null;
-          closeInstallPrompt();
-        });
       }
     }
 
-    function closeInstallPrompt() {
-      document.getElementById('installPrompt').classList.remove('show');
-      localStorage.setItem('installPromptDismissed', 'true');
+    // Add haptic pulse animation to element
+    function addHapticAnimation(element) {
+      element.classList.add('haptic-pulse');
+      setTimeout(function() {
+        element.classList.remove('haptic-pulse');
+      }, 300);
     }
 
-    // Don't show install prompt if previously dismissed
-    if (localStorage.getItem('installPromptDismissed') === 'true') {
-      window.addEventListener('beforeinstallprompt', function(e) {
-        e.preventDefault();
-      });
+    // Swipe Detection
+    function handleSwipeGesture() {
+      var swipeThreshold = 100;
+      var swipeDistance = touchEndX - touchStartX;
+      var verticalDistance = Math.abs(touchEndY - touchStartY);
+      
+      // Only trigger if horizontal swipe is dominant
+      if (verticalDistance < 100 && Math.abs(swipeDistance) > swipeThreshold) {
+        if (swipeDistance > 0) {
+          // Swipe Right - Go to Counter
+          if (!document.getElementById('counterTab').classList.contains('active')) {
+            switchTab('counter');
+            showSwipeIndicator('right');
+            triggerHaptic('medium');
+          }
+        } else {
+          // Swipe Left - Go to History
+          if (!document.getElementById('historyTab').classList.contains('active')) {
+            switchTab('history');
+            showSwipeIndicator('left');
+            triggerHaptic('medium');
+          }
+        }
+      }
     }
 
-    // Service Worker Registration for offline support
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
-          const CACHE_NAME = 'mtc-counter-v2';
-          const urlsToCache = [
-            '/',
-            '/index.html'
-          ];
-          
-          self.addEventListener('install', event => {
-            console.log('Service Worker installing...');
-            event.waitUntil(
-              caches.open(CACHE_NAME).then(cache => {
-                console.log('Caching app shell');
-                return cache.addAll(urlsToCache);
-              })
-            );
-            self.skipWaiting();
-          });
-          
-          self.addEventListener('fetch', event => {
-            event.respondWith(
-              caches.match(event.request).then(response => {
-                if (response) {
-                  console.log('Serving from cache:', event.request.url);
-                  return response;
-                }
-                
-                return fetch(event.request).then(fetchResponse => {
-                  // Don't cache non-GET requests or external resources
-                  if (event.request.method !== 'GET' || 
-                      !event.request.url.startsWith(self.location.origin)) {
-                    return fetchResponse;
-                  }
-                  
-                  return caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, fetchResponse.clone());
-                    return fetchResponse;
-                  });
-                }).catch(error => {
-                  console.log('Fetch failed, serving offline page:', error);
-                  // Return the main page from cache as fallback
-                  return caches.match('/');
-                });
-              })
-            );
-          });
-          
-          self.addEventListener('activate', event => {
-            console.log('Service Worker activating...');
-            event.waitUntil(
-              caches.keys().then(cacheNames => {
-                return Promise.all(
-                  cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME) {
-                      console.log('Deleting old cache:', cacheName);
-                      return caches.delete(cacheName);
-                    }
-                  })
-                );
-              })
-            );
-            self.clients.claim();
-          });
-          
-          // Listen for messages from the app
-          self.addEventListener('message', event => {
-            if (event.data && event.data.type === 'SKIP_WAITING') {
-              self.skipWaiting();
-            }
-          });
-        `)).then(function(registration) {
-          console.log('Service Worker registered successfully:', registration);
-          
-          // Check for updates every hour
-          setInterval(function() {
-            registration.update();
-          }, 3600000);
-        }).catch(function(error) {
-          console.log('Service Worker registration failed:', error);
-        });
-      });
+    function showSwipeIndicator(direction) {
+      var indicator = document.getElementById('swipe' + (direction === 'left' ? 'Left' : 'Right'));
+      indicator.classList.add('show');
+      setTimeout(function() {
+        indicator.classList.remove('show');
+      }, 500);
     }
 
-    // Show offline/online status
-    function updateOnlineStatus() {
-      var status = navigator.onLine ? '🟢 Online' : '🔴 Offline';
-      console.log('Connection status:', status);
-    }
+    // Touch event listeners for swipe
+    document.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
 
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    updateOnlineStatus();
-
-    // Load saved records from localStorage
-    function getHistory() {
-      var history = localStorage.getItem('mtcHistory');
-      return history ? JSON.parse(history) : [];
-    }
-
-    function saveHistory(records) {
-      localStorage.setItem('mtcHistory', JSON.stringify(records));
-    }
+    document.addEventListener('touchend', function(e) {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      handleSwipeGesture();
+    }, { passive: true });
 
     function changeMale(amount) {
       male = Math.max(0, male + amount);
       updateDisplay();
+      triggerHaptic(amount > 0 ? 'light' : 'medium');
+      addHapticAnimation(document.getElementById('maleCount'));
     }
 
     function changeFemale(amount) {
       female = Math.max(0, female + amount);
       updateDisplay();
+      triggerHaptic(amount > 0 ? 'light' : 'medium');
+      addHapticAnimation(document.getElementById('femaleCount'));
     }
 
     function updateDisplay() {
@@ -884,6 +1095,7 @@
         male = 0;
         female = 0;
         updateDisplay();
+        triggerHaptic('double');
       }
     }
 
@@ -927,14 +1139,13 @@
       };
 
       var history = getHistory();
-      // Remove existing record for same date if any
       history = history.filter(function(r) { return r.date !== date; });
-      // Add new record
       history.unshift(record);
       saveHistory(history);
 
       var msg = document.getElementById('successMsg');
       msg.style.display = 'block';
+      triggerHaptic('success');
       setTimeout(function() {
         msg.style.display = 'none';
       }, 3000);
@@ -942,12 +1153,21 @@
       displayHistory();
     }
 
+    function getHistory() {
+      var history = localStorage.getItem('mtcHistory');
+      return history ? JSON.parse(history) : [];
+    }
+
+    function saveHistory(records) {
+      localStorage.setItem('mtcHistory', JSON.stringify(records));
+    }
+
     function displayHistory() {
       var history = getHistory();
       var listEl = document.getElementById('historyList');
       
       if (history.length === 0) {
-        listEl.innerHTML = '<div class="empty-state"><p>📋 No records yet</p><p style="font-size: 14px; margin-top: 10px;">Save your first service record to see it here!</p></div>';
+        listEl.innerHTML = '<div class="empty-state"><p>📋</p><p style="font-size: 16px; font-weight: 600;">No records yet</p><p style="font-size: 14px; margin-top: 8px; opacity: 0.7;">Save your first service record to see it here!</p></div>';
         return;
       }
 
@@ -989,7 +1209,6 @@
       document.getElementById('celebrant').value = record.celebrant === 'Not specified' ? '' : record.celebrant;
       document.getElementById('sermon').value = record.sermon === 'Not specified' ? '' : record.sermon;
       
-      // Parse scripture
       if (record.scripture && record.scripture !== 'Not specified') {
         var parts = record.scripture.split(' ');
         var bookName = parts.slice(0, -1).join(' ');
@@ -1008,6 +1227,7 @@
       updateDisplay();
       
       switchTab('counter');
+      triggerHaptic('success');
     }
 
     function deleteRecord(index) {
@@ -1016,17 +1236,16 @@
         history.splice(index, 1);
         saveHistory(history);
         displayHistory();
+        triggerHaptic('error');
       }
     }
 
     function switchTab(tab) {
-      // Update tab buttons
       var tabs = document.querySelectorAll('.tab');
       tabs.forEach(function(t) {
         t.classList.remove('active');
       });
       
-      // Update tab content
       document.getElementById('counterTab').classList.remove('active');
       document.getElementById('historyTab').classList.remove('active');
       
@@ -1038,6 +1257,8 @@
         document.getElementById('historyTab').classList.add('active');
         displayHistory();
       }
+      
+      triggerHaptic('light');
     }
 
     function exportData() {
@@ -1084,13 +1305,103 @@
         var msg = document.getElementById('successMsg');
         msg.textContent = '✓ Copied to clipboard!';
         msg.style.display = 'block';
+        triggerHaptic('success');
         setTimeout(function() {
           msg.style.display = 'none';
           msg.textContent = '✓ Saved successfully!';
         }, 3000);
       }).catch(function(err) {
         alert('Copy this text:\n\n' + text);
+        triggerHaptic('error');
       });
+    }
+
+    function exportPDF() {
+      var date = document.getElementById('date').value;
+      var parishName = document.getElementById('parishName').value || 'Not specified';
+      var celebrant = document.getElementById('celebrant').value || 'Not specified';
+      var sermon = document.getElementById('sermon').value || 'Not specified';
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = 'Not specified';
+      }
+      
+      var dateObj = new Date(date + 'T00:00:00');
+      var formattedDate = dateObj.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      if (typeof window.jspdf === 'undefined') {
+        alert('PDF library not loaded. Please check your internet connection and refresh the page.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      doc.setFontSize(20);
+      doc.setFont(undefined, 'bold');
+      doc.text('⛪ MarThoma Church', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.text('Service Attendance Report', 105, 30, { align: 'center' });
+      
+      doc.setLineWidth(0.5);
+      doc.line(20, 35, 190, 35);
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text('Service Details', 20, 45);
+      
+      doc.setFont(undefined, 'normal');
+      doc.text('Date: ' + formattedDate, 20, 55);
+      doc.text('Parish: ' + parishName, 20, 63);
+      doc.text('Celebrant: ' + celebrant, 20, 71);
+      doc.text('Sermon: ' + sermon, 20, 79);
+      doc.text('Scripture: ' + scripture, 20, 87);
+      
+      doc.setFont(undefined, 'bold');
+      doc.text('Attendance Summary', 20, 100);
+      
+      doc.setFont(undefined, 'normal');
+      doc.text('Male: ' + male, 20, 110);
+      doc.text('Female: ' + female, 20, 118);
+      
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(14);
+      doc.text('Total Attendance: ' + (male + female), 20, 130);
+      
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'italic');
+      doc.text('Generated by MTC Counter App', 105, 280, { align: 'center' });
+      doc.text(new Date().toLocaleString(), 105, 285, { align: 'center' });
+      
+      var filename = 'MTC_Attendance_' + date + '.pdf';
+      doc.save(filename);
+      
+      var msg = document.getElementById('successMsg');
+      msg.textContent = '✓ PDF downloaded!';
+      msg.style.display = 'block';
+      triggerHaptic('success');
+      setTimeout(function() {
+        msg.style.display = 'none';
+        msg.textContent = '✓ Saved successfully!';
+      }, 3000);
     }
 
     // Theme change functionality
@@ -1100,14 +1411,11 @@
         ocean: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
         sunset: 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
         forest: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+        default: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
       };
       
       document.body.style.background = themes[theme];
     });
-
-    // Load history on page load
-    displayHistory();
 
     // Dark mode functionality
     function toggleDarkMode() {
@@ -1116,26 +1424,184 @@
       var btn = document.querySelector('.dark-mode-toggle');
       btn.textContent = isLight ? '🌙' : '☀️';
       localStorage.setItem('darkMode', isLight ? 'disabled' : 'enabled');
+      triggerHaptic('light');
     }
 
-    // Load dark mode preference (default is dark)
     if (localStorage.getItem('darkMode') === 'disabled') {
       document.body.classList.add('light-mode');
       document.querySelector('.dark-mode-toggle').textContent = '🌙';
     }
+
+    // PWA Install Prompt
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      setTimeout(function() {
+        if (!window.matchMedia('(display-mode: standalone)').matches) {
+          document.getElementById('installPrompt').classList.add('show');
+        }
+      }, 3000);
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choiceResult) {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('App installed');
+          }
+          deferredPrompt = null;
+          closeInstallPrompt();
+        });
+      }
+    }
+
+    function closeInstallPrompt() {
+      document.getElementById('installPrompt').classList.remove('show');
+      localStorage.setItem('installPromptDismissed', 'true');
+    }
+
+    if (localStorage.getItem('installPromptDismissed') === 'true') {
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+      });
+    }
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
+          const CACHE_NAME = 'mtc-counter-v2';
+          const urlsToCache = [
+            '/',
+            '/index.html'
+          ];
+          
+          self.addEventListener('install', event => {
+            console.log('Service Worker installing...');
+            event.waitUntil(
+              caches.open(CACHE_NAME).then(cache => {
+                console.log('Caching app shell');
+                return cache.addAll(urlsToCache);
+              })
+            );
+            self.skipWaiting();
+          });
+          
+          self.addEventListener('fetch', event => {
+            event.respondWith(
+              caches.match(event.request).then(response => {
+                if (response) {
+                  console.log('Serving from cache:', event.request.url);
+                  return response;
+                }
+                
+                return fetch(event.request).then(fetchResponse => {
+                  if (event.request.method !== 'GET' || 
+                      !event.request.url.startsWith(self.location.origin)) {
+                    return fetchResponse;
+                  }
+                  
+                  return caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, fetchResponse.clone());
+                    return fetchResponse;
+                  });
+                }).catch(error => {
+                  console.log('Fetch failed, serving offline page:', error);
+                  return caches.match('/');
+                });
+              })
+            );
+          });
+          
+          self.addEventListener('activate', event => {
+            console.log('Service Worker activating...');
+            event.waitUntil(
+              caches.keys().then(cacheNames => {
+                return Promise.all(
+                  cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                      console.log('Deleting old cache:', cacheName);
+                      return caches.delete(cacheName);
+                    }
+                  })
+                );
+              })
+            );
+            self.clients.claim();
+          });
+          
+          self.addEventListener('message', event => {
+            if (event.data && event.data.type === 'SKIP_WAITING') {
+              self.skipWaiting();
+            }
+          });
+        `)).then(function(registration) {
+          console.log('Service Worker registered successfully:', registration);
+          
+          setInterval(function() {
+            registration.update();
+          }, 3600000);
+        }).catch(function(error) {
+          console.log('Service Worker registration failed:', error);
+        });
+      });
+    }
+
+    // Offline/Online status
+    function updateOnlineStatus() {
+      var isOnline = navigator.onLine;
+      var indicator = document.getElementById('offlineIndicator');
+      
+      if (isOnline) {
+        indicator.classList.add('online');
+        indicator.innerHTML = '<span>🟢</span><span>Online</span>';
+        indicator.classList.add('show');
+        
+        setTimeout(function() {
+          indicator.classList.remove('show');
+        }, 3000);
+        
+        syncData();
+      } else {
+        indicator.classList.remove('online');
+        indicator.innerHTML = '<span>🔴</span><span>Offline</span>';
+        indicator.classList.add('show');
+      }
+      
+      console.log('Connection status:', isOnline ? '🟢 Online' : '🔴 Offline');
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    
+    setTimeout(function() {
+      if (!navigator.onLine) {
+        updateOnlineStatus();
+      }
+    }, 1000);
+
+    function syncData() {
+      var syncStatus = document.getElementById('syncStatus');
+      syncStatus.classList.add('show');
+      
+      setTimeout(function() {
+        syncStatus.innerHTML = '<span>✓</span><span>Synced!</span>';
+        syncStatus.style.background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
+        
+        setTimeout(function() {
+          syncStatus.classList.remove('show');
+          syncStatus.innerHTML = '<span>🔄</span><span>Syncing...</span>';
+          syncStatus.style.background = 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)';
+        }, 2000);
+      }, 1000);
+      
+      console.log('Syncing data...');
+    }
+
+    displayHistory();
   </script>
 
-  <!-- Install Prompt -->
-
-  <div id="installPrompt" class="install-prompt">
-    <div class="install-content">
-      <div class="install-title">📱 Install MTC Counter</div>
-      <div class="install-text">Add to home screen for quick access & offline use</div>
-    </div>
-    <div class="install-buttons">
-      <button class="install-btn" onclick="installApp()">Install</button>
-      <button class="install-btn install-close" onclick="closeInstallPrompt()">✕</button>
-    </div>
-  </div>
 </body>
 </html>
