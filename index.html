@@ -90,6 +90,7 @@
       top: 20px;
       right: 20px;
       display: flex;
+      flex-direction: column;
       gap: 10px;
       z-index: 10;
     }
@@ -262,6 +263,76 @@
       display: grid;
       grid-template-columns: 2fr 1fr 1fr;
       gap: 10px;
+    }
+    .toggle-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.3);
+      border-radius: 12px;
+      border: 2px solid rgba(71, 85, 105, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .light-mode .toggle-section {
+      background: rgba(248, 250, 252, 0.6);
+      border-color: rgba(203, 213, 225, 0.5);
+    }
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .light-mode .toggle-label {
+      color: #64748b;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 26px;
+      background: rgba(71, 85, 105, 0.5);
+      border-radius: 13px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid rgba(148, 163, 184, 0.3);
+    }
+    .light-mode .toggle-switch {
+      background: rgba(203, 213, 225, 0.5);
+      border-color: rgba(203, 213, 225, 0.6);
+    }
+    .toggle-switch.active {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      border-color: #60a5fa;
+    }
+    .toggle-slider {
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(22px);
+    }
+    .co-celebrants-field {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.3s ease;
+      opacity: 0;
+      margin-bottom: 0;
+    }
+    .co-celebrants-field.active {
+      max-height: 200px;
+      opacity: 1;
+      margin-bottom: 20px;
     }
     .total-box {
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
@@ -771,8 +842,8 @@
 </head>
 <body>
   <div class="top-controls">
-    <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle Language">EN</button>
     <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Light/Dark Mode">☀️</button>
+    <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle Language">EN</button>
   </div>
 
   <!-- Offline Indicator -->
@@ -829,6 +900,22 @@
   <div class="input-group">
     <label data-i18n="celebrantLabel">👤 Celebrant Name</label>
     <input type="text" id="celebrant" data-i18n-placeholder="celebrantPlaceholder" placeholder="Enter celebrant name">
+  </div>
+
+  <div class="toggle-section">
+    <div class="toggle-label">
+      <span data-i18n="coCelebrantsLabel">👥 Co-Celebrants</span>
+    </div>
+    <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()">
+      <div class="toggle-slider"></div>
+    </div>
+  </div>
+
+  <div class="co-celebrants-field" id="coCelebrantsField">
+    <div class="input-group">
+      <label data-i18n="coCelebrantsInputLabel">👥 Co-Celebrants Names</label>
+      <input type="text" id="coCelebrants" data-i18n-placeholder="coCelebrantsPlaceholder" placeholder="Enter co-celebrants names (comma separated)">
+    </div>
   </div>
 
   <div class="input-group">
@@ -1049,7 +1136,10 @@
         pdfDownloaded: "✓ PDF downloaded!",
         serviceDetails: "Service Details",
         attendanceSummary: "Attendance Summary",
-        totalAttendanceFull: "Total Attendance"
+        totalAttendanceFull: "Total Attendance",
+        coCelebrantsLabel: "👥 Co-Celebrants",
+        coCelebrantsInputLabel: "👥 Co-Celebrants Names",
+        coCelebrantsPlaceholder: "Enter co-celebrants names (comma separated)"
       },
       ml: {
         appTitle: "⛪ എം.ടി.സി കൗണ്ടർ",
@@ -1107,7 +1197,10 @@
         pdfDownloaded: "✓ പിഡിഎഫ് ഡൗൺലോഡ് ചെയ്തു!",
         serviceDetails: "സേവന വിശദാംശങ്ങൾ",
         attendanceSummary: "ഹാജർ സംഗ്രഹം",
-        totalAttendanceFull: "മൊത്തം ഹാജർ"
+        totalAttendanceFull: "മൊത്തം ഹാജർ",
+        coCelebrantsLabel: "👥 സഹ-കാര്യസ്ഥന്മാർ",
+        coCelebrantsInputLabel: "👥 സഹ-കാര്യസ്ഥന്മാരുടെ പേരുകൾ",
+        coCelebrantsPlaceholder: "സഹ-കാര്യസ്ഥന്മാരുടെ പേരുകൾ നൽകുക (കോമയാൽ വേർതിരിച്ച്)"
       }
     };
 
@@ -1123,6 +1216,7 @@
     // Initialize language
     document.addEventListener('DOMContentLoaded', function() {
       updateLanguage();
+      initCoCelebrantsToggle();
     });
 
     // Set today's date
@@ -1170,6 +1264,33 @@
 
     function t(key) {
       return translations[currentLang][key] || translations['en'][key] || key;
+    }
+
+    function toggleCoCelebrants() {
+      var toggle = document.getElementById('coCelebrantsToggle');
+      var field = document.getElementById('coCelebrantsField');
+      var isActive = toggle.classList.contains('active');
+      
+      if (isActive) {
+        toggle.classList.remove('active');
+        field.classList.remove('active');
+        localStorage.setItem('coCelebrantsEnabled', 'false');
+      } else {
+        toggle.classList.add('active');
+        field.classList.add('active');
+        localStorage.setItem('coCelebrantsEnabled', 'true');
+      }
+      
+      triggerHaptic('light');
+    }
+
+    // Initialize co-celebrants toggle state
+    function initCoCelebrantsToggle() {
+      var enabled = localStorage.getItem('coCelebrantsEnabled') === 'true';
+      if (enabled) {
+        document.getElementById('coCelebrantsToggle').classList.add('active');
+        document.getElementById('coCelebrantsField').classList.add('active');
+      }
     }
 
     // Haptic Feedback Function
@@ -1290,6 +1411,10 @@
 
       var parishName = document.getElementById('parishName').value || t('notSpecified');
       var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
       var chapter = document.getElementById('chapter').value;
@@ -1312,6 +1437,7 @@
         date: date,
         parishName: parishName,
         celebrant: celebrant,
+        coCelebrants: coCelebrants,
         sermon: sermon,
         scripture: scripture,
         male: male,
@@ -1368,6 +1494,9 @@
         html += '<div class="history-details">';
         html += '<strong>' + t('parish') + ':</strong> ' + record.parishName + '<br>';
         html += '<strong>' + t('celebrant') + ':</strong> ' + record.celebrant + '<br>';
+        if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
+          html += '<strong>' + t('coCelebrantsLabel') + ':</strong> ' + record.coCelebrants + '<br>';
+        }
         html += '<strong>' + t('sermon') + ':</strong> ' + record.sermon + '<br>';
         html += '<strong>' + t('scripture') + ':</strong> ' + record.scripture + '<br>';
         html += '<strong>' + t('attendance') + ':</strong> ' + t('male') + ': ' + record.male + ', ' + t('female') + ': ' + record.female + ', ' + t('total') + ': ' + record.total;
@@ -1389,6 +1518,17 @@
       document.getElementById('date').value = record.date;
       document.getElementById('parishName').value = record.parishName === t('notSpecified') ? '' : record.parishName;
       document.getElementById('celebrant').value = record.celebrant === t('notSpecified') ? '' : record.celebrant;
+      
+      // Handle co-celebrants
+      if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
+        document.getElementById('coCelebrants').value = record.coCelebrants;
+        if (!document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+          toggleCoCelebrants();
+        }
+      } else {
+        document.getElementById('coCelebrants').value = '';
+      }
+      
       document.getElementById('sermon').value = record.sermon === t('notSpecified') ? '' : record.sermon;
       
       if (record.scripture && record.scripture !== t('notSpecified')) {
@@ -1447,6 +1587,10 @@
       var date = document.getElementById('date').value;
       var parishName = document.getElementById('parishName').value || t('notSpecified');
       var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
       var chapter = document.getElementById('chapter').value;
@@ -1475,13 +1619,18 @@
 
       var text = t('serviceDetails') + ' - ' + formattedDate + '\n\n' +
                  t('parish') + ': ' + parishName + '\n' +
-                 t('celebrant') + ': ' + celebrant + '\n' +
-                 t('sermon') + ': ' + sermon + '\n' +
-                 t('scripture') + ': ' + scripture + '\n\n' +
-                 t('attendanceSummary') + ':\n' +
-                 '• ' + t('male') + ': ' + male + '\n' +
-                 '• ' + t('female') + ': ' + female + '\n' +
-                 '• ' + t('totalAttendanceFull') + ': ' + (male + female);
+                 t('celebrant') + ': ' + celebrant + '\n';
+      
+      if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
+        text += t('coCelebrantsLabel') + ': ' + coCelebrants + '\n';
+      }
+      
+      text += t('sermon') + ': ' + sermon + '\n' +
+              t('scripture') + ': ' + scripture + '\n\n' +
+              t('attendanceSummary') + ':\n' +
+              '• ' + t('male') + ': ' + male + '\n' +
+              '• ' + t('female') + ': ' + female + '\n' +
+              '• ' + t('totalAttendanceFull') + ': ' + (male + female);
 
       navigator.clipboard.writeText(text).then(function() {
         var msg = document.getElementById('successMsg');
@@ -1502,6 +1651,10 @@
       var date = document.getElementById('date').value;
       var parishName = document.getElementById('parishName').value || t('notSpecified');
       var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
       var chapter = document.getElementById('chapter').value;
@@ -1551,22 +1704,37 @@
       doc.text(t('serviceDetails'), 20, 45);
       
       doc.setFont(undefined, 'normal');
-      doc.text(t('dateLabel') + ': ' + formattedDate, 20, 55);
-      doc.text(t('parish') + ': ' + parishName, 20, 63);
-      doc.text(t('celebrant') + ': ' + celebrant, 20, 71);
-      doc.text(t('sermon') + ': ' + sermon, 20, 79);
-      doc.text(t('scripture') + ': ' + scripture, 20, 87);
+      var yPos = 55;
+      doc.text(t('dateLabel') + ': ' + formattedDate, 20, yPos);
+      yPos += 8;
+      doc.text(t('parish') + ': ' + parishName, 20, yPos);
+      yPos += 8;
+      doc.text(t('celebrant') + ': ' + celebrant, 20, yPos);
       
+      if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
+        yPos += 8;
+        doc.text(t('coCelebrantsLabel') + ': ' + coCelebrants, 20, yPos);
+      }
+      
+      yPos += 8;
+      doc.text(t('sermon') + ': ' + sermon, 20, yPos);
+      yPos += 8;
+      doc.text(t('scripture') + ': ' + scripture, 20, yPos);
+      
+      yPos += 13;
       doc.setFont(undefined, 'bold');
-      doc.text(t('attendanceSummary'), 20, 100);
+      doc.text(t('attendanceSummary'), 20, yPos);
       
+      yPos += 10;
       doc.setFont(undefined, 'normal');
-      doc.text(t('male') + ': ' + male, 20, 110);
-      doc.text(t('female') + ': ' + female, 20, 118);
+      doc.text(t('male') + ': ' + male, 20, yPos);
+      yPos += 8;
+      doc.text(t('female') + ': ' + female, 20, yPos);
       
+      yPos += 12;
       doc.setFont(undefined, 'bold');
       doc.setFontSize(14);
-      doc.text(t('totalAttendanceFull') + ': ' + (male + female), 20, 130);
+      doc.text(t('totalAttendanceFull') + ': ' + (male + female), 20, yPos);
       
       doc.setFontSize(8);
       doc.setFont(undefined, 'italic');
