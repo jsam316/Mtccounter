@@ -1,14 +1,1962 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MTC Counter">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="MarThoma Church attendance counter app - Track service attendance easily">
+  <meta name="theme-color" content="#1e293b">
+
+  <!-- Favicons and App Icons -->
+
+  <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231e293b' width='100' height='100'/><text y='70' font-size='70' fill='white' text-anchor='middle' x='50' font-family='Arial'>⛪</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%231e293b' width='180' height='180' rx='40'/><text y='125' font-size='100' fill='white' text-anchor='middle' x='90' font-family='Arial'>⛪</text></svg>">
+
+  <!-- jsPDF Library for PDF export -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <title>MTC Church Counter</title>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(96, 165, 250, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: backgroundMove 60s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes backgroundMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+    .container {
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(20px);
+      color: #e2e8f0;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+    h1 {
+      text-align: center;
+      color: #e2e8f0;
+      margin-bottom: 8px;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 32px;
+      font-weight: 500;
+    }
+    .top-controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
+    }
+    .dark-mode-toggle, .lang-toggle {
+      background: rgba(51, 65, 85, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      width: 48px;
+      height: 48px;
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .lang-toggle {
+      font-size: 14px;
+      font-weight: 700;
+      color: #60a5fa;
+    }
+    .dark-mode-toggle:hover, .lang-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      background: rgba(71, 85, 105, 0.8);
+    }
+    .dark-mode-toggle:active, .lang-toggle:active {
+      transform: scale(0.95);
+    }
+    .light-mode {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+    }
+    .light-mode .container {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    }
+    .light-mode h1 {
+      color: #1e293b;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .light-mode .subtitle {
+      color: #64748b;
+    }
+    .light-mode .dark-mode-toggle, .light-mode .lang-toggle {
+      background: rgba(241, 245, 249, 0.9);
+      border-color: rgba(203, 213, 225, 0.5);
+    }
+    .light-mode .dark-mode-toggle:hover, .light-mode .lang-toggle:hover {
+      background: rgba(226, 232, 240, 0.9);
+    }
+    .light-mode .lang-toggle {
+      color: #3b82f6;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .light-mode .tabs {
+      background: rgba(248, 250, 252, 0.8);
+      border-color: rgba(203, 213, 225, 0.3);
+    }
+    .tab {
+      flex: 1;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      color: #94a3b8;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tab:hover {
+      color: #cbd5e1;
+      background: rgba(51, 65, 85, 0.3);
+    }
+    .tab.active {
+      color: #60a5fa;
+      background: rgba(59, 130, 246, 0.15);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+    .light-mode .tab {
+      color: #64748b;
+    }
+    .light-mode .tab:hover {
+      color: #475569;
+      background: rgba(226, 232, 240, 0.5);
+    }
+    .light-mode .tab.active {
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .light-mode label {
+      color: #64748b;
+    }
+    input, select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid rgba(71, 85, 105, 0.3);
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(15, 23, 42, 0.4);
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+    input::placeholder {
+      color: #64748b;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #60a5fa;
+      background: rgba(15, 23, 42, 0.6);
+      box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+    }
+    .light-mode input, .light-mode select {
+      background: rgba(248, 250, 252, 0.8);
+      border-color: rgba(203, 213, 225, 0.5);
+      color: #1e293b;
+    }
+    .light-mode input::placeholder {
+      color: #94a3b8;
+    }
+    .light-mode input:focus, .light-mode select:focus {
+      background: white;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+    .verse-group {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 10px;
+    }
+    .toggle-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.3);
+      border-radius: 12px;
+      border: 2px solid rgba(71, 85, 105, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .light-mode .toggle-section {
+      background: rgba(248, 250, 252, 0.6);
+      border-color: rgba(203, 213, 225, 0.5);
+    }
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .light-mode .toggle-label {
+      color: #64748b;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 26px;
+      background: rgba(71, 85, 105, 0.5);
+      border-radius: 13px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid rgba(148, 163, 184, 0.3);
+    }
+    .light-mode .toggle-switch {
+      background: rgba(203, 213, 225, 0.5);
+      border-color: rgba(203, 213, 225, 0.6);
+    }
+    .toggle-switch.active {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      border-color: #60a5fa;
+    }
+    .toggle-slider {
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(22px);
+    }
+    .co-celebrants-field {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.3s ease;
+      opacity: 0;
+      margin-bottom: 0;
+    }
+    .co-celebrants-field.active {
+      max-height: 200px;
+      opacity: 1;
+      margin-bottom: 20px;
+    }
+    .total-box {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .light-mode .total-box {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+    .total-title {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 16px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .light-mode .total-title {
+      color: #64748b;
+    }
+    .total-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .total-item {
+      text-align: center;
+    }
+    .total-label {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .light-mode .total-label {
+      color: #64748b;
+    }
+    .total-number {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .male-total { 
+      color: #60a5fa;
+      text-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
+    }
+    .female-total { 
+      color: #c084fc;
+      text-shadow: 0 0 20px rgba(192, 132, 252, 0.3);
+    }
+    .grand-total { 
+      color: #e2e8f0;
+      text-shadow: 0 0 20px rgba(226, 232, 240, 0.2);
+    }
+    .light-mode .male-total { 
+      color: #3b82f6;
+      text-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    }
+    .light-mode .female-total { 
+      color: #a855f7;
+      text-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+    }
+    .light-mode .grand-total { 
+      color: #1e293b;
+      text-shadow: none;
+    }
+    .counter-box {
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+      border: 2px solid;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .counter-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.3);
+    }
+    .male-box {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.1) 100%);
+      border-color: rgba(96, 165, 250, 0.3);
+    }
+    .female-box {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(192, 132, 252, 0.1) 100%);
+      border-color: rgba(192, 132, 252, 0.3);
+    }
+    .light-mode .male-box {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(96, 165, 250, 0.05) 100%);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    .light-mode .female-box {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(192, 132, 252, 0.05) 100%);
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+    .counter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .counter-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .male-title { color: #60a5fa; }
+    .female-title { color: #c084fc; }
+    .light-mode .male-title { color: #3b82f6; }
+    .light-mode .female-title { color: #a855f7; }
+    .counter-value {
+      font-size: 40px;
+      font-weight: 700;
+    }
+    .counter-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    button {
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .male-minus, .female-minus {
+      background: rgba(15, 23, 42, 0.6);
+      border: 2px solid;
+    }
+    .male-minus {
+      color: #60a5fa;
+      border-color: #60a5fa;
+    }
+    .female-minus {
+      color: #c084fc;
+      border-color: #c084fc;
+    }
+    .male-plus {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+    }
+    .female-plus {
+      background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+      color: white;
+    }
+    .light-mode .male-minus, .light-mode .female-minus {
+      background: white;
+    }
+    .light-mode .male-minus {
+      color: #3b82f6;
+      border-color: #3b82f6;
+    }
+    .light-mode .female-minus {
+      color: #a855f7;
+      border-color: #a855f7;
+    }
+    .save-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    .reset-btn {
+      width: 100%;
+      background: rgba(71, 85, 105, 0.4);
+      color: #e2e8f0;
+      margin-bottom: 12px;
+      font-size: 16px;
+      border: 2px solid rgba(148, 163, 184, 0.2);
+    }
+    .export-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      color: white;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    .pdf-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      color: white;
+      font-size: 16px;
+    }
+    .light-mode .reset-btn {
+      background: rgba(241, 245, 249, 0.8);
+      color: #475569;
+      border-color: rgba(203, 213, 225, 0.5);
+    }
+    .success-msg {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      margin-top: 16px;
+      font-weight: 600;
+      display: none;
+      animation: slideDown 0.3s ease-out;
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .history-list {
+      max-height: 500px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+    .history-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    .history-list::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.3);
+      border-radius: 10px;
+    }
+    .history-list::-webkit-scrollbar-thumb {
+      background: rgba(96, 165, 250, 0.4);
+      border-radius: 10px;
+    }
+    .history-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(96, 165, 250, 0.6);
+    }
+    .history-item {
+      background: rgba(15, 23, 42, 0.4);
+      border: 2px solid rgba(71, 85, 105, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .history-item:hover {
+      background: rgba(15, 23, 42, 0.6);
+      border-color: #60a5fa;
+      transform: translateX(4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    .light-mode .history-item {
+      background: rgba(248, 250, 252, 0.8);
+      border-color: rgba(203, 213, 225, 0.5);
+    }
+    .light-mode .history-item:hover {
+      background: white;
+      border-color: #3b82f6;
+    }
+    .history-date {
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    .light-mode .history-date {
+      color: #3b82f6;
+    }
+    .history-details {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.8;
+    }
+    .light-mode .history-details {
+      color: #64748b;
+    }
+    .history-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .history-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .load-btn {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+    }
+    .delete-btn {
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      color: white;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #64748b;
+    }
+    .empty-state p:first-child {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .offline-indicator {
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 999;
+      animation: pulse 2s infinite;
+      backdrop-filter: blur(10px);
+    }
+    .offline-indicator.show {
+      display: flex;
+    }
+    .offline-indicator.online {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+      animation: none;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    .sync-status {
+      position: fixed;
+      top: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 998;
+      backdrop-filter: blur(10px);
+    }
+    .sync-status.show {
+      display: flex;
+      animation: slideDown 0.3s ease-out;
+    }
+    .install-prompt {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+      padding: 20px 24px;
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+      display: none;
+      align-items: center;
+      gap: 16px;
+      z-index: 1000;
+      animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    @keyframes slideUp {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .install-prompt.show {
+      display: flex;
+    }
+    .install-content {
+      flex: 1;
+    }
+    .install-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+    .install-text {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .install-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .install-btn {
+      background: white;
+      color: #3b82f6;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .install-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+    }
+    .install-close {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .install-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+      .container {
+        padding: 24px;
+      }
+      h1 {
+        font-size: 28px;
+      }
+      .counter-value {
+        font-size: 36px;
+      }
+      .total-number {
+        font-size: 32px;
+      }
+    }
+    .swipe-indicator {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 48px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1001;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    }
+    .swipe-indicator.left {
+      left: 30px;
+    }
+    .swipe-indicator.right {
+      right: 30px;
+    }
+    .swipe-indicator.show {
+      opacity: 0.8;
+      animation: swipePulse 0.5s ease-out;
+    }
+    @keyframes swipePulse {
+      0% {
+        transform: translateY(-50%) scale(0.5);
+        opacity: 0;
+      }
+      50% {
+        transform: translateY(-50%) scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 0.8;
+      }
+    }
+    .haptic-pulse {
+      animation: hapticPulse 0.3s ease-out;
+    }
+    @keyframes hapticPulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(0.95);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+  </style>
 </head>
 <body>
-    <div id="app">
-        <h1>Hello World</h1>
-        <p class="example">This is an example.</p>
+  <div class="top-controls">
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Light/Dark Mode">☀️</button>
+    <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle Language">EN</button>
+  </div>
+
+  <!-- Offline Indicator -->
+
+  <div id="offlineIndicator" class="offline-indicator">
+    <span>🔴</span>
+    <span data-i18n="offline">Offline</span>
+  </div>
+
+  <!-- Sync Status -->
+
+  <div id="syncStatus" class="sync-status">
+    <span>🔄</span>
+    <span data-i18n="syncing">Syncing...</span>
+  </div>
+
+  <!-- Swipe Indicators -->
+
+  <div id="swipeLeft" class="swipe-indicator left">👈</div>
+  <div id="swipeRight" class="swipe-indicator right">👉</div>
+
+  <div class="container">
+    <h1><span data-i18n="appTitle">⛪ MTC Counter</span></h1>
+    <div class="subtitle" data-i18n="appSubtitle">MarThoma Church Attendance Tracker</div>
+
+```
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('counter')"><span data-i18n="counterTab">📊 Counter</span></button>
+  <button class="tab" onclick="switchTab('history')"><span data-i18n="historyTab">📅 History</span></button>
+</div>
+
+<!-- Counter Tab -->
+<div id="counterTab" class="tab-content active">
+  <div class="input-group">
+    <label data-i18n="parishLabel">⛪ Parish Name</label>
+    <input type="text" id="parishName" data-i18n-placeholder="parishPlaceholder" placeholder="Enter parish name">
+  </div>
+
+  <div class="input-group">
+    <label data-i18n="themeLabel">🎨 Theme</label>
+    <select id="theme">
+      <option value="default" data-i18n="themePurpleBlue">Purple & Blue</option>
+      <option value="ocean" data-i18n="themeOcean">Ocean</option>
+      <option value="sunset" data-i18n="themeSunset">Sunset</option>
+      <option value="forest" data-i18n="themeForest">Forest</option>
+    </select>
+  </div>
+
+  <div class="input-group">
+    <label data-i18n="dateLabel">📅 Date</label>
+    <input type="date" id="date">
+  </div>
+
+  <div class="input-group">
+    <label data-i18n="celebrantLabel">👤 Celebrant Name</label>
+    <input type="text" id="celebrant" data-i18n-placeholder="celebrantPlaceholder" placeholder="Enter celebrant name">
+  </div>
+
+  <div class="toggle-section">
+    <div class="toggle-label">
+      <span data-i18n="coCelebrantsLabel">👥 Co-Celebrants</span>
     </div>
+    <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()">
+      <div class="toggle-slider"></div>
+    </div>
+  </div>
+
+  <div class="co-celebrants-field" id="coCelebrantsField">
+    <div class="input-group">
+      <label data-i18n="coCelebrantsInputLabel">👥 Co-Celebrants Names</label>
+      <input type="text" id="coCelebrants" data-i18n-placeholder="coCelebrantsPlaceholder" placeholder="Enter co-celebrants names (comma separated)">
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label data-i18n="sermonLabel">📖 Sermon Title</label>
+    <input type="text" id="sermon" data-i18n-placeholder="sermonPlaceholder" placeholder="Enter sermon title">
+  </div>
+
+  <div class="input-group">
+    <label data-i18n="scriptureLabel">📜 Scripture Reference</label>
+    <div class="verse-group">
+      <select id="book">
+        <option value="" data-i18n="selectBook">Select Book</option>
+        <option value="Genesis">Genesis</option>
+        <option value="Exodus">Exodus</option>
+        <option value="Leviticus">Leviticus</option>
+        <option value="Numbers">Numbers</option>
+        <option value="Deuteronomy">Deuteronomy</option>
+        <option value="Joshua">Joshua</option>
+        <option value="Judges">Judges</option>
+        <option value="Ruth">Ruth</option>
+        <option value="1 Samuel">1 Samuel</option>
+        <option value="2 Samuel">2 Samuel</option>
+        <option value="1 Kings">1 Kings</option>
+        <option value="2 Kings">2 Kings</option>
+        <option value="1 Chronicles">1 Chronicles</option>
+        <option value="2 Chronicles">2 Chronicles</option>
+        <option value="Ezra">Ezra</option>
+        <option value="Nehemiah">Nehemiah</option>
+        <option value="Esther">Esther</option>
+        <option value="Job">Job</option>
+        <option value="Psalms">Psalms</option>
+        <option value="Proverbs">Proverbs</option>
+        <option value="Ecclesiastes">Ecclesiastes</option>
+        <option value="Song of Solomon">Song of Solomon</option>
+        <option value="Isaiah">Isaiah</option>
+        <option value="Jeremiah">Jeremiah</option>
+        <option value="Lamentations">Lamentations</option>
+        <option value="Ezekiel">Ezekiel</option>
+        <option value="Daniel">Daniel</option>
+        <option value="Hosea">Hosea</option>
+        <option value="Joel">Joel</option>
+        <option value="Amos">Amos</option>
+        <option value="Obadiah">Obadiah</option>
+        <option value="Jonah">Jonah</option>
+        <option value="Micah">Micah</option>
+        <option value="Nahum">Nahum</option>
+        <option value="Habakkuk">Habakkuk</option>
+        <option value="Zephaniah">Zephaniah</option>
+        <option value="Haggai">Haggai</option>
+        <option value="Zechariah">Zechariah</option>
+        <option value="Malachi">Malachi</option>
+        <option value="Matthew">Matthew</option>
+        <option value="Mark">Mark</option>
+        <option value="Luke">Luke</option>
+        <option value="John">John</option>
+        <option value="Acts">Acts</option>
+        <option value="Romans">Romans</option>
+        <option value="1 Corinthians">1 Corinthians</option>
+        <option value="2 Corinthians">2 Corinthians</option>
+        <option value="Galatians">Galatians</option>
+        <option value="Ephesians">Ephesians</option>
+        <option value="Philippians">Philippians</option>
+        <option value="Colossians">Colossians</option>
+        <option value="1 Thessalonians">1 Thessalonians</option>
+        <option value="2 Thessalonians">2 Thessalonians</option>
+        <option value="1 Timothy">1 Timothy</option>
+        <option value="2 Timothy">2 Timothy</option>
+        <option value="Titus">Titus</option>
+        <option value="Philemon">Philemon</option>
+        <option value="Hebrews">Hebrews</option>
+        <option value="James">James</option>
+        <option value="1 Peter">1 Peter</option>
+        <option value="2 Peter">2 Peter</option>
+        <option value="1 John">1 John</option>
+        <option value="2 John">2 John</option>
+        <option value="3 John">3 John</option>
+        <option value="Jude">Jude</option>
+        <option value="Revelation">Revelation</option>
+      </select>
+      <input type="number" id="chapter" data-i18n-placeholder="chPlaceholder" placeholder="Ch" min="1">
+      <input type="text" id="verse" data-i18n-placeholder="versePlaceholder" placeholder="Verse">
+    </div>
+  </div>
+
+  <div class="total-box">
+    <div class="total-title" data-i18n="totalAttendance">Total Attendance</div>
+    <div class="total-grid">
+      <div class="total-item">
+        <div class="total-label" data-i18n="male">Male</div>
+        <div class="total-number male-total" id="maleTotal">0</div>
+      </div>
+      <div class="total-item">
+        <div class="total-label" data-i18n="female">Female</div>
+        <div class="total-number female-total" id="femaleTotal">0</div>
+      </div>
+      <div class="total-item">
+        <div class="total-label" data-i18n="total">Total</div>
+        <div class="total-number grand-total" id="grandTotal">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="counter-box male-box">
+    <div class="counter-header">
+      <span class="counter-title male-title"><span data-i18n="maleCounter">👨 Male</span></span>
+      <span class="counter-value male-total" id="maleCount">0</span>
+    </div>
+    <div class="counter-buttons">
+      <button class="male-minus" onclick="changeMale(-1)">−</button>
+      <button class="male-plus" onclick="changeMale(1)">+</button>
+    </div>
+  </div>
+
+  <div class="counter-box female-box">
+    <div class="counter-header">
+      <span class="counter-title female-title"><span data-i18n="femaleCounter">👩 Female</span></span>
+      <span class="counter-value female-total" id="femaleCount">0</span>
+    </div>
+    <div class="counter-buttons">
+      <button class="female-minus" onclick="changeFemale(-1)">−</button>
+      <button class="female-plus" onclick="changeFemale(1)">+</button>
+    </div>
+  </div>
+
+  <button class="save-btn" onclick="saveRecord()"><span data-i18n="saveBtn">💾 Save Record</span></button>
+  <button class="reset-btn" onclick="reset()"><span data-i18n="resetBtn">🔄 Reset Counters</span></button>
+  <button class="export-btn" onclick="exportData()"><span data-i18n="exportBtn">📤 Export as Text</span></button>
+  <button class="pdf-btn" onclick="exportPDF()"><span data-i18n="pdfBtn">📄 Export as PDF</span></button>
+  
+  <div id="successMsg" class="success-msg">
+    <span data-i18n="successMsg">✓ Saved successfully!</span>
+  </div>
+</div>
+
+<!-- History Tab -->
+<div id="historyTab" class="tab-content">
+  <div id="historyList" class="history-list">
+    <div class="empty-state">
+      <p>📋</p>
+      <p style="font-size: 16px; font-weight: 600;" data-i18n="noRecords">No records yet</p>
+      <p style="font-size: 14px; margin-top: 8px; opacity: 0.7;" data-i18n="noRecordsDesc">Save your first service record to see it here!</p>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Install Prompt -->
+
+  <div id="installPrompt" class="install-prompt">
+    <div class="install-content">
+      <div class="install-title" data-i18n="installTitle">📱 Install MTC Counter</div>
+      <div class="install-text" data-i18n="installText">Add to home screen for quick access & offline use</div>
+    </div>
+    <div class="install-buttons">
+      <button class="install-btn" onclick="installApp()" data-i18n="installBtn">Install</button>
+      <button class="install-btn install-close" onclick="closeInstallPrompt()">✕</button>
+    </div>
+  </div>
+
+  <script>
+    // Language Translations
+    const translations = {
+      en: {
+        appTitle: "⛪ MTC Counter",
+        appSubtitle: "MarThoma Church Attendance Tracker",
+        counterTab: "📊 Counter",
+        historyTab: "📅 History",
+        parishLabel: "⛪ Parish Name",
+        parishPlaceholder: "Enter parish name",
+        themeLabel: "🎨 Theme",
+        themePurpleBlue: "Purple & Blue",
+        themeOcean: "Ocean",
+        themeSunset: "Sunset",
+        themeForest: "Forest",
+        dateLabel: "📅 Date",
+        celebrantLabel: "👤 Celebrant Name",
+        celebrantPlaceholder: "Enter celebrant name",
+        sermonLabel: "📖 Sermon Title",
+        sermonPlaceholder: "Enter sermon title",
+        scriptureLabel: "📜 Scripture Reference",
+        selectBook: "Select Book",
+        chPlaceholder: "Ch",
+        versePlaceholder: "Verse",
+        totalAttendance: "Total Attendance",
+        male: "Male",
+        female: "Female",
+        total: "Total",
+        maleCounter: "👨 Male",
+        femaleCounter: "👩 Female",
+        saveBtn: "💾 Save Record",
+        resetBtn: "🔄 Reset Counters",
+        exportBtn: "📤 Export as Text",
+        pdfBtn: "📄 Export as PDF",
+        successMsg: "✓ Saved successfully!",
+        noRecords: "No records yet",
+        noRecordsDesc: "Save your first service record to see it here!",
+        offline: "Offline",
+        online: "Online",
+        syncing: "Syncing...",
+        synced: "Synced!",
+        installTitle: "📱 Install MTC Counter",
+        installText: "Add to home screen for quick access & offline use",
+        installBtn: "Install",
+        loadBtn: "📥 Load",
+        deleteBtn: "🗑️ Delete",
+        parish: "Parish",
+        celebrant: "Celebrant",
+        sermon: "Sermon",
+        scripture: "Scripture",
+        attendance: "Attendance",
+        notSpecified: "Not specified",
+        resetConfirm: "Reset all counters to 0?",
+        deleteConfirm: "Are you sure you want to delete this record?",
+        selectDateFirst: "Please select a date first!",
+        copiedToClipboard: "✓ Copied to clipboard!",
+        pdfDownloaded: "✓ PDF downloaded!",
+        serviceDetails: "Service Details",
+        attendanceSummary: "Attendance Summary",
+        totalAttendanceFull: "Total Attendance",
+        coCelebrantsLabel: "👥 Co-Celebrants",
+        coCelebrantsInputLabel: "👥 Co-Celebrants Names",
+        coCelebrantsPlaceholder: "Enter co-celebrants names (comma separated)"
+      },
+      ml: {
+        appTitle: "⛪ എം.ടി.സി കൗണ്ടർ",
+        appSubtitle: "മാർത്തോമ്മാ പള്ളി ഹാജർ ട്രാക്കർ",
+        counterTab: "📊 കൗണ്ടർ",
+        historyTab: "📅 ചരിത്രം",
+        parishLabel: "⛪ ഇടവക പേര്",
+        parishPlaceholder: "ഇടവക പേര് നൽകുക",
+        themeLabel: "🎨 തീം",
+        themePurpleBlue: "പർപ്പിൾ & നീല",
+        themeOcean: "സമുദ്രം",
+        themeSunset: "സൂര്യാസ്തമയം",
+        themeForest: "വനം",
+        dateLabel: "📅 തീയതി",
+        celebrantLabel: "👤 കാര്യസ്ഥന്റെ പേര്",
+        celebrantPlaceholder: "കാര്യസ്ഥന്റെ പേര് നൽകുക",
+        sermonLabel: "📖 പ്രഭാഷണ ശീർഷകം",
+        sermonPlaceholder: "പ്രഭാഷണ ശീർഷകം നൽകുക",
+        scriptureLabel: "📜 തിരുവെഴുത്ത് റഫറൻസ്",
+        selectBook: "പുസ്തകം തിരഞ്ഞെടുക്കുക",
+        chPlaceholder: "അദ്ധ്യാ",
+        versePlaceholder: "വാക്യം",
+        totalAttendance: "മൊത്തം ഹാജർ",
+        male: "പുരുഷൻ",
+        female: "സ്ത്രീ",
+        total: "മൊത്തം",
+        maleCounter: "👨 പുരുഷൻ",
+        femaleCounter: "👩 സ്ത്രീ",
+        saveBtn: "💾 റെക്കോർഡ് സേവ് ചെയ്യുക",
+        resetBtn: "🔄 കൗണ്ടറുകൾ റീസെറ്റ് ചെയ്യുക",
+        exportBtn: "📤 ടെക്സ്റ്റായി എക്സ്പോർട്ട് ചെയ്യുക",
+        pdfBtn: "📄 പിഡിഎഫ് ആയി എക്സ്പോർട്ട് ചെയ്യുക",
+        successMsg: "✓ വിജയകരമായി സേവ് ചെയ്തു!",
+        noRecords: "ഇതുവരെ റെക്കോർഡുകളൊന്നുമില്ല",
+        noRecordsDesc: "നിങ്ങളുടെ ആദ്യ സേവാ റെക്കോർഡ് ഇവിടെ കാണാൻ സേവ് ചെയ്യുക!",
+        offline: "ഓഫ്‌ലൈൻ",
+        online: "ഓൺലൈൻ",
+        syncing: "സമന്വയിപ്പിക്കുന്നു...",
+        synced: "സമന്വയിപ്പിച്ചു!",
+        installTitle: "📱 എം.ടി.സി കൗണ്ടർ ഇൻസ്റ്റാൾ ചെയ്യുക",
+        installText: "വേഗത്തിലുള്ള ആക്സസ്സിനും ഓഫ്‌ലൈൻ ഉപയോഗത്തിനുമായി ഹോം സ്ക്രീനിലേക്ക് ചേർക്കുക",
+        installBtn: "ഇൻസ്റ്റാൾ ചെയ്യുക",
+        loadBtn: "📥 ലോഡ് ചെയ്യുക",
+        deleteBtn: "🗑️ ഇല്ലാതാക്കുക",
+        parish: "ഇടവക",
+        celebrant: "കാര്യസ്ഥൻ",
+        sermon: "പ്രഭാഷണം",
+        scripture: "തിരുവെഴുത്ത്",
+        attendance: "ഹാജർ",
+        notSpecified: "വ്യക്തമാക്കിയിട്ടില്ല",
+        resetConfirm: "എല്ലാ കൗണ്ടറുകളും 0 ആക്കണോ?",
+        deleteConfirm: "ഈ റെക്കോർഡ് ഇല്ലാതാക്കണമെന്ന് തീർച്ചയാണോ?",
+        selectDateFirst: "ദയവായി ആദ്യം ഒരു തീയതി തിരഞ്ഞെടുക്കുക!",
+        copiedToClipboard: "✓ ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി!",
+        pdfDownloaded: "✓ പിഡിഎഫ് ഡൗൺലോഡ് ചെയ്തു!",
+        serviceDetails: "സേവന വിശദാംശങ്ങൾ",
+        attendanceSummary: "ഹാജർ സംഗ്രഹം",
+        totalAttendanceFull: "മൊത്തം ഹാജർ",
+        coCelebrantsLabel: "👥 സഹ-കാര്യസ്ഥന്മാർ",
+        coCelebrantsInputLabel: "👥 സഹ-കാര്യസ്ഥന്മാരുടെ പേരുകൾ",
+        coCelebrantsPlaceholder: "സഹ-കാര്യസ്ഥന്മാരുടെ പേരുകൾ നൽകുക (കോമയാൽ വേർതിരിച്ച്)"
+      }
+    };
+
+    let currentLang = localStorage.getItem('language') || 'en';
+    var male = 0;
+    var female = 0;
+    var deferredPrompt;
+    var touchStartX = 0;
+    var touchEndX = 0;
+    var touchStartY = 0;
+    var touchEndY = 0;
+
+    // Initialize language
+    document.addEventListener('DOMContentLoaded', function() {
+      updateLanguage();
+      initCoCelebrantsToggle();
+    });
+
+    // Set today's date
+    document.getElementById('date').valueAsDate = new Date();
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'en' ? 'ml' : 'en';
+      localStorage.setItem('language', currentLang);
+      updateLanguage();
+      triggerHaptic('light');
+    }
+
+    function updateLanguage() {
+      document.querySelector('.lang-toggle').textContent = currentLang === 'en' ? 'ML' : 'EN';
+      
+      // Update all elements with data-i18n attribute
+      document.querySelectorAll('[data-i18n]').forEach(function(element) {
+        const key = element.getAttribute('data-i18n');
+        if (translations[currentLang][key]) {
+          element.textContent = translations[currentLang][key];
+        }
+      });
+
+      // Update placeholders
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(function(element) {
+        const key = element.getAttribute('data-i18n-placeholder');
+        if (translations[currentLang][key]) {
+          element.placeholder = translations[currentLang][key];
+        }
+      });
+
+      // Update select options
+      document.querySelectorAll('option[data-i18n]').forEach(function(element) {
+        const key = element.getAttribute('data-i18n');
+        if (translations[currentLang][key]) {
+          element.textContent = translations[currentLang][key];
+        }
+      });
+
+      // Refresh history display to update language
+      if (document.getElementById('historyTab').classList.contains('active')) {
+        displayHistory();
+      }
+    }
+
+    function t(key) {
+      return translations[currentLang][key] || translations['en'][key] || key;
+    }
+
+    function toggleCoCelebrants() {
+      var toggle = document.getElementById('coCelebrantsToggle');
+      var field = document.getElementById('coCelebrantsField');
+      var isActive = toggle.classList.contains('active');
+      
+      if (isActive) {
+        toggle.classList.remove('active');
+        field.classList.remove('active');
+        localStorage.setItem('coCelebrantsEnabled', 'false');
+      } else {
+        toggle.classList.add('active');
+        field.classList.add('active');
+        localStorage.setItem('coCelebrantsEnabled', 'true');
+      }
+      
+      triggerHaptic('light');
+    }
+
+    // Initialize co-celebrants toggle state
+    function initCoCelebrantsToggle() {
+      var enabled = localStorage.getItem('coCelebrantsEnabled') === 'true';
+      if (enabled) {
+        document.getElementById('coCelebrantsToggle').classList.add('active');
+        document.getElementById('coCelebrantsField').classList.add('active');
+      }
+    }
+
+    // Haptic Feedback Function
+    function triggerHaptic(style) {
+      if ('vibrate' in navigator) {
+        switch(style) {
+          case 'light':
+            navigator.vibrate(10);
+            break;
+          case 'medium':
+            navigator.vibrate(20);
+            break;
+          case 'heavy':
+            navigator.vibrate(30);
+            break;
+          case 'success':
+            navigator.vibrate([10, 50, 10]);
+            break;
+          case 'error':
+            navigator.vibrate([20, 100, 20]);
+            break;
+          case 'double':
+            navigator.vibrate([15, 30, 15]);
+            break;
+          default:
+            navigator.vibrate(15);
+        }
+      }
+    }
+
+    // Add haptic pulse animation to element
+    function addHapticAnimation(element) {
+      element.classList.add('haptic-pulse');
+      setTimeout(function() {
+        element.classList.remove('haptic-pulse');
+      }, 300);
+    }
+
+    // Swipe Detection
+    function handleSwipeGesture() {
+      var swipeThreshold = 100;
+      var swipeDistance = touchEndX - touchStartX;
+      var verticalDistance = Math.abs(touchEndY - touchStartY);
+      
+      if (verticalDistance < 100 && Math.abs(swipeDistance) > swipeThreshold) {
+        if (swipeDistance > 0) {
+          if (!document.getElementById('counterTab').classList.contains('active')) {
+            switchTab('counter');
+            showSwipeIndicator('right');
+            triggerHaptic('medium');
+          }
+        } else {
+          if (!document.getElementById('historyTab').classList.contains('active')) {
+            switchTab('history');
+            showSwipeIndicator('left');
+            triggerHaptic('medium');
+          }
+        }
+      }
+    }
+
+    function showSwipeIndicator(direction) {
+      var indicator = document.getElementById('swipe' + (direction === 'left' ? 'Left' : 'Right'));
+      indicator.classList.add('show');
+      setTimeout(function() {
+        indicator.classList.remove('show');
+      }, 500);
+    }
+
+    document.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      handleSwipeGesture();
+    }, { passive: true });
+
+    function changeMale(amount) {
+      male = Math.max(0, male + amount);
+      updateDisplay();
+      triggerHaptic(amount > 0 ? 'light' : 'medium');
+      addHapticAnimation(document.getElementById('maleCount'));
+    }
+
+    function changeFemale(amount) {
+      female = Math.max(0, female + amount);
+      updateDisplay();
+      triggerHaptic(amount > 0 ? 'light' : 'medium');
+      addHapticAnimation(document.getElementById('femaleCount'));
+    }
+
+    function updateDisplay() {
+      document.getElementById('maleCount').textContent = male;
+      document.getElementById('femaleCount').textContent = female;
+      document.getElementById('maleTotal').textContent = male;
+      document.getElementById('femaleTotal').textContent = female;
+      document.getElementById('grandTotal').textContent = male + female;
+    }
+
+    function reset() {
+      if (confirm(t('resetConfirm'))) {
+        male = 0;
+        female = 0;
+        updateDisplay();
+        triggerHaptic('double');
+      }
+    }
+
+    function saveRecord() {
+      var date = document.getElementById('date').value;
+      if (!date) {
+        alert(t('selectDateFirst'));
+        return;
+      }
+
+      var parishName = document.getElementById('parishName').value || t('notSpecified');
+      var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
+      var sermon = document.getElementById('sermon').value || t('notSpecified');
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = t('notSpecified');
+      }
+
+      var record = {
+        date: date,
+        parishName: parishName,
+        celebrant: celebrant,
+        coCelebrants: coCelebrants,
+        sermon: sermon,
+        scripture: scripture,
+        male: male,
+        female: female,
+        total: male + female,
+        timestamp: new Date().toISOString()
+      };
+
+      var history = getHistory();
+      history = history.filter(function(r) { return r.date !== date; });
+      history.unshift(record);
+      saveHistory(history);
+
+      var msg = document.getElementById('successMsg');
+      msg.style.display = 'block';
+      triggerHaptic('success');
+      setTimeout(function() {
+        msg.style.display = 'none';
+      }, 3000);
+
+      displayHistory();
+    }
+
+    function getHistory() {
+      var history = localStorage.getItem('mtcHistory');
+      return history ? JSON.parse(history) : [];
+    }
+
+    function saveHistory(records) {
+      localStorage.setItem('mtcHistory', JSON.stringify(records));
+    }
+
+    function displayHistory() {
+      var history = getHistory();
+      var listEl = document.getElementById('historyList');
+      
+      if (history.length === 0) {
+        listEl.innerHTML = '<div class="empty-state"><p>📋</p><p style="font-size: 16px; font-weight: 600;">' + t('noRecords') + '</p><p style="font-size: 14px; margin-top: 8px; opacity: 0.7;">' + t('noRecordsDesc') + '</p></div>';
+        return;
+      }
+
+      var html = '';
+      history.forEach(function(record, index) {
+        var dateObj = new Date(record.date + 'T00:00:00');
+        var formattedDate = dateObj.toLocaleDateString(currentLang === 'ml' ? 'ml-IN' : 'en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        html += '<div class="history-item">';
+        html += '<div class="history-date">' + formattedDate + '</div>';
+        html += '<div class="history-details">';
+        html += '<strong>' + t('parish') + ':</strong> ' + record.parishName + '<br>';
+        html += '<strong>' + t('celebrant') + ':</strong> ' + record.celebrant + '<br>';
+        if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
+          html += '<strong>' + t('coCelebrantsLabel') + ':</strong> ' + record.coCelebrants + '<br>';
+        }
+        html += '<strong>' + t('sermon') + ':</strong> ' + record.sermon + '<br>';
+        html += '<strong>' + t('scripture') + ':</strong> ' + record.scripture + '<br>';
+        html += '<strong>' + t('attendance') + ':</strong> ' + t('male') + ': ' + record.male + ', ' + t('female') + ': ' + record.female + ', ' + t('total') + ': ' + record.total;
+        html += '</div>';
+        html += '<div class="history-actions">';
+        html += '<button class="history-btn load-btn" onclick="loadRecord(' + index + ')">' + t('loadBtn') + '</button>';
+        html += '<button class="history-btn delete-btn" onclick="deleteRecord(' + index + ')">' + t('deleteBtn') + '</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+
+      listEl.innerHTML = html;
+    }
+
+    function loadRecord(index) {
+      var history = getHistory();
+      var record = history[index];
+      
+      document.getElementById('date').value = record.date;
+      document.getElementById('parishName').value = record.parishName === t('notSpecified') ? '' : record.parishName;
+      document.getElementById('celebrant').value = record.celebrant === t('notSpecified') ? '' : record.celebrant;
+      
+      // Handle co-celebrants
+      if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
+        document.getElementById('coCelebrants').value = record.coCelebrants;
+        if (!document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+          toggleCoCelebrants();
+        }
+      } else {
+        document.getElementById('coCelebrants').value = '';
+      }
+      
+      document.getElementById('sermon').value = record.sermon === t('notSpecified') ? '' : record.sermon;
+      
+      if (record.scripture && record.scripture !== t('notSpecified')) {
+        var parts = record.scripture.split(' ');
+        var bookName = parts.slice(0, -1).join(' ');
+        var chapterVerse = parts[parts.length - 1];
+        
+        if (chapterVerse) {
+          var cv = chapterVerse.split(':');
+          document.getElementById('book').value = bookName;
+          document.getElementById('chapter').value = cv[0] || '';
+          document.getElementById('verse').value = cv[1] || '';
+        }
+      }
+      
+      male = record.male;
+      female = record.female;
+      updateDisplay();
+      
+      switchTab('counter');
+      triggerHaptic('success');
+    }
+
+    function deleteRecord(index) {
+      if (confirm(t('deleteConfirm'))) {
+        var history = getHistory();
+        history.splice(index, 1);
+        saveHistory(history);
+        displayHistory();
+        triggerHaptic('error');
+      }
+    }
+
+    function switchTab(tab) {
+      var tabs = document.querySelectorAll('.tab');
+      tabs.forEach(function(t) {
+        t.classList.remove('active');
+      });
+      
+      document.getElementById('counterTab').classList.remove('active');
+      document.getElementById('historyTab').classList.remove('active');
+      
+      if (tab === 'counter') {
+        tabs[0].classList.add('active');
+        document.getElementById('counterTab').classList.add('active');
+      } else {
+        tabs[1].classList.add('active');
+        document.getElementById('historyTab').classList.add('active');
+        displayHistory();
+      }
+      
+      triggerHaptic('light');
+    }
+
+    function exportData() {
+      var date = document.getElementById('date').value;
+      var parishName = document.getElementById('parishName').value || t('notSpecified');
+      var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
+      var sermon = document.getElementById('sermon').value || t('notSpecified');
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = t('notSpecified');
+      }
+      
+      var dateObj = new Date(date + 'T00:00:00');
+      var formattedDate = dateObj.toLocaleDateString(currentLang === 'ml' ? 'ml-IN' : 'en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      var text = t('serviceDetails') + ' - ' + formattedDate + '\n\n' +
+                 t('parish') + ': ' + parishName + '\n' +
+                 t('celebrant') + ': ' + celebrant + '\n';
+      
+      if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
+        text += t('coCelebrantsLabel') + ': ' + coCelebrants + '\n';
+      }
+      
+      text += t('sermon') + ': ' + sermon + '\n' +
+              t('scripture') + ': ' + scripture + '\n\n' +
+              t('attendanceSummary') + ':\n' +
+              '• ' + t('male') + ': ' + male + '\n' +
+              '• ' + t('female') + ': ' + female + '\n' +
+              '• ' + t('totalAttendanceFull') + ': ' + (male + female);
+
+      navigator.clipboard.writeText(text).then(function() {
+        var msg = document.getElementById('successMsg');
+        msg.querySelector('[data-i18n="successMsg"]').textContent = t('copiedToClipboard');
+        msg.style.display = 'block';
+        triggerHaptic('success');
+        setTimeout(function() {
+          msg.style.display = 'none';
+          msg.querySelector('[data-i18n="successMsg"]').textContent = t('successMsg');
+        }, 3000);
+      }).catch(function(err) {
+        alert('Copy this text:\n\n' + text);
+        triggerHaptic('error');
+      });
+    }
+
+    function exportPDF() {
+      var date = document.getElementById('date').value;
+      var parishName = document.getElementById('parishName').value || t('notSpecified');
+      var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
+      var sermon = document.getElementById('sermon').value || t('notSpecified');
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = t('notSpecified');
+      }
+      
+      var dateObj = new Date(date + 'T00:00:00');
+      var formattedDate = dateObj.toLocaleDateString(currentLang === 'ml' ? 'ml-IN' : 'en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      if (typeof window.jspdf === 'undefined') {
+        alert('PDF library not loaded. Please check your internet connection and refresh the page.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      doc.setFontSize(20);
+      doc.setFont(undefined, 'bold');
+      doc.text(currentLang === 'ml' ? 'മാർത്തോമ്മാ പള്ളി' : '⛪ MarThoma Church', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.text(t('serviceDetails'), 105, 30, { align: 'center' });
+      
+      doc.setLineWidth(0.5);
+      doc.line(20, 35, 190, 35);
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(t('serviceDetails'), 20, 45);
+      
+      doc.setFont(undefined, 'normal');
+      var yPos = 55;
+      doc.text(t('dateLabel') + ': ' + formattedDate, 20, yPos);
+      yPos += 8;
+      doc.text(t('parish') + ': ' + parishName, 20, yPos);
+      yPos += 8;
+      doc.text(t('celebrant') + ': ' + celebrant, 20, yPos);
+      
+      if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
+        yPos += 8;
+        doc.text(t('coCelebrantsLabel') + ': ' + coCelebrants, 20, yPos);
+      }
+      
+      yPos += 8;
+      doc.text(t('sermon') + ': ' + sermon, 20, yPos);
+      yPos += 8;
+      doc.text(t('scripture') + ': ' + scripture, 20, yPos);
+      
+      yPos += 13;
+      doc.setFont(undefined, 'bold');
+      doc.text(t('attendanceSummary'), 20, yPos);
+      
+      yPos += 10;
+      doc.setFont(undefined, 'normal');
+      doc.text(t('male') + ': ' + male, 20, yPos);
+      yPos += 8;
+      doc.text(t('female') + ': ' + female, 20, yPos);
+      
+      yPos += 12;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(14);
+      doc.text(t('totalAttendanceFull') + ': ' + (male + female), 20, yPos);
+      
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'italic');
+      doc.text('Generated by MTC Counter App', 105, 280, { align: 'center' });
+      doc.text(new Date().toLocaleString(), 105, 285, { align: 'center' });
+      
+      var filename = 'MTC_Attendance_' + date + '.pdf';
+      doc.save(filename);
+      
+      var msg = document.getElementById('successMsg');
+      msg.querySelector('[data-i18n="successMsg"]').textContent = t('pdfDownloaded');
+      msg.style.display = 'block';
+      triggerHaptic('success');
+      setTimeout(function() {
+        msg.style.display = 'none';
+        msg.querySelector('[data-i18n="successMsg"]').textContent = t('successMsg');
+      }, 3000);
+    }
+
+    // Theme change functionality
+    document.getElementById('theme').addEventListener('change', function(e) {
+      var theme = e.target.value;
+      var themes = {
+        ocean: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+        sunset: 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
+        forest: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        default: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
+      };
+      
+      document.body.style.background = themes[theme];
+    });
+
+    // Dark mode functionality
+    function toggleDarkMode() {
+      document.body.classList.toggle('light-mode');
+      var isLight = document.body.classList.contains('light-mode');
+      var btn = document.querySelector('.dark-mode-toggle');
+      btn.textContent = isLight ? '🌙' : '☀️';
+      localStorage.setItem('darkMode', isLight ? 'disabled' : 'enabled');
+      triggerHaptic('light');
+    }
+
+    if (localStorage.getItem('darkMode') === 'disabled') {
+      document.body.classList.add('light-mode');
+      document.querySelector('.dark-mode-toggle').textContent = '🌙';
+    }
+
+    // PWA Install Prompt
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      setTimeout(function() {
+        if (!window.matchMedia('(display-mode: standalone)').matches) {
+          document.getElementById('installPrompt').classList.add('show');
+        }
+      }, 3000);
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choiceResult) {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('App installed');
+          }
+          deferredPrompt = null;
+          closeInstallPrompt();
+        });
+      }
+    }
+
+    function closeInstallPrompt() {
+      document.getElementById('installPrompt').classList.remove('show');
+      localStorage.setItem('installPromptDismissed', 'true');
+    }
+
+    if (localStorage.getItem('installPromptDismissed') === 'true') {
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+      });
+    }
+
+    // Service Worker Registration
+    // Note: Service Workers are disabled for file:// protocol
+    // To enable offline features, serve this app from a web server (http://localhost or https://)
+    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
+          const CACHE_NAME = 'mtc-counter-v2';
+          const urlsToCache = [
+            '/',
+            '/index.html'
+          ];
+          
+          self.addEventListener('install', event => {
+            console.log('Service Worker installing...');
+            event.waitUntil(
+              caches.open(CACHE_NAME).then(cache => {
+                console.log('Caching app shell');
+                return cache.addAll(urlsToCache);
+              })
+            );
+            self.skipWaiting();
+          });
+          
+          self.addEventListener('fetch', event => {
+            event.respondWith(
+              caches.match(event.request).then(response => {
+                if (response) {
+                  console.log('Serving from cache:', event.request.url);
+                  return response;
+                }
+                
+                return fetch(event.request).then(fetchResponse => {
+                  if (event.request.method !== 'GET' || 
+                      !event.request.url.startsWith(self.location.origin)) {
+                    return fetchResponse;
+                  }
+                  
+                  return caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, fetchResponse.clone());
+                    return fetchResponse;
+                  });
+                }).catch(error => {
+                  console.log('Fetch failed, serving offline page:', error);
+                  return caches.match('/');
+                });
+              })
+            );
+          });
+          
+          self.addEventListener('activate', event => {
+            console.log('Service Worker activating...');
+            event.waitUntil(
+              caches.keys().then(cacheNames => {
+                return Promise.all(
+                  cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                      console.log('Deleting old cache:', cacheName);
+                      return caches.delete(cacheName);
+                    }
+                  })
+                );
+              })
+            );
+            self.clients.claim();
+          });
+          
+          self.addEventListener('message', event => {
+            if (event.data && event.data.type === 'SKIP_WAITING') {
+              self.skipWaiting();
+            }
+          });
+        `)).then(function(registration) {
+          console.log('Service Worker registered successfully:', registration);
+          
+          setInterval(function() {
+            registration.update();
+          }, 3600000);
+        }).catch(function(error) {
+          console.log('Service Worker registration failed:', error);
+        });
+      });
+    } else if (window.location.protocol === 'file:') {
+      console.log('Service Worker disabled: app is running from file:// protocol');
+    }
+
+    // Offline/Online status
+    function updateOnlineStatus() {
+      var isOnline = navigator.onLine;
+      var indicator = document.getElementById('offlineIndicator');
+      
+      if (isOnline) {
+        indicator.classList.add('online');
+        indicator.innerHTML = '<span>🟢</span><span>' + t('online') + '</span>';
+        indicator.classList.add('show');
+        
+        setTimeout(function() {
+          indicator.classList.remove('show');
+        }, 3000);
+        
+        syncData();
+      } else {
+        indicator.classList.remove('online');
+        indicator.innerHTML = '<span>🔴</span><span>' + t('offline') + '</span>';
+        indicator.classList.add('show');
+      }
+      
+      console.log('Connection status:', isOnline ? '🟢 Online' : '🔴 Offline');
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    
+    setTimeout(function() {
+      if (!navigator.onLine) {
+        updateOnlineStatus();
+      }
+    }, 1000);
+
+    function syncData() {
+      var syncStatus = document.getElementById('syncStatus');
+      syncStatus.querySelector('[data-i18n="syncing"]').textContent = t('syncing');
+      syncStatus.classList.add('show');
+      
+      setTimeout(function() {
+        syncStatus.innerHTML = '<span>✓</span><span>' + t('synced') + '</span>';
+        syncStatus.style.background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
+        
+        setTimeout(function() {
+          syncStatus.classList.remove('show');
+          syncStatus.innerHTML = '<span>🔄</span><span data-i18n="syncing">' + t('syncing') + '</span>';
+          syncStatus.style.background = 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)';
+        }, 2000);
+      }, 1000);
+      
+      console.log('Syncing data...');
+    }
+
+    displayHistory();
+  </script>
+
 </body>
 </html>
