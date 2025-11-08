@@ -1819,7 +1819,9 @@
     }
 
     // Service Worker Registration
-    if ('serviceWorker' in navigator) {
+    // Note: Service Workers are disabled for file:// protocol
+    // To enable offline features, serve this app from a web server (http://localhost or https://)
+    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
           const CACHE_NAME = 'mtc-counter-v2';
@@ -1897,6 +1899,8 @@
           console.log('Service Worker registration failed:', error);
         });
       });
+    } else if (window.location.protocol === 'file:') {
+      console.log('Service Worker disabled: app is running from file:// protocol');
     }
 
     // Offline/Online status
