@@ -11,13 +11,14 @@
   <meta name="description" content="MarThoma Church attendance counter app - Track service attendance easily">
   <meta name="theme-color" content="#1e293b">
 
-  <!-- Favicons and App Icons -->
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
 
+  <!-- Favicons and App Icons -->
   <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231e293b' width='100' height='100'/><text y='70' font-size='70' fill='white' text-anchor='middle' x='50' font-family='Arial'>⛪</text></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%231e293b' width='180' height='180' rx='40'/><text y='125' font-size='100' fill='white' text-anchor='middle' x='90' font-family='Arial'>⛪</text></svg>">
 
   <!-- jsPDF Library for PDF export -->
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <title>MTC Church Counter</title>
@@ -847,21 +848,18 @@
   </div>
 
   <!-- Offline Indicator -->
-
   <div id="offlineIndicator" class="offline-indicator">
     <span>🔴</span>
     <span data-i18n="offline">Offline</span>
   </div>
 
   <!-- Sync Status -->
-
   <div id="syncStatus" class="sync-status">
     <span>🔄</span>
     <span data-i18n="syncing">Syncing...</span>
   </div>
 
   <!-- Swipe Indicators -->
-
   <div id="swipeLeft" class="swipe-indicator left">👈</div>
   <div id="swipeRight" class="swipe-indicator right">👉</div>
 
@@ -869,203 +867,199 @@
     <h1><span data-i18n="appTitle">⛪ MTC Counter</span></h1>
     <div class="subtitle" data-i18n="appSubtitle">MarThoma Church Attendance Tracker</div>
 
-```
-<div class="tabs">
-  <button class="tab active" onclick="switchTab('counter')"><span data-i18n="counterTab">📊 Counter</span></button>
-  <button class="tab" onclick="switchTab('history')"><span data-i18n="historyTab">📅 History</span></button>
-</div>
-
-<!-- Counter Tab -->
-<div id="counterTab" class="tab-content active">
-  <div class="input-group">
-    <label data-i18n="parishLabel">⛪ Parish Name</label>
-    <input type="text" id="parishName" data-i18n-placeholder="parishPlaceholder" placeholder="Enter parish name">
-  </div>
-
-  <div class="input-group">
-    <label data-i18n="themeLabel">🎨 Theme</label>
-    <select id="theme">
-      <option value="default" data-i18n="themePurpleBlue">Purple & Blue</option>
-      <option value="ocean" data-i18n="themeOcean">Ocean</option>
-      <option value="sunset" data-i18n="themeSunset">Sunset</option>
-      <option value="forest" data-i18n="themeForest">Forest</option>
-    </select>
-  </div>
-
-  <div class="input-group">
-    <label data-i18n="dateLabel">📅 Date</label>
-    <input type="date" id="date">
-  </div>
-
-  <div class="input-group">
-    <label data-i18n="celebrantLabel">👤 Celebrant Name</label>
-    <input type="text" id="celebrant" data-i18n-placeholder="celebrantPlaceholder" placeholder="Enter celebrant name">
-  </div>
-
-  <div class="toggle-section">
-    <div class="toggle-label">
-      <span data-i18n="coCelebrantsLabel">👥 Co-Celebrants</span>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('counter')"><span data-i18n="counterTab">📊 Counter</span></button>
+      <button class="tab" onclick="switchTab('history')"><span data-i18n="historyTab">📅 History</span></button>
     </div>
-    <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()">
-      <div class="toggle-slider"></div>
-    </div>
-  </div>
 
-  <div class="co-celebrants-field" id="coCelebrantsField">
-    <div class="input-group">
-      <label data-i18n="coCelebrantsInputLabel">👥 Co-Celebrants Names</label>
-      <input type="text" id="coCelebrants" data-i18n-placeholder="coCelebrantsPlaceholder" placeholder="Enter co-celebrants names (comma separated)">
-    </div>
-  </div>
-
-  <div class="input-group">
-    <label data-i18n="sermonLabel">📖 Sermon Title</label>
-    <input type="text" id="sermon" data-i18n-placeholder="sermonPlaceholder" placeholder="Enter sermon title">
-  </div>
-
-  <div class="input-group">
-    <label data-i18n="scriptureLabel">📜 Scripture Reference</label>
-    <div class="verse-group">
-      <select id="book">
-        <option value="" data-i18n="selectBook">Select Book</option>
-        <option value="Genesis">Genesis</option>
-        <option value="Exodus">Exodus</option>
-        <option value="Leviticus">Leviticus</option>
-        <option value="Numbers">Numbers</option>
-        <option value="Deuteronomy">Deuteronomy</option>
-        <option value="Joshua">Joshua</option>
-        <option value="Judges">Judges</option>
-        <option value="Ruth">Ruth</option>
-        <option value="1 Samuel">1 Samuel</option>
-        <option value="2 Samuel">2 Samuel</option>
-        <option value="1 Kings">1 Kings</option>
-        <option value="2 Kings">2 Kings</option>
-        <option value="1 Chronicles">1 Chronicles</option>
-        <option value="2 Chronicles">2 Chronicles</option>
-        <option value="Ezra">Ezra</option>
-        <option value="Nehemiah">Nehemiah</option>
-        <option value="Esther">Esther</option>
-        <option value="Job">Job</option>
-        <option value="Psalms">Psalms</option>
-        <option value="Proverbs">Proverbs</option>
-        <option value="Ecclesiastes">Ecclesiastes</option>
-        <option value="Song of Solomon">Song of Solomon</option>
-        <option value="Isaiah">Isaiah</option>
-        <option value="Jeremiah">Jeremiah</option>
-        <option value="Lamentations">Lamentations</option>
-        <option value="Ezekiel">Ezekiel</option>
-        <option value="Daniel">Daniel</option>
-        <option value="Hosea">Hosea</option>
-        <option value="Joel">Joel</option>
-        <option value="Amos">Amos</option>
-        <option value="Obadiah">Obadiah</option>
-        <option value="Jonah">Jonah</option>
-        <option value="Micah">Micah</option>
-        <option value="Nahum">Nahum</option>
-        <option value="Habakkuk">Habakkuk</option>
-        <option value="Zephaniah">Zephaniah</option>
-        <option value="Haggai">Haggai</option>
-        <option value="Zechariah">Zechariah</option>
-        <option value="Malachi">Malachi</option>
-        <option value="Matthew">Matthew</option>
-        <option value="Mark">Mark</option>
-        <option value="Luke">Luke</option>
-        <option value="John">John</option>
-        <option value="Acts">Acts</option>
-        <option value="Romans">Romans</option>
-        <option value="1 Corinthians">1 Corinthians</option>
-        <option value="2 Corinthians">2 Corinthians</option>
-        <option value="Galatians">Galatians</option>
-        <option value="Ephesians">Ephesians</option>
-        <option value="Philippians">Philippians</option>
-        <option value="Colossians">Colossians</option>
-        <option value="1 Thessalonians">1 Thessalonians</option>
-        <option value="2 Thessalonians">2 Thessalonians</option>
-        <option value="1 Timothy">1 Timothy</option>
-        <option value="2 Timothy">2 Timothy</option>
-        <option value="Titus">Titus</option>
-        <option value="Philemon">Philemon</option>
-        <option value="Hebrews">Hebrews</option>
-        <option value="James">James</option>
-        <option value="1 Peter">1 Peter</option>
-        <option value="2 Peter">2 Peter</option>
-        <option value="1 John">1 John</option>
-        <option value="2 John">2 John</option>
-        <option value="3 John">3 John</option>
-        <option value="Jude">Jude</option>
-        <option value="Revelation">Revelation</option>
-      </select>
-      <input type="number" id="chapter" data-i18n-placeholder="chPlaceholder" placeholder="Ch" min="1">
-      <input type="text" id="verse" data-i18n-placeholder="versePlaceholder" placeholder="Verse">
-    </div>
-  </div>
-
-  <div class="total-box">
-    <div class="total-title" data-i18n="totalAttendance">Total Attendance</div>
-    <div class="total-grid">
-      <div class="total-item">
-        <div class="total-label" data-i18n="male">Male</div>
-        <div class="total-number male-total" id="maleTotal">0</div>
+    <!-- Counter Tab -->
+    <div id="counterTab" class="tab-content active">
+      <div class="input-group">
+        <label data-i18n="parishLabel">⛪ Parish Name</label>
+        <input type="text" id="parishName" data-i18n-placeholder="parishPlaceholder" placeholder="Enter parish name">
       </div>
-      <div class="total-item">
-        <div class="total-label" data-i18n="female">Female</div>
-        <div class="total-number female-total" id="femaleTotal">0</div>
+
+      <div class="input-group">
+        <label data-i18n="themeLabel">🎨 Theme</label>
+        <select id="theme">
+          <option value="default" data-i18n="themePurpleBlue">Purple & Blue</option>
+          <option value="ocean" data-i18n="themeOcean">Ocean</option>
+          <option value="sunset" data-i18n="themeSunset">Sunset</option>
+          <option value="forest" data-i18n="themeForest">Forest</option>
+        </select>
       </div>
-      <div class="total-item">
-        <div class="total-label" data-i18n="total">Total</div>
-        <div class="total-number grand-total" id="grandTotal">0</div>
+
+      <div class="input-group">
+        <label data-i18n="dateLabel">📅 Date</label>
+        <input type="date" id="date">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="celebrantLabel">👤 Celebrant Name</label>
+        <input type="text" id="celebrant" data-i18n-placeholder="celebrantPlaceholder" placeholder="Enter celebrant name">
+      </div>
+
+      <div class="toggle-section">
+        <div class="toggle-label">
+          <span data-i18n="coCelebrantsLabel">👥 Co-Celebrants</span>
+        </div>
+        <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()">
+          <div class="toggle-slider"></div>
+        </div>
+      </div>
+
+      <div class="co-celebrants-field" id="coCelebrantsField">
+        <div class="input-group">
+          <label data-i18n="coCelebrantsInputLabel">👥 Co-Celebrants Names</label>
+          <input type="text" id="coCelebrants" data-i18n-placeholder="coCelebrantsPlaceholder" placeholder="Enter co-celebrants names (comma separated)">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="sermonLabel">📖 Sermon Title</label>
+        <input type="text" id="sermon" data-i18n-placeholder="sermonPlaceholder" placeholder="Enter sermon title">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="scriptureLabel">📜 Scripture Reference</label>
+        <div class="verse-group">
+          <select id="book">
+            <option value="" data-i18n="selectBook">Select Book</option>
+            <option value="Genesis">Genesis</option>
+            <option value="Exodus">Exodus</option>
+            <option value="Leviticus">Leviticus</option>
+            <option value="Numbers">Numbers</option>
+            <option value="Deuteronomy">Deuteronomy</option>
+            <option value="Joshua">Joshua</option>
+            <option value="Judges">Judges</option>
+            <option value="Ruth">Ruth</option>
+            <option value="1 Samuel">1 Samuel</option>
+            <option value="2 Samuel">2 Samuel</option>
+            <option value="1 Kings">1 Kings</option>
+            <option value="2 Kings">2 Kings</option>
+            <option value="1 Chronicles">1 Chronicles</option>
+            <option value="2 Chronicles">2 Chronicles</option>
+            <option value="Ezra">Ezra</option>
+            <option value="Nehemiah">Nehemiah</option>
+            <option value="Esther">Esther</option>
+            <option value="Job">Job</option>
+            <option value="Psalms">Psalms</option>
+            <option value="Proverbs">Proverbs</option>
+            <option value="Ecclesiastes">Ecclesiastes</option>
+            <option value="Song of Solomon">Song of Solomon</option>
+            <option value="Isaiah">Isaiah</option>
+            <option value="Jeremiah">Jeremiah</option>
+            <option value="Lamentations">Lamentations</option>
+            <option value="Ezekiel">Ezekiel</option>
+            <option value="Daniel">Daniel</option>
+            <option value="Hosea">Hosea</option>
+            <option value="Joel">Joel</option>
+            <option value="Amos">Amos</option>
+            <option value="Obadiah">Obadiah</option>
+            <option value="Jonah">Jonah</option>
+            <option value="Micah">Micah</option>
+            <option value="Nahum">Nahum</option>
+            <option value="Habakkuk">Habakkuk</option>
+            <option value="Zephaniah">Zephaniah</option>
+            <option value="Haggai">Haggai</option>
+            <option value="Zechariah">Zechariah</option>
+            <option value="Malachi">Malachi</option>
+            <option value="Matthew">Matthew</option>
+            <option value="Mark">Mark</option>
+            <option value="Luke">Luke</option>
+            <option value="John">John</option>
+            <option value="Acts">Acts</option>
+            <option value="Romans">Romans</option>
+            <option value="1 Corinthians">1 Corinthians</option>
+            <option value="2 Corinthians">2 Corinthians</option>
+            <option value="Galatians">Galatians</option>
+            <option value="Ephesians">Ephesians</option>
+            <option value="Philippians">Philippians</option>
+            <option value="Colossians">Colossians</option>
+            <option value="1 Thessalonians">1 Thessalonians</option>
+            <option value="2 Thessalonians">2 Thessalonians</option>
+            <option value="1 Timothy">1 Timothy</option>
+            <option value="2 Timothy">2 Timothy</option>
+            <option value="Titus">Titus</option>
+            <option value="Philemon">Philemon</option>
+            <option value="Hebrews">Hebrews</option>
+            <option value="James">James</option>
+            <option value="1 Peter">1 Peter</option>
+            <option value="2 Peter">2 Peter</option>
+            <option value="1 John">1 John</option>
+            <option value="2 John">2 John</option>
+            <option value="3 John">3 John</option>
+            <option value="Jude">Jude</option>
+            <option value="Revelation">Revelation</option>
+          </select>
+          <input type="number" id="chapter" data-i18n-placeholder="chPlaceholder" placeholder="Ch" min="1">
+          <input type="text" id="verse" data-i18n-placeholder="versePlaceholder" placeholder="Verse">
+        </div>
+      </div>
+
+      <div class="total-box">
+        <div class="total-title" data-i18n="totalAttendance">Total Attendance</div>
+        <div class="total-grid">
+          <div class="total-item">
+            <div class="total-label" data-i18n="male">Male</div>
+            <div class="total-number male-total" id="maleTotal">0</div>
+          </div>
+          <div class="total-item">
+            <div class="total-label" data-i18n="female">Female</div>
+            <div class="total-number female-total" id="femaleTotal">0</div>
+          </div>
+          <div class="total-item">
+            <div class="total-label" data-i18n="total">Total</div>
+            <div class="total-number grand-total" id="grandTotal">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="counter-box male-box">
+        <div class="counter-header">
+          <span class="counter-title male-title"><span data-i18n="maleCounter">👨 Male</span></span>
+          <span class="counter-value male-total" id="maleCount">0</span>
+        </div>
+        <div class="counter-buttons">
+          <button class="male-minus" onclick="changeMale(-1)">−</button>
+          <button class="male-plus" onclick="changeMale(1)">+</button>
+        </div>
+      </div>
+
+      <div class="counter-box female-box">
+        <div class="counter-header">
+          <span class="counter-title female-title"><span data-i18n="femaleCounter">👩 Female</span></span>
+          <span class="counter-value female-total" id="femaleCount">0</span>
+        </div>
+        <div class="counter-buttons">
+          <button class="female-minus" onclick="changeFemale(-1)">−</button>
+          <button class="female-plus" onclick="changeFemale(1)">+</button>
+        </div>
+      </div>
+
+      <button class="save-btn" onclick="saveRecord()"><span data-i18n="saveBtn">💾 Save Record</span></button>
+      <button class="reset-btn" onclick="reset()"><span data-i18n="resetBtn">🔄 Reset Counters</span></button>
+      <button class="export-btn" onclick="exportData()"><span data-i18n="exportBtn">📤 Export as Text</span></button>
+      <button class="pdf-btn" onclick="exportPDF()"><span data-i18n="pdfBtn">📄 Export as PDF</span></button>
+      
+      <div id="successMsg" class="success-msg">
+        <span data-i18n="successMsg">✓ Saved successfully!</span>
       </div>
     </div>
-  </div>
 
-  <div class="counter-box male-box">
-    <div class="counter-header">
-      <span class="counter-title male-title"><span data-i18n="maleCounter">👨 Male</span></span>
-      <span class="counter-value male-total" id="maleCount">0</span>
+    <!-- History Tab -->
+    <div id="historyTab" class="tab-content">
+      <div id="historyList" class="history-list">
+        <div class="empty-state">
+          <p>📋</p>
+          <p style="font-size: 16px; font-weight: 600;" data-i18n="noRecords">No records yet</p>
+          <p style="font-size: 14px; margin-top: 8px; opacity: 0.7;" data-i18n="noRecordsDesc">Save your first service record to see it here!</p>
+        </div>
+      </div>
     </div>
-    <div class="counter-buttons">
-      <button class="male-minus" onclick="changeMale(-1)">−</button>
-      <button class="male-plus" onclick="changeMale(1)">+</button>
-    </div>
-  </div>
-
-  <div class="counter-box female-box">
-    <div class="counter-header">
-      <span class="counter-title female-title"><span data-i18n="femaleCounter">👩 Female</span></span>
-      <span class="counter-value female-total" id="femaleCount">0</span>
-    </div>
-    <div class="counter-buttons">
-      <button class="female-minus" onclick="changeFemale(-1)">−</button>
-      <button class="female-plus" onclick="changeFemale(1)">+</button>
-    </div>
-  </div>
-
-  <button class="save-btn" onclick="saveRecord()"><span data-i18n="saveBtn">💾 Save Record</span></button>
-  <button class="reset-btn" onclick="reset()"><span data-i18n="resetBtn">🔄 Reset Counters</span></button>
-  <button class="export-btn" onclick="exportData()"><span data-i18n="exportBtn">📤 Export as Text</span></button>
-  <button class="pdf-btn" onclick="exportPDF()"><span data-i18n="pdfBtn">📄 Export as PDF</span></button>
-  
-  <div id="successMsg" class="success-msg">
-    <span data-i18n="successMsg">✓ Saved successfully!</span>
-  </div>
-</div>
-
-<!-- History Tab -->
-<div id="historyTab" class="tab-content">
-  <div id="historyList" class="history-list">
-    <div class="empty-state">
-      <p>📋</p>
-      <p style="font-size: 16px; font-weight: 600;" data-i18n="noRecords">No records yet</p>
-      <p style="font-size: 14px; margin-top: 8px; opacity: 0.7;" data-i18n="noRecordsDesc">Save your first service record to see it here!</p>
-    </div>
-  </div>
-</div>
-```
-
   </div>
 
   <!-- Install Prompt -->
-
   <div id="installPrompt" class="install-prompt">
     <div class="install-content">
       <div class="install-title" data-i18n="installTitle">📱 Install MTC Counter</div>
@@ -1818,89 +1812,25 @@
       });
     }
 
-    // Service Worker Registration
-    // Note: Service Workers are disabled for file:// protocol
-    // To enable offline features, serve this app from a web server (http://localhost or https://)
+    // Service Worker Registration for PWA
     if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('data:application/javascript;base64,' + btoa(`
-          const CACHE_NAME = 'mtc-counter-v2';
-          const urlsToCache = [
-            '/',
-            '/index.html'
-          ];
-          
-          self.addEventListener('install', event => {
-            console.log('Service Worker installing...');
-            event.waitUntil(
-              caches.open(CACHE_NAME).then(cache => {
-                console.log('Caching app shell');
-                return cache.addAll(urlsToCache);
-              })
-            );
-            self.skipWaiting();
+        navigator.serviceWorker.register('./sw.js')
+          .then(function(registration) {
+            console.log('Service Worker registered successfully:', registration.scope);
+            
+            // Check for updates periodically
+            setInterval(function() {
+              registration.update();
+            }, 3600000); // Check every hour
+          })
+          .catch(function(error) {
+            console.log('Service Worker registration failed:', error);
           });
-          
-          self.addEventListener('fetch', event => {
-            event.respondWith(
-              caches.match(event.request).then(response => {
-                if (response) {
-                  console.log('Serving from cache:', event.request.url);
-                  return response;
-                }
-                
-                return fetch(event.request).then(fetchResponse => {
-                  if (event.request.method !== 'GET' || 
-                      !event.request.url.startsWith(self.location.origin)) {
-                    return fetchResponse;
-                  }
-                  
-                  return caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, fetchResponse.clone());
-                    return fetchResponse;
-                  });
-                }).catch(error => {
-                  console.log('Fetch failed, serving offline page:', error);
-                  return caches.match('/');
-                });
-              })
-            );
-          });
-          
-          self.addEventListener('activate', event => {
-            console.log('Service Worker activating...');
-            event.waitUntil(
-              caches.keys().then(cacheNames => {
-                return Promise.all(
-                  cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME) {
-                      console.log('Deleting old cache:', cacheName);
-                      return caches.delete(cacheName);
-                    }
-                  })
-                );
-              })
-            );
-            self.clients.claim();
-          });
-          
-          self.addEventListener('message', event => {
-            if (event.data && event.data.type === 'SKIP_WAITING') {
-              self.skipWaiting();
-            }
-          });
-        `)).then(function(registration) {
-          console.log('Service Worker registered successfully:', registration);
-          
-          setInterval(function() {
-            registration.update();
-          }, 3600000);
-        }).catch(function(error) {
-          console.log('Service Worker registration failed:', error);
-        });
       });
     } else if (window.location.protocol === 'file:') {
       console.log('Service Worker disabled: app is running from file:// protocol');
+      console.log('To enable PWA features, host this app on a web server');
     }
 
     // Offline/Online status
