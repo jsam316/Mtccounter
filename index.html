@@ -309,6 +309,31 @@
       font-weight: 500;
     }
     
+    input[type="date"] {
+      color-scheme: dark;
+      appearance: none;
+      -webkit-appearance: none;
+      position: relative;
+    }
+    
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    
+    input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+    
+    .light-mode input[type="date"] {
+      color-scheme: light;
+    }
+    
+    .light-mode input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0);
+    }
+    
     input::placeholder {
       color: rgba(255, 255, 255, 0.5);
     }
