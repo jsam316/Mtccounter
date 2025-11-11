@@ -1465,6 +1465,18 @@
     document.addEventListener('DOMContentLoaded', function() {
       updateLanguage();
       initCoCelebrantsToggle();
+      
+      // Test haptic feedback support
+      console.log('Haptic support check:');
+      console.log('- navigator.vibrate:', 'vibrate' in navigator);
+      console.log('- User agent:', navigator.userAgent);
+      
+      // Request any needed permissions (user gesture required)
+      document.body.addEventListener('click', function testHaptic() {
+        console.log('First user interaction detected - testing haptic');
+        triggerHaptic('light');
+        document.body.removeEventListener('click', testHaptic);
+      }, { once: true });
     });
 
     // Set today's date
@@ -1543,28 +1555,65 @@
 
     // Haptic Feedback Function
     function triggerHaptic(style) {
-      if ('vibrate' in navigator) {
+      // Check if vibration API is available
+      if (!('vibrate' in navigator)) {
+        console.log('Vibration API not supported');
+        return;
+      }
+      
+      try {
+        let pattern;
         switch(style) {
           case 'light':
-            navigator.vibrate(10);
+            pattern = 10;
             break;
           case 'medium':
-            navigator.vibrate(20);
+            pattern = 20;
             break;
           case 'heavy':
-            navigator.vibrate(30);
+            pattern = 30;
             break;
           case 'success':
-            navigator.vibrate([10, 50, 10]);
+            pattern = [10, 50, 10];
             break;
           case 'error':
-            navigator.vibrate([20, 100, 20]);
+            pattern = [20, 100, 20];
             break;
           case 'double':
-            navigator.vibrate([15, 30, 15]);
+            pattern = [15, 30, 15];
             break;
           default:
-            navigator.vibrate(15);
+            pattern = 15;
+        }
+        
+        // Trigger vibration
+        const success = navigator.vibrate(pattern);
+        console.log('Haptic triggered:', style, 'Success:', success);
+      } catch (error) {
+        console.error('Haptic error:', error);
+      }
+    }
+    
+    // Alternative haptic for iOS (uses audio feedback as fallback)
+    function triggerIOSHaptic() {
+      // iOS supports haptic through audio context
+      if (window.AudioContext || window.webkitAudioContext) {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          const audioContext = new AudioContext();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = 200;
+          gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.01);
+        } catch (e) {
+          console.log('iOS haptic fallback failed:', e);
         }
       }
     }
