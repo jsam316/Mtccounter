@@ -12,7 +12,6 @@ A modern, bilingual (English/Malayalam) Progressive Web App for tracking church 
 - 💾 **Offline Support** - Works without internet
 - 📄 **Export Options** - PDF & Text export
 - 📅 **History Tracking** - View and load past records
-- 🎨 **Themes** - Multiple color schemes
 - 📖 **Scripture Reference** - Track sermon details
 
 ## 🚀 Quick Start
@@ -50,14 +49,6 @@ See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions on:
 ## 🌍 Language Support
 
 Switch between English and Malayalam by clicking the **ML/EN** button in the top right corner.
-
-## 🎨 Themes
-
-Choose from 4 color themes:
-- 🟣 Purple & Blue (default)
-- 🌊 Ocean
-- 🌅 Sunset
-- 🌲 Forest
 
 ## 💾 Data Storage
 

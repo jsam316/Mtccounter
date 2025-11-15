@@ -31,7 +31,7 @@
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 35%, #3730a3 70%, #1e3a8a 100%);
       min-height: 100vh;
       padding: 20px;
       display: flex;
@@ -50,9 +50,9 @@
       width: 100%;
       height: 100%;
       background: 
-        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(252, 70, 107, 0.3), transparent 50%),
-        radial-gradient(circle at 40% 20%, rgba(99, 102, 241, 0.3), transparent 50%);
+        radial-gradient(circle at 20% 50%, rgba(79, 70, 229, 0.4), transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.3), transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(30, 58, 138, 0.4), transparent 50%);
       animation: gradientShift 15s ease infinite;
       pointer-events: none;
     }
@@ -608,6 +608,218 @@
       gap: 12px;
     }
     
+    .round-total-section {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    }
+    
+    .light-mode .round-total-section {
+      background: rgba(255, 255, 255, 0.5);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .round-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+    
+    .round-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .light-mode .round-title {
+      color: #667eea;
+    }
+    
+    .add-round-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      white-space: nowrap;
+    }
+    
+    .add-round-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .round-total-display {
+      min-height: 60px;
+      margin-bottom: 12px;
+    }
+    
+    .round-total-empty {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 14px;
+      padding: 20px;
+      font-style: italic;
+    }
+    
+    .light-mode .round-total-empty {
+      color: rgba(0, 0, 0, 0.4);
+    }
+    
+    .round-item {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    .light-mode .round-item {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .round-item-label {
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+    }
+    
+    .light-mode .round-item-label {
+      color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .round-item-values {
+      display: flex;
+      gap: 20px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    
+    .round-item-remove {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-left: 12px;
+    }
+    
+    .round-item-remove:hover {
+      background: rgba(239, 68, 68, 0.3);
+      transform: scale(1.05);
+    }
+    
+    .round-total-summary {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+    
+    .light-mode .round-total-summary {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+    
+    .round-summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .round-summary-item:last-of-type {
+      border-bottom: none;
+    }
+    
+    .light-mode .round-summary-item {
+      color: rgba(0, 0, 0, 0.8);
+      border-bottom-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .grand-total-item {
+      font-size: 16px;
+      font-weight: 700;
+      padding: 12px 0 8px 0;
+      margin-top: 8px;
+      border-top: 2px solid rgba(255, 255, 255, 0.2);
+      border-bottom: none;
+    }
+    
+    .light-mode .grand-total-item {
+      border-top-color: rgba(102, 126, 234, 0.3);
+    }
+    
+    .round-number {
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .clear-rounds-btn {
+      width: 100%;
+      margin-top: 12px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .clear-rounds-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+      transform: translateY(-1px);
+    }
+    
+    .light-mode .clear-rounds-btn {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    
     button {
       padding: 16px;
       font-size: 18px;
@@ -1134,16 +1346,6 @@
       </div>
 
       <div class="input-group">
-        <label data-i18n="themeLabel">🎨 Theme</label>
-        <select id="theme">
-          <option value="default" data-i18n="themePurpleBlue">Purple & Blue</option>
-          <option value="ocean" data-i18n="themeOcean">Ocean</option>
-          <option value="sunset" data-i18n="themeSunset">Sunset</option>
-          <option value="forest" data-i18n="themeForest">Forest</option>
-        </select>
-      </div>
-
-      <div class="input-group">
         <label data-i18n="dateLabel">📅 Date</label>
         <input type="date" id="date">
       </div>
@@ -1291,6 +1493,44 @@
         </div>
       </div>
 
+      <!-- Round Total Section -->
+      <div class="round-total-section">
+        <div class="round-header">
+          <span class="round-title" data-i18n="roundTitle">📊 Round Totals</span>
+          <button class="add-round-btn" onclick="addToRoundTotal()">
+            <span data-i18n="addRoundBtn">➕ Add to Round</span>
+          </button>
+        </div>
+        
+        <div id="roundTotalDisplay" class="round-total-display">
+          <div class="round-total-empty" data-i18n="roundEmptyState">
+            Click "Add to Round" to track multiple counting rounds
+          </div>
+        </div>
+        
+        <div id="roundTotalSummary" class="round-total-summary" style="display: none;">
+          <div class="round-summary-item">
+            <span data-i18n="roundsLabel">Rounds:</span>
+            <span id="roundCount" class="round-number">0</span>
+          </div>
+          <div class="round-summary-item">
+            <span data-i18n="roundMaleTotal">Total Male:</span>
+            <span id="roundMaleTotal" class="round-number male-total">0</span>
+          </div>
+          <div class="round-summary-item">
+            <span data-i18n="roundFemaleTotal">Total Female:</span>
+            <span id="roundFemaleTotal" class="round-number female-total">0</span>
+          </div>
+          <div class="round-summary-item grand-total-item">
+            <span data-i18n="roundGrandTotal">Grand Total:</span>
+            <span id="roundGrandTotal" class="round-number grand-total">0</span>
+          </div>
+          <button class="clear-rounds-btn" onclick="clearRounds()">
+            <span data-i18n="clearRoundsBtn">🗑️ Clear Rounds</span>
+          </button>
+        </div>
+      </div>
+
       <button class="save-btn" onclick="saveRecord()"><span data-i18n="saveBtn">💾 Save Record</span></button>
       <button class="reset-btn" onclick="reset()"><span data-i18n="resetBtn">🔄 Reset Counters</span></button>
       <button class="export-btn" onclick="exportData()"><span data-i18n="exportBtn">📤 Export as Text</span></button>
@@ -1335,11 +1575,6 @@
         historyTab: "📅 History",
         parishLabel: "⛪ Parish Name",
         parishPlaceholder: "Enter parish name",
-        themeLabel: "🎨 Theme",
-        themePurpleBlue: "Purple & Blue",
-        themeOcean: "Ocean",
-        themeSunset: "Sunset",
-        themeForest: "Forest",
         dateLabel: "📅 Date",
         celebrantLabel: "👤 Celebrant Name",
         celebrantPlaceholder: "Enter celebrant name",
@@ -1387,7 +1622,21 @@
         totalAttendanceFull: "Total Attendance",
         coCelebrantsLabel: "👥 Co-Celebrants",
         coCelebrantsInputLabel: "👥 Co-Celebrants Names",
-        coCelebrantsPlaceholder: "Enter co-celebrants names (comma separated)"
+        coCelebrantsPlaceholder: "Enter co-celebrants names (comma separated)",
+        roundTitle: "📊 Round Totals",
+        addRoundBtn: "➕ Add to Round",
+        roundEmptyState: "Click 'Add to Round' to track multiple counting rounds",
+        roundsLabel: "Rounds",
+        roundMaleTotal: "Total Male",
+        roundFemaleTotal: "Total Female",
+        roundGrandTotal: "Grand Total",
+        clearRoundsBtn: "🗑️ Clear Rounds",
+        roundAdded: "✓ Added to round!",
+        roundsCleared: "✓ Rounds cleared!",
+        roundTotalsLabel: "Round Totals",
+        roundSummary: "Round Summary",
+        roundsCount: "Number of Rounds",
+        grandTotal: "Grand Total"
       },
       ml: {
         appTitle: "⛪ എം.ടി.സി കൗണ്ടർ",
@@ -1396,11 +1645,6 @@
         historyTab: "📅 ചരിത്രം",
         parishLabel: "⛪ ഇടവക പേര്",
         parishPlaceholder: "ഇടവക പേര് നൽകുക",
-        themeLabel: "🎨 തീം",
-        themePurpleBlue: "പർപ്പിൾ & നീല",
-        themeOcean: "സമുദ്രം",
-        themeSunset: "സൂര്യാസ്തമയം",
-        themeForest: "വനം",
         dateLabel: "📅 തീയതി",
         celebrantLabel: "👤 കാര്യസ്ഥന്റെ പേര്",
         celebrantPlaceholder: "കാര്യസ്ഥന്റെ പേര് നൽകുക",
@@ -1448,7 +1692,21 @@
         totalAttendanceFull: "മൊത്തം ഹാജർ",
         coCelebrantsLabel: "👥 സഹ-കാര്യസ്ഥന്മാർ",
         coCelebrantsInputLabel: "👥 സഹ-കാര്യസ്ഥന്മാരുടെ പേരുകൾ",
-        coCelebrantsPlaceholder: "സഹ-കാര്യസ്ഥന്മാരുടെ പേരുകൾ നൽകുക (കോമയാൽ വേർതിരിച്ച്)"
+        coCelebrantsPlaceholder: "സഹ-കാര്യസ്ഥന്മാരുടെ പേരുകൾ നൽകുക (കോമയാൽ വേർതിരിച്ച്)",
+        roundTitle: "📊 റൗണ്ട് ടോട്ടലുകൾ",
+        addRoundBtn: "➕ റൗണ്ടിലേക്ക് ചേർക്കുക",
+        roundEmptyState: "ഒന്നിലധികം എണ്ണൽ റൗണ്ടുകൾ ട്രാക്ക് ചെയ്യാൻ 'റൗണ്ടിലേക്ക് ചേർക്കുക' ക്ലിക്ക് ചെയ്യുക",
+        roundsLabel: "റൗണ്ടുകൾ",
+        roundMaleTotal: "മൊത്തം പുരുഷൻ",
+        roundFemaleTotal: "മൊത്തം സ്ത്രീ",
+        roundGrandTotal: "ഗ്രാൻഡ് ടോട്ടൽ",
+        clearRoundsBtn: "🗑️ റൗണ്ടുകൾ മായ്ക്കുക",
+        roundAdded: "✓ റൗണ്ടിലേക്ക് ചേർത്തു!",
+        roundsCleared: "✓ റൗണ്ടുകൾ മായ്ച്ചു!",
+        roundTotalsLabel: "റൗണ്ട് ടോട്ടലുകൾ",
+        roundSummary: "റൗണ്ട് സംഗ്രഹം",
+        roundsCount: "റൗണ്ടുകളുടെ എണ്ണം",
+        grandTotal: "ഗ്രാൻഡ് ടോട്ടൽ"
       }
     };
 
@@ -1460,11 +1718,13 @@
     var touchEndX = 0;
     var touchStartY = 0;
     var touchEndY = 0;
+    var rounds = []; // Array to store round totals
 
     // Initialize language
     document.addEventListener('DOMContentLoaded', function() {
       updateLanguage();
       initCoCelebrantsToggle();
+      loadRounds(); // Load saved rounds
       
       // Test haptic feedback support
       console.log('Haptic support check:');
@@ -1478,6 +1738,123 @@
         document.body.removeEventListener('click', testHaptic);
       }, { once: true });
     });
+
+    // Round Total Functions
+    function addToRoundTotal() {
+      if (male === 0 && female === 0) {
+        alert(t('selectDateFirst')); // Reusing translation, or add specific message
+        return;
+      }
+      
+      var round = {
+        male: male,
+        female: female,
+        total: male + female,
+        timestamp: new Date().toISOString()
+      };
+      
+      rounds.push(round);
+      saveRounds();
+      displayRounds();
+      
+      // Clear the counters automatically
+      male = 0;
+      female = 0;
+      updateDisplay();
+      
+      // Show success message
+      var msg = document.getElementById('successMsg');
+      var originalText = msg.querySelector('[data-i18n="successMsg"]').textContent;
+      msg.querySelector('[data-i18n="successMsg"]').textContent = t('roundAdded');
+      msg.style.display = 'block';
+      triggerHaptic('success');
+      
+      setTimeout(function() {
+        msg.style.display = 'none';
+        msg.querySelector('[data-i18n="successMsg"]').textContent = originalText;
+      }, 2000);
+    }
+    
+    function displayRounds() {
+      var displayEl = document.getElementById('roundTotalDisplay');
+      var summaryEl = document.getElementById('roundTotalSummary');
+      
+      if (rounds.length === 0) {
+        displayEl.innerHTML = '<div class="round-total-empty" data-i18n="roundEmptyState">' + t('roundEmptyState') + '</div>';
+        summaryEl.style.display = 'none';
+        updateDisplay(); // Update to show only current counters
+        return;
+      }
+      
+      var html = '';
+      var totalMale = 0;
+      var totalFemale = 0;
+      
+      rounds.forEach(function(round, index) {
+        totalMale += round.male;
+        totalFemale += round.female;
+        
+        html += '<div class="round-item">';
+        html += '<span class="round-item-label">Round ' + (index + 1) + ':</span>';
+        html += '<div class="round-item-values">';
+        html += '<span class="male-total">♂ ' + round.male + '</span>';
+        html += '<span class="female-total">♀ ' + round.female + '</span>';
+        html += '<span>= ' + round.total + '</span>';
+        html += '</div>';
+        html += '<button class="round-item-remove" onclick="removeRound(' + index + ')">✕</button>';
+        html += '</div>';
+      });
+      
+      displayEl.innerHTML = html;
+      
+      // Update summary
+      document.getElementById('roundCount').textContent = rounds.length;
+      document.getElementById('roundMaleTotal').textContent = totalMale;
+      document.getElementById('roundFemaleTotal').textContent = totalFemale;
+      document.getElementById('roundGrandTotal').textContent = totalMale + totalFemale;
+      summaryEl.style.display = 'block';
+      
+      // Update the main total display to show grand total
+      updateDisplay();
+    }
+    
+    function removeRound(index) {
+      rounds.splice(index, 1);
+      saveRounds();
+      displayRounds();
+      triggerHaptic('light');
+    }
+    
+    function clearRounds() {
+      if (confirm(t('resetConfirm'))) { // Reusing translation
+        rounds = [];
+        saveRounds();
+        displayRounds();
+        
+        var msg = document.getElementById('successMsg');
+        var originalText = msg.querySelector('[data-i18n="successMsg"]').textContent;
+        msg.querySelector('[data-i18n="successMsg"]').textContent = t('roundsCleared');
+        msg.style.display = 'block';
+        triggerHaptic('double');
+        
+        setTimeout(function() {
+          msg.style.display = 'none';
+          msg.querySelector('[data-i18n="successMsg"]').textContent = originalText;
+        }, 2000);
+      }
+    }
+    
+    function saveRounds() {
+      localStorage.setItem('mtcRounds', JSON.stringify(rounds));
+    }
+    
+    function loadRounds() {
+      var saved = localStorage.getItem('mtcRounds');
+      if (saved) {
+        rounds = JSON.parse(saved);
+        displayRounds();
+      }
+    }
 
     // Set today's date
     document.getElementById('date').valueAsDate = new Date();
@@ -1683,11 +2060,30 @@
     }
 
     function updateDisplay() {
-      document.getElementById('maleCount').textContent = male;
-      document.getElementById('femaleCount').textContent = female;
-      document.getElementById('maleTotal').textContent = male;
-      document.getElementById('femaleTotal').textContent = female;
-      document.getElementById('grandTotal').textContent = male + female;
+      // If we have rounds, show the grand total from rounds
+      if (rounds.length > 0) {
+        var totalMale = male;
+        var totalFemale = female;
+        
+        // Add all rounds to the total
+        rounds.forEach(function(round) {
+          totalMale += round.male;
+          totalFemale += round.female;
+        });
+        
+        document.getElementById('maleCount').textContent = male;
+        document.getElementById('femaleCount').textContent = female;
+        document.getElementById('maleTotal').textContent = totalMale;
+        document.getElementById('femaleTotal').textContent = totalFemale;
+        document.getElementById('grandTotal').textContent = totalMale + totalFemale;
+      } else {
+        // No rounds, just show current counters
+        document.getElementById('maleCount').textContent = male;
+        document.getElementById('femaleCount').textContent = female;
+        document.getElementById('maleTotal').textContent = male;
+        document.getElementById('femaleTotal').textContent = female;
+        document.getElementById('grandTotal').textContent = male + female;
+      }
     }
 
     function reset() {
@@ -1923,11 +2319,32 @@
       }
       
       text += t('sermon') + ': ' + sermon + '\n' +
-              t('scripture') + ': ' + scripture + '\n\n' +
-              t('attendanceSummary') + ':\n' +
-              '• ' + t('male') + ': ' + male + '\n' +
-              '• ' + t('female') + ': ' + female + '\n' +
-              '• ' + t('totalAttendanceFull') + ': ' + (male + female);
+              t('scripture') + ': ' + scripture + '\n\n';
+      
+      // If we have rounds, show round totals as main attendance
+      if (rounds.length > 0) {
+        var totalMaleRounds = 0;
+        var totalFemaleRounds = 0;
+        
+        text += t('roundTotalsLabel') + ':\n';
+        rounds.forEach(function(round, index) {
+          totalMaleRounds += round.male;
+          totalFemaleRounds += round.female;
+          text += '  Round ' + (index + 1) + ': ♂ ' + round.male + ' | ♀ ' + round.female + ' = ' + round.total + '\n';
+        });
+        
+        text += '\n' + t('attendanceSummary') + ':\n';
+        text += '• ' + t('roundsCount') + ': ' + rounds.length + '\n';
+        text += '• ' + t('male') + ': ' + totalMaleRounds + '\n';
+        text += '• ' + t('female') + ': ' + totalFemaleRounds + '\n';
+        text += '• ' + t('totalAttendanceFull') + ': ' + (totalMaleRounds + totalFemaleRounds);
+      } else {
+        // No rounds, show current counter
+        text += t('attendanceSummary') + ':\n' +
+                '• ' + t('male') + ': ' + male + '\n' +
+                '• ' + t('female') + ': ' + female + '\n' +
+                '• ' + t('totalAttendanceFull') + ': ' + (male + female);
+      }
 
       navigator.clipboard.writeText(text).then(function() {
         var msg = document.getElementById('successMsg');
@@ -2019,19 +2436,60 @@
       doc.text(t('scripture') + ': ' + scripture, 20, yPos);
       
       yPos += 13;
-      doc.setFont(undefined, 'bold');
-      doc.text(t('attendanceSummary'), 20, yPos);
       
-      yPos += 10;
-      doc.setFont(undefined, 'normal');
-      doc.text(t('male') + ': ' + male, 20, yPos);
-      yPos += 8;
-      doc.text(t('female') + ': ' + female, 20, yPos);
-      
-      yPos += 12;
-      doc.setFont(undefined, 'bold');
-      doc.setFontSize(14);
-      doc.text(t('totalAttendanceFull') + ': ' + (male + female), 20, yPos);
+      // If we have rounds, show round totals as main attendance
+      if (rounds.length > 0) {
+        var totalMaleRounds = 0;
+        var totalFemaleRounds = 0;
+        
+        doc.setFont(undefined, 'bold');
+        doc.text(t('roundTotalsLabel'), 20, yPos);
+        
+        yPos += 8;
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        
+        rounds.forEach(function(round, index) {
+          totalMaleRounds += round.male;
+          totalFemaleRounds += round.female;
+          doc.text('Round ' + (index + 1) + ': M ' + round.male + ' | F ' + round.female + ' = ' + round.total, 25, yPos);
+          yPos += 6;
+        });
+        
+        yPos += 5;
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text(t('attendanceSummary'), 20, yPos);
+        
+        yPos += 8;
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(t('roundsCount') + ': ' + rounds.length, 20, yPos);
+        yPos += 6;
+        doc.text(t('male') + ': ' + totalMaleRounds, 20, yPos);
+        yPos += 6;
+        doc.text(t('female') + ': ' + totalFemaleRounds, 20, yPos);
+        
+        yPos += 8;
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(14);
+        doc.text(t('totalAttendanceFull') + ': ' + (totalMaleRounds + totalFemaleRounds), 20, yPos);
+      } else {
+        // No rounds, show current counter
+        doc.setFont(undefined, 'bold');
+        doc.text(t('attendanceSummary'), 20, yPos);
+        
+        yPos += 10;
+        doc.setFont(undefined, 'normal');
+        doc.text(t('male') + ': ' + male, 20, yPos);
+        yPos += 8;
+        doc.text(t('female') + ': ' + female, 20, yPos);
+        
+        yPos += 12;
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(14);
+        doc.text(t('totalAttendanceFull') + ': ' + (male + female), 20, yPos);
+      }
       
       doc.setFontSize(8);
       doc.setFont(undefined, 'italic');
@@ -2050,19 +2508,6 @@
         msg.querySelector('[data-i18n="successMsg"]').textContent = t('successMsg');
       }, 3000);
     }
-
-    // Theme change functionality
-    document.getElementById('theme').addEventListener('change', function(e) {
-      var theme = e.target.value;
-      var themes = {
-        ocean: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-        sunset: 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
-        forest: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        default: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)'
-      };
-      
-      document.body.style.background = themes[theme];
-    });
 
     // Dark mode functionality
     function toggleDarkMode() {
