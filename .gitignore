@@ -1,0 +1,30 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary Files
+*.tmp
+*.bak
+
+# Debug Files
+index-debug.html
+
+# Documentation (optional - remove lines if you want these on GitHub)
+# APP_SUMMARY.md
+# DEPLOYMENT_GUIDE.md
+# EXPORT_FIX_SUMMARY.md
+# HAPTIC_TROUBLESHOOTING.md
+# LIQUID_GLASS_UI.md
+# NEW_RECORD_BUTTON_INFO.md
+# QUICK_START.md
+# ROUND_TOTAL_GUIDE.md
+# THEME_REMOVAL_SUMMARY.md
+# DARK_THEME_INFO.md
+# DEBUG_NEW_RECORD.md
