@@ -1,0 +1,3165 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MTC Counter">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="MarThoma Church attendance counter app - Track service attendance easily">
+  <meta name="theme-color" content="#1e293b">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Favicons and App Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231e293b' width='100' height='100'/><text y='70' font-size='70' fill='white' text-anchor='middle' x='50' font-family='Arial'>⛪</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%231e293b' width='180' height='180' rx='40'/><text y='125' font-size='100' fill='white' text-anchor='middle' x='90' font-family='Arial'>⛪</text></svg>">
+
+  <!-- jsPDF Library for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <title>MTC Church Counter</title>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 35%, #3730a3 70%, #1e3a8a 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+    
+    /* Animated gradient background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(79, 70, 229, 0.4), transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.3), transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(30, 58, 138, 0.4), transparent 50%);
+      animation: gradientShift 15s ease infinite;
+      pointer-events: none;
+    }
+    
+    @keyframes gradientShift {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.1); }
+    }
+    
+    /* Floating particles */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background-image: 
+        radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.15), transparent),
+        radial-gradient(2px 2px at 60% 70%, rgba(255, 255, 255, 0.15), transparent),
+        radial-gradient(1px 1px at 50% 50%, rgba(255, 255, 255, 0.1), transparent),
+        radial-gradient(1px 1px at 80% 10%, rgba(255, 255, 255, 0.1), transparent);
+      background-size: 200px 200px, 300px 300px, 150px 150px, 250px 250px;
+      animation: particleFloat 60s linear infinite;
+      pointer-events: none;
+    }
+    
+    @keyframes particleFloat {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+    
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      border-radius: 30px;
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 
+        0 8px 32px 0 rgba(31, 38, 135, 0.37),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #ffffff;
+      margin-bottom: 8px;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+      margin-bottom: 32px;
+      font-weight: 500;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    
+    .top-controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
+    }
+    
+    .dark-mode-toggle, .lang-toggle {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      width: 48px;
+      height: 48px;
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+    }
+    
+    .lang-toggle {
+      font-size: 14px;
+      font-weight: 700;
+    }
+    
+    .dark-mode-toggle:hover, .lang-toggle:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .dark-mode-toggle:active, .lang-toggle:active {
+      transform: scale(0.95);
+    }
+    
+    .light-mode {
+      background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    }
+    
+    .light-mode .container {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 
+        0 8px 32px 0 rgba(31, 38, 135, 0.15),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    }
+    
+    .light-mode h1 {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .light-mode .subtitle {
+      color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .light-mode .dark-mode-toggle, .light-mode .lang-toggle {
+      background: rgba(255, 255, 255, 0.6);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: #667eea;
+    }
+    
+    .light-mode .dark-mode-toggle:hover, .light-mode .lang-toggle:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 6px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    
+    .light-mode .tabs {
+      background: rgba(255, 255, 255, 0.5);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .tab:hover {
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .tab.active {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .light-mode .tab {
+      color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .light-mode .tab:hover {
+      color: rgba(0, 0, 0, 0.7);
+      background: rgba(255, 255, 255, 0.7);
+    }
+    
+    .light-mode .tab.active {
+      color: #667eea;
+      background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.4s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .input-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 13px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    
+    .light-mode label {
+      color: rgba(0, 0, 0, 0.6);
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      font-size: 15px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #ffffff;
+      font-weight: 500;
+    }
+    
+    input[type="date"] {
+      color-scheme: dark;
+      appearance: none;
+      -webkit-appearance: none;
+      position: relative;
+    }
+    
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    
+    input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+    
+    .light-mode input[type="date"] {
+      color-scheme: light;
+    }
+    
+    .light-mode input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0);
+    }
+    
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+    }
+    
+    .light-mode input, .light-mode select {
+      background: rgba(255, 255, 255, 0.6);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: #000000;
+    }
+    
+    .light-mode input::placeholder {
+      color: rgba(0, 0, 0, 0.4);
+    }
+    
+    .light-mode input:focus, .light-mode select:focus {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    .verse-group {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .toggle-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .light-mode .toggle-section {
+      background: rgba(255, 255, 255, 0.5);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .light-mode .toggle-label {
+      color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 26px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 13px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .light-mode .toggle-switch {
+      background: rgba(0, 0, 0, 0.1);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    .toggle-switch.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(22px);
+    }
+    
+    .co-celebrants-field {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.3s ease;
+      opacity: 0;
+      margin-bottom: 0;
+    }
+    
+    .co-celebrants-field.active {
+      max-height: 200px;
+      opacity: 1;
+      margin-bottom: 20px;
+    }
+    
+    .total-box {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 24px;
+      text-align: center;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    }
+    
+    .light-mode .total-box {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .total-title {
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .light-mode .total-title {
+      color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .total-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    
+    .total-item {
+      text-align: center;
+    }
+    
+    .total-label {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .light-mode .total-label {
+      color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .total-number {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    
+    .male-total { 
+      color: #60a5fa;
+      text-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
+    }
+    
+    .female-total { 
+      color: #c084fc;
+      text-shadow: 0 0 20px rgba(192, 132, 252, 0.5);
+    }
+    
+    .grand-total { 
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+    
+    .light-mode .male-total { 
+      color: #3b82f6;
+      text-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+    
+    .light-mode .female-total { 
+      color: #a855f7;
+      text-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    }
+    
+    .light-mode .grand-total { 
+      color: #667eea;
+      text-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+    }
+    
+    .counter-box {
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    }
+    
+    .counter-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.3);
+    }
+    
+    .male-box {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+      border-color: rgba(96, 165, 250, 0.3);
+    }
+    
+    .female-box {
+      background: linear-gradient(135deg, rgba(192, 132, 252, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+      border-color: rgba(192, 132, 252, 0.3);
+    }
+    
+    .light-mode .male-box {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(59, 130, 246, 0.08) 100%);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .light-mode .female-box {
+      background: linear-gradient(135deg, rgba(192, 132, 252, 0.15) 0%, rgba(168, 85, 247, 0.08) 100%);
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+    
+    .counter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .counter-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .male-title { color: #60a5fa; }
+    .female-title { color: #c084fc; }
+    .light-mode .male-title { color: #3b82f6; }
+    .light-mode .female-title { color: #a855f7; }
+    
+    .counter-value {
+      font-size: 40px;
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .counter-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .round-total-section {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    }
+    
+    .light-mode .round-total-section {
+      background: rgba(255, 255, 255, 0.5);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .round-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+    
+    .round-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .light-mode .round-title {
+      color: #667eea;
+    }
+    
+    .add-round-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      white-space: nowrap;
+    }
+    
+    .add-round-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .round-total-display {
+      min-height: 60px;
+      margin-bottom: 12px;
+    }
+    
+    .round-total-empty {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 14px;
+      padding: 20px;
+      font-style: italic;
+    }
+    
+    .light-mode .round-total-empty {
+      color: rgba(0, 0, 0, 0.4);
+    }
+    
+    .round-item {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    .light-mode .round-item {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .round-item-label {
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 14px;
+    }
+    
+    .light-mode .round-item-label {
+      color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .round-item-values {
+      display: flex;
+      gap: 20px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    
+    .round-item-remove {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-left: 12px;
+    }
+    
+    .round-item-remove:hover {
+      background: rgba(239, 68, 68, 0.3);
+      transform: scale(1.05);
+    }
+    
+    .round-total-summary {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+    
+    .light-mode .round-total-summary {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+    
+    .round-summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .round-summary-item:last-of-type {
+      border-bottom: none;
+    }
+    
+    .light-mode .round-summary-item {
+      color: rgba(0, 0, 0, 0.8);
+      border-bottom-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .grand-total-item {
+      font-size: 16px;
+      font-weight: 700;
+      padding: 12px 0 8px 0;
+      margin-top: 8px;
+      border-top: 2px solid rgba(255, 255, 255, 0.2);
+      border-bottom: none;
+    }
+    
+    .light-mode .grand-total-item {
+      border-top-color: rgba(102, 126, 234, 0.3);
+    }
+    
+    .round-number {
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .clear-rounds-btn {
+      width: 100%;
+      margin-top: 12px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .clear-rounds-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+      transform: translateY(-1px);
+    }
+    
+    .light-mode .clear-rounds-btn {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    button {
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 700;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    
+    button:active::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    .male-minus, .female-minus {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2px solid;
+    }
+    
+    .male-minus {
+      color: #60a5fa;
+      border-color: rgba(96, 165, 250, 0.3);
+    }
+    
+    .female-minus {
+      color: #c084fc;
+      border-color: rgba(192, 132, 252, 0.3);
+    }
+    
+    .male-plus {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .female-plus {
+      background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .light-mode .male-minus, .light-mode .female-minus {
+      background: rgba(255, 255, 255, 0.8);
+    }
+    
+    .light-mode .male-minus {
+      color: #3b82f6;
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .light-mode .female-minus {
+      color: #a855f7;
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+    
+    /* Action Buttons Grid */
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .action-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 12px 8px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      min-height: 70px;
+    }
+    
+    .action-btn .btn-icon {
+      font-size: 24px;
+      line-height: 1;
+    }
+    
+    .action-btn .btn-text {
+      font-size: 12px;
+      line-height: 1;
+    }
+    
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .save-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      grid-column: span 2;
+    }
+    
+    .reset-btn {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #ffffff;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .export-btn {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      color: white;
+    }
+    
+    .pdf-btn {
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      color: white;
+    }
+    
+    .whatsapp-btn {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      color: white;
+    }
+    
+    .light-mode .reset-btn {
+      background: rgba(255, 255, 255, 0.8);
+      color: #667eea;
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+    
+    .light-mode .action-btn {
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    @media (max-width: 480px) {
+      .action-btn .btn-text {
+        font-size: 11px;
+      }
+      .action-btn .btn-icon {
+        font-size: 20px;
+      }
+      .action-btn {
+        min-height: 65px;
+        padding: 10px 6px;
+      }
+    }
+    
+    .success-msg {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 15px;
+      text-align: center;
+      margin-top: 16px;
+      font-weight: 600;
+      display: none;
+      animation: slideDown 0.3s ease-out;
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .history-list {
+      max-height: 500px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+    
+    .history-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .history-list::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+    
+    .history-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+    }
+    
+    .history-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .history-item {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .history-item:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateX(4px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .light-mode .history-item {
+      background: rgba(255, 255, 255, 0.5);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    
+    .light-mode .history-item:hover {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: #667eea;
+    }
+    
+    .history-date {
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 12px;
+      font-size: 16px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .light-mode .history-date {
+      color: #667eea;
+    }
+    
+    .history-details {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.8;
+    }
+    
+    .light-mode .history-details {
+      color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .history-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    
+    .history-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .load-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .delete-btn {
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .light-mode .empty-state {
+      color: rgba(0, 0, 0, 0.4);
+    }
+    
+    .empty-state p:first-child {
+      font-size: 48px;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+    }
+    
+    .offline-indicator {
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 999;
+      animation: pulse 2s infinite;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .offline-indicator.show {
+      display: flex;
+    }
+    
+    .offline-indicator.online {
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+      animation: none;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    
+    .sync-status {
+      position: fixed;
+      top: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 998;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .sync-status.show {
+      display: flex;
+      animation: slideDown 0.3s ease-out;
+    }
+    
+    .install-prompt {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 24px;
+      border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+      display: none;
+      align-items: center;
+      gap: 16px;
+      z-index: 1000;
+      animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .install-prompt.show {
+      display: flex;
+    }
+    
+    .install-content {
+      flex: 1;
+    }
+    
+    .install-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+    
+    .install-text {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    
+    .install-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .install-btn {
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .install-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+    }
+    
+    .install-close {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .install-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+      .container {
+        padding: 24px;
+      }
+      h1 {
+        font-size: 28px;
+      }
+      .counter-value {
+        font-size: 36px;
+      }
+      .total-number {
+        font-size: 32px;
+      }
+    }
+    
+    .swipe-indicator {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 48px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1001;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+    }
+    
+    .swipe-indicator.left {
+      left: 30px;
+    }
+    
+    .swipe-indicator.right {
+      right: 30px;
+    }
+    
+    .swipe-indicator.show {
+      opacity: 0.8;
+      animation: swipePulse 0.5s ease-out;
+    }
+    
+    @keyframes swipePulse {
+      0% {
+        transform: translateY(-50%) scale(0.5);
+        opacity: 0;
+      }
+      50% {
+        transform: translateY(-50%) scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 0.8;
+      }
+    }
+    
+    .haptic-pulse {
+      animation: hapticPulse 0.3s ease-out;
+    }
+    
+    @keyframes hapticPulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(0.95);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    /* Celebrant Manager Styles */
+    .manage-celebrants-btn {
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(96, 165, 250, 0.3);
+      border-radius: 8px;
+      color: #60a5fa;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 18px;
+      min-width: 44px;
+      height: 44px;
+    }
+    
+    .manage-celebrants-btn:hover {
+      background: rgba(96, 165, 250, 0.2);
+      border-color: #60a5fa;
+      transform: scale(1.05);
+    }
+    
+    .celebrant-manager-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .celebrant-manager-modal.show {
+      display: flex;
+    }
+    
+    .celebrant-manager-content {
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .celebrant-manager-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .celebrant-manager-header h2 {
+      margin: 0;
+      color: #e2e8f0;
+      font-size: 20px;
+    }
+    
+    .close-manager-btn {
+      background: rgba(239, 68, 68, 0.2);
+      border: 2px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .close-manager-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+      border-color: #ef4444;
+    }
+    
+    .celebrant-manager-body {
+      padding: 20px;
+      max-height: calc(80vh - 80px);
+      overflow-y: auto;
+    }
+    
+    .add-celebrant-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .add-celebrant-section input {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      color: #e2e8f0;
+      font-size: 16px;
+    }
+    
+    .add-celebrant-section input:focus {
+      outline: none;
+      border-color: #60a5fa;
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .add-celebrant-btn {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+    
+    .add-celebrant-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    }
+    
+    .celebrant-list-section h3 {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .celebrant-list-display {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .celebrant-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.4);
+      border: 2px solid rgba(71, 85, 105, 0.3);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    
+    .celebrant-item:hover {
+      background: rgba(15, 23, 42, 0.6);
+      border-color: #60a5fa;
+    }
+    
+    .celebrant-name {
+      color: #e2e8f0;
+      font-size: 16px;
+    }
+    
+    .delete-celebrant-btn {
+      background: rgba(239, 68, 68, 0.2);
+      border: 2px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .delete-celebrant-btn:hover {
+      background: rgba(239, 68, 68, 0.3);
+      border-color: #ef4444;
+    }
+    
+    .celebrant-empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #64748b;
+      font-style: italic;
+    }
+    
+    .light-mode .celebrant-manager-content {
+      background: rgba(255, 255, 255, 0.95);
+    }
+    
+    .light-mode .celebrant-manager-header h2,
+    .light-mode .celebrant-name {
+      color: #1e293b;
+    }
+    
+    .light-mode .celebrant-item {
+      background: rgba(248, 250, 252, 0.8);
+      border-color: rgba(203, 213, 225, 0.5);
+    }
+    
+    .light-mode .celebrant-item:hover {
+      background: white;
+      border-color: #3b82f6;
+    }
+    
+    .light-mode .add-celebrant-section input {
+      background: rgba(241, 245, 249, 0.8);
+      color: #475569;
+      border-color: rgba(203, 213, 225, 0.5);
+    }
+    
+    .light-mode .manage-celebrants-btn {
+      background: rgba(241, 245, 249, 0.8);
+      color: #3b82f6;
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .light-mode .manage-celebrants-btn:hover {
+      background: rgba(219, 234, 254, 0.8);
+      border-color: #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-controls">
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Light/Dark Mode">☀️</button>
+    <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle Language">EN</button>
+  </div>
+
+  <!-- Offline Indicator -->
+  <div id="offlineIndicator" class="offline-indicator">
+    <span>🔴</span>
+    <span data-i18n="offline">Offline</span>
+  </div>
+
+  <!-- Sync Status -->
+  <div id="syncStatus" class="sync-status">
+    <span>🔄</span>
+    <span data-i18n="syncing">Syncing...</span>
+  </div>
+
+  <!-- Swipe Indicators -->
+  <div id="swipeLeft" class="swipe-indicator left">👈</div>
+  <div id="swipeRight" class="swipe-indicator right">👉</div>
+
+  <div class="container">
+    <h1><span data-i18n="appTitle">⛪ MTC Counter</span></h1>
+    <div class="subtitle" data-i18n="appSubtitle">MarThoma Church Attendance Tracker</div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('counter')"><span data-i18n="counterTab">📊 Counter</span></button>
+      <button class="tab" onclick="switchTab('history')"><span data-i18n="historyTab">📅 History</span></button>
+    </div>
+
+    <!-- Counter Tab -->
+    <div id="counterTab" class="tab-content active">
+      <div class="input-group">
+        <label data-i18n="parishLabel">⛪ Parish Name</label>
+        <input type="text" id="parishName" data-i18n-placeholder="parishPlaceholder" placeholder="Enter parish name">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="dateLabel">📅 Date</label>
+        <input type="date" id="date">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="celebrantLabel">👤 Celebrant Name</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="celebrant" list="celebrantList" data-i18n-placeholder="celebrantPlaceholder" placeholder="Enter celebrant name" style="flex: 1;">
+          <datalist id="celebrantList"></datalist>
+          <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants">⚙️</button>
+        </div>
+      </div>
+
+      <div class="toggle-section">
+        <div class="toggle-label">
+          <span data-i18n="coCelebrantsLabel">👥 Co-Celebrants</span>
+        </div>
+        <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()">
+          <div class="toggle-slider"></div>
+        </div>
+      </div>
+
+      <div class="co-celebrants-field" id="coCelebrantsField">
+        <div class="input-group">
+          <label data-i18n="coCelebrantsInputLabel">👥 Co-Celebrants Names</label>
+          <input type="text" id="coCelebrants" data-i18n-placeholder="coCelebrantsPlaceholder" placeholder="Enter co-celebrants names (comma separated)">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="sermonLabel">📖 Sermon Title</label>
+        <input type="text" id="sermon" data-i18n-placeholder="sermonPlaceholder" placeholder="Enter sermon title">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="scriptureLabel">📜 Scripture Reference</label>
+        <div class="verse-group">
+          <select id="book">
+            <option value="" data-i18n="selectBook">Select Book</option>
+            <option value="Genesis">Genesis</option>
+            <option value="Exodus">Exodus</option>
+            <option value="Leviticus">Leviticus</option>
+            <option value="Numbers">Numbers</option>
+            <option value="Deuteronomy">Deuteronomy</option>
+            <option value="Joshua">Joshua</option>
+            <option value="Judges">Judges</option>
+            <option value="Ruth">Ruth</option>
+            <option value="1 Samuel">1 Samuel</option>
+            <option value="2 Samuel">2 Samuel</option>
+            <option value="1 Kings">1 Kings</option>
+            <option value="2 Kings">2 Kings</option>
+            <option value="1 Chronicles">1 Chronicles</option>
+            <option value="2 Chronicles">2 Chronicles</option>
+            <option value="Ezra">Ezra</option>
+            <option value="Nehemiah">Nehemiah</option>
+            <option value="Esther">Esther</option>
+            <option value="Job">Job</option>
+            <option value="Psalms">Psalms</option>
+            <option value="Proverbs">Proverbs</option>
+            <option value="Ecclesiastes">Ecclesiastes</option>
+            <option value="Song of Solomon">Song of Solomon</option>
+            <option value="Isaiah">Isaiah</option>
+            <option value="Jeremiah">Jeremiah</option>
+            <option value="Lamentations">Lamentations</option>
+            <option value="Ezekiel">Ezekiel</option>
+            <option value="Daniel">Daniel</option>
+            <option value="Hosea">Hosea</option>
+            <option value="Joel">Joel</option>
+            <option value="Amos">Amos</option>
+            <option value="Obadiah">Obadiah</option>
+            <option value="Jonah">Jonah</option>
+            <option value="Micah">Micah</option>
+            <option value="Nahum">Nahum</option>
+            <option value="Habakkuk">Habakkuk</option>
+            <option value="Zephaniah">Zephaniah</option>
+            <option value="Haggai">Haggai</option>
+            <option value="Zechariah">Zechariah</option>
+            <option value="Malachi">Malachi</option>
+            <option value="Matthew">Matthew</option>
+            <option value="Mark">Mark</option>
+            <option value="Luke">Luke</option>
+            <option value="John">John</option>
+            <option value="Acts">Acts</option>
+            <option value="Romans">Romans</option>
+            <option value="1 Corinthians">1 Corinthians</option>
+            <option value="2 Corinthians">2 Corinthians</option>
+            <option value="Galatians">Galatians</option>
+            <option value="Ephesians">Ephesians</option>
+            <option value="Philippians">Philippians</option>
+            <option value="Colossians">Colossians</option>
+            <option value="1 Thessalonians">1 Thessalonians</option>
+            <option value="2 Thessalonians">2 Thessalonians</option>
+            <option value="1 Timothy">1 Timothy</option>
+            <option value="2 Timothy">2 Timothy</option>
+            <option value="Titus">Titus</option>
+            <option value="Philemon">Philemon</option>
+            <option value="Hebrews">Hebrews</option>
+            <option value="James">James</option>
+            <option value="1 Peter">1 Peter</option>
+            <option value="2 Peter">2 Peter</option>
+            <option value="1 John">1 John</option>
+            <option value="2 John">2 John</option>
+            <option value="3 John">3 John</option>
+            <option value="Jude">Jude</option>
+            <option value="Revelation">Revelation</option>
+          </select>
+          <input type="number" id="chapter" data-i18n-placeholder="chPlaceholder" placeholder="Ch" min="1">
+          <input type="text" id="verse" data-i18n-placeholder="versePlaceholder" placeholder="Verse">
+        </div>
+      </div>
+
+      <div class="total-box">
+        <div class="total-title" data-i18n="totalAttendance">Total Attendance</div>
+        <div class="total-grid">
+          <div class="total-item">
+            <div class="total-label" data-i18n="male">Male</div>
+            <div class="total-number male-total" id="maleTotal">0</div>
+          </div>
+          <div class="total-item">
+            <div class="total-label" data-i18n="female">Female</div>
+            <div class="total-number female-total" id="femaleTotal">0</div>
+          </div>
+          <div class="total-item">
+            <div class="total-label" data-i18n="total">Total</div>
+            <div class="total-number grand-total" id="grandTotal">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="counter-box male-box">
+        <div class="counter-header">
+          <span class="counter-title male-title"><span data-i18n="maleCounter">👨 Male</span></span>
+          <span class="counter-value male-total" id="maleCount">0</span>
+        </div>
+        <div class="counter-buttons">
+          <button class="male-minus" onclick="changeMale(-1)">−</button>
+          <button class="male-plus" onclick="changeMale(1)">+</button>
+        </div>
+      </div>
+
+      <div class="counter-box female-box">
+        <div class="counter-header">
+          <span class="counter-title female-title"><span data-i18n="femaleCounter">👩 Female</span></span>
+          <span class="counter-value female-total" id="femaleCount">0</span>
+        </div>
+        <div class="counter-buttons">
+          <button class="female-minus" onclick="changeFemale(-1)">−</button>
+          <button class="female-plus" onclick="changeFemale(1)">+</button>
+        </div>
+      </div>
+
+      <!-- Round Total Section -->
+      <div class="round-total-section">
+        <div class="round-header">
+          <span class="round-title" data-i18n="roundTitle">📊 Round Totals</span>
+          <button class="add-round-btn" onclick="addToRoundTotal()">
+            <span data-i18n="addRoundBtn">➕ Add to Round</span>
+          </button>
+        </div>
+        
+        <div id="roundTotalDisplay" class="round-total-display">
+          <div class="round-total-empty" data-i18n="roundEmptyState">
+            Click "Add to Round" to track multiple counting rounds
+          </div>
+        </div>
+        
+        <div id="roundTotalSummary" class="round-total-summary" style="display: none;">
+          <div class="round-summary-item">
+            <span data-i18n="roundsLabel">Rounds:</span>
+            <span id="roundCount" class="round-number">0</span>
+          </div>
+          <div class="round-summary-item">
+            <span data-i18n="roundMaleTotal">Total Male:</span>
+            <span id="roundMaleTotal" class="round-number male-total">0</span>
+          </div>
+          <div class="round-summary-item">
+            <span data-i18n="roundFemaleTotal">Total Female:</span>
+            <span id="roundFemaleTotal" class="round-number female-total">0</span>
+          </div>
+          <div class="round-summary-item grand-total-item">
+            <span data-i18n="roundGrandTotal">Grand Total:</span>
+            <span id="roundGrandTotal" class="round-number grand-total">0</span>
+          </div>
+          <button class="clear-rounds-btn" onclick="clearRounds()">
+            <span data-i18n="clearRoundsBtn">🗑️ Clear Rounds</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="action-btn save-btn" onclick="saveRecord()" title="Save Record">
+          <span class="btn-icon">💾</span>
+          <span class="btn-text" data-i18n="saveBtn">Save</span>
+        </button>
+        <button class="action-btn reset-btn" onclick="newRecord()" title="New Record">
+          <span class="btn-icon">📝</span>
+          <span class="btn-text" data-i18n="newRecordBtn">New</span>
+        </button>
+        <button class="action-btn export-btn" onclick="exportData()" title="Export as Text">
+          <span class="btn-icon">📤</span>
+          <span class="btn-text" data-i18n="exportBtn">Text</span>
+        </button>
+        <button class="action-btn pdf-btn" onclick="exportPDF()" title="Export as PDF">
+          <span class="btn-icon">📄</span>
+          <span class="btn-text" data-i18n="pdfBtn">PDF</span>
+        </button>
+        <button class="action-btn whatsapp-btn" onclick="shareToWhatsApp()" title="Share to WhatsApp">
+          <span class="btn-icon">📱</span>
+          <span class="btn-text" data-i18n="whatsappBtn">WhatsApp</span>
+        </button>
+      </div>
+      
+      <div id="successMsg" class="success-msg">
+        <span data-i18n="successMsg">✓ Saved successfully!</span>
+      </div>
+    </div>
+
+    <!-- History Tab -->
+    <div id="historyTab" class="tab-content">
+      <div id="historyList" class="history-list">
+        <div class="empty-state">
+          <p>📋</p>
+          <p style="font-size: 16px; font-weight: 600;" data-i18n="noRecords">No records yet</p>
+          <p style="font-size: 14px; margin-top: 8px; opacity: 0.7;" data-i18n="noRecordsDesc">Save your first service record to see it here!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Install Prompt -->
+  <div id="installPrompt" class="install-prompt">
+    <div class="install-content">
+      <div class="install-title" data-i18n="installTitle">📱 Install MTC Counter</div>
+      <div class="install-text" data-i18n="installText">Add to home screen for quick access & offline use</div>
+    </div>
+    <div class="install-buttons">
+      <button class="install-btn" onclick="installApp()" data-i18n="installBtn">Install</button>
+      <button class="install-btn install-close" onclick="closeInstallPrompt()">✕</button>
+    </div>
+  </div>
+
+  <!-- Celebrant Manager Modal -->
+  <div id="celebrantManager" class="celebrant-manager-modal">
+    <div class="celebrant-manager-content">
+      <div class="celebrant-manager-header">
+        <h2 data-i18n="manageCelebrants">⚙️ Manage Celebrants</h2>
+        <button class="close-manager-btn" onclick="closeCelebrantManager()">✕</button>
+      </div>
+      
+      <div class="celebrant-manager-body">
+        <div class="add-celebrant-section">
+          <input type="text" id="newCelebrantName" data-i18n-placeholder="enterCelebrantName" placeholder="Enter celebrant name">
+          <button class="add-celebrant-btn" onclick="addCelebrant()"><span data-i18n="addCelebrant">➕ Add</span></button>
+        </div>
+        
+        <div class="celebrant-list-section">
+          <h3 data-i18n="savedCelebrants">Saved Celebrants:</h3>
+          <div id="celebrantListDisplay" class="celebrant-list-display"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Language Translations
+    const translations = {
+      en: {
+        appTitle: "⛪ MTC Counter",
+        appSubtitle: "MarThoma Church Attendance Tracker",
+        counterTab: "📊 Counter",
+        historyTab: "📅 History",
+        parishLabel: "⛪ Parish Name",
+        parishPlaceholder: "Enter parish name",
+        dateLabel: "📅 Date",
+        celebrantLabel: "👤 Celebrant Name",
+        celebrantPlaceholder: "Enter celebrant name",
+        sermonLabel: "📖 Sermon Title",
+        sermonPlaceholder: "Enter sermon title",
+        scriptureLabel: "📜 Scripture Reference",
+        selectBook: "Select Book",
+        chPlaceholder: "Ch",
+        versePlaceholder: "Verse",
+        totalAttendance: "Total Attendance",
+        male: "Male",
+        female: "Female",
+        total: "Total",
+        maleCounter: "👨 Male",
+        femaleCounter: "👩 Female",
+        saveBtn: "Save",
+        newRecordBtn: "New",
+        exportBtn: "Text",
+        pdfBtn: "PDF",
+        whatsappBtn: "WhatsApp",
+        successMsg: "✓ Saved successfully!",
+        noRecords: "No records yet",
+        noRecordsDesc: "Save your first service record to see it here!",
+        offline: "Offline",
+        online: "Online",
+        syncing: "Syncing...",
+        synced: "Synced!",
+        installTitle: "📱 Install MTC Counter",
+        installText: "Add to home screen for quick access & offline use",
+        installBtn: "Install",
+        loadBtn: "📥 Load",
+        deleteBtn: "🗑️ Delete",
+        parish: "Parish",
+        celebrant: "Celebrant",
+        sermon: "Sermon",
+        scripture: "Scripture",
+        attendance: "Attendance",
+        notSpecified: "Not specified",
+        newRecordConfirm: "Start a new record? This will clear all counters and rounds.",
+        deleteConfirm: "Are you sure you want to delete this record?",
+        selectDateFirst: "Please select a date first!",
+        copiedToClipboard: "✓ Copied to clipboard!",
+        pdfDownloaded: "✓ PDF downloaded!",
+        serviceDetails: "Service Details",
+        attendanceSummary: "Attendance Summary",
+        totalAttendanceFull: "Total Attendance",
+        coCelebrantsLabel: "👥 Co-Celebrants",
+        coCelebrantsInputLabel: "👥 Co-Celebrants Names",
+        coCelebrantsPlaceholder: "Enter co-celebrants names (comma separated)",
+        roundTitle: "📊 Round Totals",
+        addRoundBtn: "➕ Add to Round",
+        roundEmptyState: "Click 'Add to Round' to track multiple counting rounds",
+        roundsLabel: "Rounds",
+        roundMaleTotal: "Total Male",
+        roundFemaleTotal: "Total Female",
+        roundGrandTotal: "Grand Total",
+        clearRoundsBtn: "🗑️ Clear Rounds",
+        clearRoundsConfirm: "Clear all rounds? This will remove all round totals.",
+        roundAdded: "✓ Added to round!",
+        roundsCleared: "✓ Rounds cleared!",
+        roundTotalsLabel: "Round Totals",
+        roundSummary: "Round Summary",
+        roundsCount: "Number of Rounds",
+        grandTotal: "Grand Total",
+        manageCelebrants: "⚙️ Manage Celebrants",
+        enterCelebrantName: "Enter celebrant name",
+        addCelebrant: "➕ Add",
+        savedCelebrants: "Saved Celebrants:",
+        noCelebrants: "No saved celebrants yet. Add your first celebrant above!",
+        deleteCelebrant: "Delete",
+        celebrantAdded: "✓ Celebrant added!",
+        celebrantDeleted: "✓ Celebrant deleted!",
+        celebrantExists: "This celebrant already exists!"
+      },
+      ml: {
+        appTitle: "⛪ എം.ടി.സി കൗണ്ടർ",
+        appSubtitle: "മാർത്തോമ്മാ പള്ളി ഹാജർ ട്രാക്കർ",
+        counterTab: "📊 കൗണ്ടർ",
+        historyTab: "📅 ചരിത്രം",
+        parishLabel: "⛪ ഇടവക പേര്",
+        parishPlaceholder: "ഇടവക പേര് നൽകുക",
+        dateLabel: "📅 തീയതി",
+        celebrantLabel: "👤 കാര്യസ്ഥന്റെ പേര്",
+        celebrantPlaceholder: "കാര്യസ്ഥന്റെ പേര് നൽകുക",
+        sermonLabel: "📖 പ്രഭാഷണ ശീർഷകം",
+        sermonPlaceholder: "പ്രഭാഷണ ശീർഷകം നൽകുക",
+        scriptureLabel: "📜 തിരുവെഴുത്ത് റഫറൻസ്",
+        selectBook: "പുസ്തകം തിരഞ്ഞെടുക്കുക",
+        chPlaceholder: "അദ്ധ്യാ",
+        versePlaceholder: "വാക്യം",
+        totalAttendance: "മൊത്തം ഹാജർ",
+        male: "പുരുഷൻ",
+        female: "സ്ത്രീ",
+        total: "മൊത്തം",
+        maleCounter: "👨 പുരുഷൻ",
+        femaleCounter: "👩 സ്ത്രീ",
+        saveBtn: "സേവ്",
+        newRecordBtn: "പുതിയത്",
+        exportBtn: "ടെക്സ്റ്റ്",
+        pdfBtn: "PDF",
+        whatsappBtn: "WhatsApp",
+        successMsg: "✓ വിജയകരമായി സേവ് ചെയ്തു!",
+        noRecords: "ഇതുവരെ റെക്കോർഡുകളൊന്നുമില്ല",
+        noRecordsDesc: "നിങ്ങളുടെ ആദ്യ സേവാ റെക്കോർഡ് ഇവിടെ കാണാൻ സേവ് ചെയ്യുക!",
+        offline: "ഓഫ്‌ലൈൻ",
+        online: "ഓൺലൈൻ",
+        syncing: "സമന്വയിപ്പിക്കുന്നു...",
+        synced: "സമന്വയിപ്പിച്ചു!",
+        installTitle: "📱 എം.ടി.സി കൗണ്ടർ ഇൻസ്റ്റാൾ ചെയ്യുക",
+        installText: "വേഗത്തിലുള്ള ആക്സസ്സിനും ഓഫ്‌ലൈൻ ഉപയോഗത്തിനുമായി ഹോം സ്ക്രീനിലേക്ക് ചേർക്കുക",
+        installBtn: "ഇൻസ്റ്റാൾ ചെയ്യുക",
+        loadBtn: "📥 ലോഡ് ചെയ്യുക",
+        deleteBtn: "🗑️ ഇല്ലാതാക്കുക",
+        parish: "ഇടവക",
+        celebrant: "കാര്യസ്ഥൻ",
+        sermon: "പ്രഭാഷണം",
+        scripture: "തിരുവെഴുത്ത്",
+        attendance: "ഹാജർ",
+        notSpecified: "വ്യക്തമാക്കിയിട്ടില്ല",
+        newRecordConfirm: "പുതിയ റെക്കോർഡ് ആരംഭിക്കണോ? ഇത് എല്ലാ കൗണ്ടറുകളും റൗണ്ടുകളും മായ്ക്കും.",
+        deleteConfirm: "ഈ റെക്കോർഡ് ഇല്ലാതാക്കണമെന്ന് തീർച്ചയാണോ?",
+        selectDateFirst: "ദയവായി ആദ്യം ഒരു തീയതി തിരഞ്ഞെടുക്കുക!",
+        copiedToClipboard: "✓ ക്ലിപ്പ്ബോർഡിലേക്ക് പകർത്തി!",
+        pdfDownloaded: "✓ പിഡിഎഫ് ഡൗൺലോഡ് ചെയ്തു!",
+        serviceDetails: "സേവന വിശദാംശങ്ങൾ",
+        attendanceSummary: "ഹാജർ സംഗ്രഹം",
+        totalAttendanceFull: "മൊത്തം ഹാജർ",
+        coCelebrantsLabel: "👥 സഹ-കാര്യസ്ഥന്മാർ",
+        coCelebrantsInputLabel: "👥 സഹ-കാര്യസ്ഥന്മാരുടെ പേരുകൾ",
+        coCelebrantsPlaceholder: "സഹ-കാര്യസ്ഥന്മാരുടെ പേരുകൾ നൽകുക (കോമയാൽ വേർതിരിച്ച്)",
+        roundTitle: "📊 റൗണ്ട് ടോട്ടലുകൾ",
+        addRoundBtn: "➕ റൗണ്ടിലേക്ക് ചേർക്കുക",
+        roundEmptyState: "ഒന്നിലധികം എണ്ണൽ റൗണ്ടുകൾ ട്രാക്ക് ചെയ്യാൻ 'റൗണ്ടിലേക്ക് ചേർക്കുക' ക്ലിക്ക് ചെയ്യുക",
+        roundsLabel: "റൗണ്ടുകൾ",
+        roundMaleTotal: "മൊത്തം പുരുഷൻ",
+        roundFemaleTotal: "മൊത്തം സ്ത്രീ",
+        roundGrandTotal: "ഗ്രാൻഡ് ടോട്ടൽ",
+        clearRoundsBtn: "🗑️ റൗണ്ടുകൾ മായ്ക്കുക",
+        clearRoundsConfirm: "എല്ലാ റൗണ്ടുകളും മായ്ക്കണോ? ഇത് എല്ലാ റൗണ്ട് ടോട്ടലുകളും നീക്കം ചെയ്യും.",
+        roundAdded: "✓ റൗണ്ടിലേക്ക് ചേർത്തു!",
+        roundsCleared: "✓ റൗണ്ടുകൾ മായ്ച്ചു!",
+        roundTotalsLabel: "റൗണ്ട് ടോട്ടലുകൾ",
+        roundSummary: "റൗണ്ട് സംഗ്രഹം",
+        roundsCount: "റൗണ്ടുകളുടെ എണ്ണം",
+        grandTotal: "ഗ്രാൻഡ് ടോട്ടൽ",
+        manageCelebrants: "⚙️ കാര്യസ്ഥന്മാരെ നിയന്ത്രിക്കുക",
+        enterCelebrantName: "കാര്യസ്ഥന്റെ പേര് നൽകുക",
+        addCelebrant: "➕ ചേർക്കുക",
+        savedCelebrants: "സംരക്ഷിച്ച കാര്യസ്ഥന്മാർ:",
+        noCelebrants: "ഇതുവരെ സംരക്ഷിച്ച കാര്യസ്ഥന്മാരില്ല. മുകളിൽ ആദ്യത്തെ കാര്യസ്ഥനെ ചേർക്കുക!",
+        deleteCelebrant: "ഇല്ലാതാക്കുക",
+        celebrantAdded: "✓ കാര്യസ്ഥൻ ചേർത്തു!",
+        celebrantDeleted: "✓ കാര്യസ്ഥൻ ഇല്ലാതാക്കി!",
+        celebrantExists: "ഈ കാര്യസ്ഥൻ ഇതിനകം നിലവിലുണ്ട്!"
+      }
+    };
+
+    let currentLang = localStorage.getItem('language') || 'en';
+    var male = 0;
+    var female = 0;
+    var deferredPrompt;
+    var touchStartX = 0;
+    var touchEndX = 0;
+    var touchStartY = 0;
+    var touchEndY = 0;
+    var rounds = []; // Array to store round totals
+
+    // Initialize language
+    document.addEventListener('DOMContentLoaded', function() {
+      updateLanguage();
+      initCoCelebrantsToggle();
+      loadRounds(); // Load saved rounds
+      
+      // Test haptic feedback support
+      console.log('Haptic support check:');
+      console.log('- navigator.vibrate:', 'vibrate' in navigator);
+      console.log('- User agent:', navigator.userAgent);
+      
+      // Request any needed permissions (user gesture required)
+      document.body.addEventListener('click', function testHaptic() {
+        console.log('First user interaction detected - testing haptic');
+        triggerHaptic('light');
+        document.body.removeEventListener('click', testHaptic);
+      }, { once: true });
+    });
+
+    // Round Total Functions
+    function addToRoundTotal() {
+      if (male === 0 && female === 0) {
+        alert(t('selectDateFirst')); // Reusing translation, or add specific message
+        return;
+      }
+      
+      var round = {
+        male: male,
+        female: female,
+        total: male + female,
+        timestamp: new Date().toISOString()
+      };
+      
+      rounds.push(round);
+      saveRounds();
+      displayRounds();
+      
+      // Clear the counters automatically
+      male = 0;
+      female = 0;
+      updateDisplay();
+      
+      // Show success message
+      var msg = document.getElementById('successMsg');
+      var originalText = msg.querySelector('[data-i18n="successMsg"]').textContent;
+      msg.querySelector('[data-i18n="successMsg"]').textContent = t('roundAdded');
+      msg.style.display = 'block';
+      triggerHaptic('success');
+      
+      setTimeout(function() {
+        msg.style.display = 'none';
+        msg.querySelector('[data-i18n="successMsg"]').textContent = originalText;
+      }, 2000);
+    }
+    
+    function displayRounds() {
+      var displayEl = document.getElementById('roundTotalDisplay');
+      var summaryEl = document.getElementById('roundTotalSummary');
+      
+      if (rounds.length === 0) {
+        displayEl.innerHTML = '<div class="round-total-empty" data-i18n="roundEmptyState">' + t('roundEmptyState') + '</div>';
+        summaryEl.style.display = 'none';
+        updateDisplay(); // Update to show only current counters
+        return;
+      }
+      
+      var html = '';
+      var totalMale = 0;
+      var totalFemale = 0;
+      
+      rounds.forEach(function(round, index) {
+        totalMale += round.male;
+        totalFemale += round.female;
+        
+        html += '<div class="round-item">';
+        html += '<span class="round-item-label">Round ' + (index + 1) + ':</span>';
+        html += '<div class="round-item-values">';
+        html += '<span class="male-total">♂ ' + round.male + '</span>';
+        html += '<span class="female-total">♀ ' + round.female + '</span>';
+        html += '<span>= ' + round.total + '</span>';
+        html += '</div>';
+        html += '<button class="round-item-remove" onclick="removeRound(' + index + ')">✕</button>';
+        html += '</div>';
+      });
+      
+      displayEl.innerHTML = html;
+      
+      // Update summary
+      document.getElementById('roundCount').textContent = rounds.length;
+      document.getElementById('roundMaleTotal').textContent = totalMale;
+      document.getElementById('roundFemaleTotal').textContent = totalFemale;
+      document.getElementById('roundGrandTotal').textContent = totalMale + totalFemale;
+      summaryEl.style.display = 'block';
+      
+      // Update the main total display to show grand total
+      updateDisplay();
+    }
+    
+    function removeRound(index) {
+      rounds.splice(index, 1);
+      saveRounds();
+      displayRounds();
+      triggerHaptic('light');
+    }
+    
+    function clearRounds() {
+      if (confirm(t('clearRoundsConfirm'))) {
+        rounds = [];
+        saveRounds();
+        displayRounds();
+        
+        var msg = document.getElementById('successMsg');
+        var originalText = msg.querySelector('[data-i18n="successMsg"]').textContent;
+        msg.querySelector('[data-i18n="successMsg"]').textContent = t('roundsCleared');
+        msg.style.display = 'block';
+        triggerHaptic('double');
+        
+        setTimeout(function() {
+          msg.style.display = 'none';
+          msg.querySelector('[data-i18n="successMsg"]').textContent = originalText;
+        }, 2000);
+      }
+    }
+    
+    function saveRounds() {
+      localStorage.setItem('mtcRounds', JSON.stringify(rounds));
+    }
+    
+    function loadRounds() {
+      var saved = localStorage.getItem('mtcRounds');
+      if (saved) {
+        rounds = JSON.parse(saved);
+        displayRounds();
+      }
+    }
+
+    // Set today's date
+    document.getElementById('date').valueAsDate = new Date();
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'en' ? 'ml' : 'en';
+      localStorage.setItem('language', currentLang);
+      updateLanguage();
+      triggerHaptic('light');
+    }
+
+    function updateLanguage() {
+      document.querySelector('.lang-toggle').textContent = currentLang === 'en' ? 'ML' : 'EN';
+      
+      // Update all elements with data-i18n attribute
+      document.querySelectorAll('[data-i18n]').forEach(function(element) {
+        const key = element.getAttribute('data-i18n');
+        if (translations[currentLang][key]) {
+          element.textContent = translations[currentLang][key];
+        }
+      });
+
+      // Update placeholders
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(function(element) {
+        const key = element.getAttribute('data-i18n-placeholder');
+        if (translations[currentLang][key]) {
+          element.placeholder = translations[currentLang][key];
+        }
+      });
+
+      // Update select options
+      document.querySelectorAll('option[data-i18n]').forEach(function(element) {
+        const key = element.getAttribute('data-i18n');
+        if (translations[currentLang][key]) {
+          element.textContent = translations[currentLang][key];
+        }
+      });
+
+      // Refresh history display to update language
+      if (document.getElementById('historyTab').classList.contains('active')) {
+        displayHistory();
+      }
+    }
+
+    function t(key) {
+      return translations[currentLang][key] || translations['en'][key] || key;
+    }
+
+    function toggleCoCelebrants() {
+      var toggle = document.getElementById('coCelebrantsToggle');
+      var field = document.getElementById('coCelebrantsField');
+      var isActive = toggle.classList.contains('active');
+      
+      if (isActive) {
+        toggle.classList.remove('active');
+        field.classList.remove('active');
+        localStorage.setItem('coCelebrantsEnabled', 'false');
+      } else {
+        toggle.classList.add('active');
+        field.classList.add('active');
+        localStorage.setItem('coCelebrantsEnabled', 'true');
+      }
+      
+      triggerHaptic('light');
+    }
+
+    // Initialize co-celebrants toggle state
+    function initCoCelebrantsToggle() {
+      var enabled = localStorage.getItem('coCelebrantsEnabled') === 'true';
+      if (enabled) {
+        document.getElementById('coCelebrantsToggle').classList.add('active');
+        document.getElementById('coCelebrantsField').classList.add('active');
+      }
+    }
+
+    // Haptic Feedback Function
+    function triggerHaptic(style) {
+      // Check if vibration API is available
+      if (!('vibrate' in navigator)) {
+        console.log('Vibration API not supported');
+        return;
+      }
+      
+      try {
+        let pattern;
+        switch(style) {
+          case 'light':
+            pattern = 10;
+            break;
+          case 'medium':
+            pattern = 20;
+            break;
+          case 'heavy':
+            pattern = 30;
+            break;
+          case 'success':
+            pattern = [10, 50, 10];
+            break;
+          case 'error':
+            pattern = [20, 100, 20];
+            break;
+          case 'double':
+            pattern = [15, 30, 15];
+            break;
+          default:
+            pattern = 15;
+        }
+        
+        // Trigger vibration
+        const success = navigator.vibrate(pattern);
+        console.log('Haptic triggered:', style, 'Success:', success);
+      } catch (error) {
+        console.error('Haptic error:', error);
+      }
+    }
+    
+    // Alternative haptic for iOS (uses audio feedback as fallback)
+    function triggerIOSHaptic() {
+      // iOS supports haptic through audio context
+      if (window.AudioContext || window.webkitAudioContext) {
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          const audioContext = new AudioContext();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = 200;
+          gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.01);
+        } catch (e) {
+          console.log('iOS haptic fallback failed:', e);
+        }
+      }
+    }
+
+    // Add haptic pulse animation to element
+    function addHapticAnimation(element) {
+      element.classList.add('haptic-pulse');
+      setTimeout(function() {
+        element.classList.remove('haptic-pulse');
+      }, 300);
+    }
+
+    // Swipe Detection
+    function handleSwipeGesture() {
+      var swipeThreshold = 100;
+      var swipeDistance = touchEndX - touchStartX;
+      var verticalDistance = Math.abs(touchEndY - touchStartY);
+      
+      if (verticalDistance < 100 && Math.abs(swipeDistance) > swipeThreshold) {
+        if (swipeDistance > 0) {
+          if (!document.getElementById('counterTab').classList.contains('active')) {
+            switchTab('counter');
+            showSwipeIndicator('right');
+            triggerHaptic('medium');
+          }
+        } else {
+          if (!document.getElementById('historyTab').classList.contains('active')) {
+            switchTab('history');
+            showSwipeIndicator('left');
+            triggerHaptic('medium');
+          }
+        }
+      }
+    }
+
+    function showSwipeIndicator(direction) {
+      var indicator = document.getElementById('swipe' + (direction === 'left' ? 'Left' : 'Right'));
+      indicator.classList.add('show');
+      setTimeout(function() {
+        indicator.classList.remove('show');
+      }, 500);
+    }
+
+    document.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      handleSwipeGesture();
+    }, { passive: true });
+
+    function changeMale(amount) {
+      male = Math.max(0, male + amount);
+      updateDisplay();
+      triggerHaptic(amount > 0 ? 'light' : 'medium');
+      addHapticAnimation(document.getElementById('maleCount'));
+    }
+
+    function changeFemale(amount) {
+      female = Math.max(0, female + amount);
+      updateDisplay();
+      triggerHaptic(amount > 0 ? 'light' : 'medium');
+      addHapticAnimation(document.getElementById('femaleCount'));
+    }
+
+    function updateDisplay() {
+      // If we have rounds, show the grand total from rounds
+      if (rounds.length > 0) {
+        var totalMale = male;
+        var totalFemale = female;
+        
+        // Add all rounds to the total
+        rounds.forEach(function(round) {
+          totalMale += round.male;
+          totalFemale += round.female;
+        });
+        
+        document.getElementById('maleCount').textContent = male;
+        document.getElementById('femaleCount').textContent = female;
+        document.getElementById('maleTotal').textContent = totalMale;
+        document.getElementById('femaleTotal').textContent = totalFemale;
+        document.getElementById('grandTotal').textContent = totalMale + totalFemale;
+      } else {
+        // No rounds, just show current counters
+        document.getElementById('maleCount').textContent = male;
+        document.getElementById('femaleCount').textContent = female;
+        document.getElementById('maleTotal').textContent = male;
+        document.getElementById('femaleTotal').textContent = female;
+        document.getElementById('grandTotal').textContent = male + female;
+      }
+    }
+
+    function newRecord() {
+      console.log('New Record button clicked!');
+      console.log('Current confirmation text:', t('newRecordConfirm'));
+      if (confirm(t('newRecordConfirm'))) {
+        console.log('User confirmed - clearing data');
+        male = 0;
+        female = 0;
+        rounds = [];
+        saveRounds();
+        updateDisplay();
+        displayRounds();
+        triggerHaptic('double');
+        console.log('Data cleared successfully');
+      } else {
+        console.log('User canceled');
+      }
+    }
+
+    function saveRecord() {
+      var date = document.getElementById('date').value;
+      if (!date) {
+        alert(t('selectDateFirst'));
+        return;
+      }
+
+      var parishName = document.getElementById('parishName').value || t('notSpecified');
+      var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
+      var sermon = document.getElementById('sermon').value || t('notSpecified');
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = t('notSpecified');
+      }
+
+      var record = {
+        date: date,
+        parishName: parishName,
+        celebrant: celebrant,
+        coCelebrants: coCelebrants,
+        sermon: sermon,
+        scripture: scripture,
+        male: male,
+        female: female,
+        total: male + female,
+        timestamp: new Date().toISOString()
+      };
+
+      var history = getHistory();
+      history = history.filter(function(r) { return r.date !== date; });
+      history.unshift(record);
+      saveHistory(history);
+
+      var msg = document.getElementById('successMsg');
+      msg.style.display = 'block';
+      triggerHaptic('success');
+      setTimeout(function() {
+        msg.style.display = 'none';
+      }, 3000);
+
+      displayHistory();
+    }
+
+    function getHistory() {
+      var history = localStorage.getItem('mtcHistory');
+      return history ? JSON.parse(history) : [];
+    }
+
+    function saveHistory(records) {
+      localStorage.setItem('mtcHistory', JSON.stringify(records));
+    }
+
+    function displayHistory() {
+      var history = getHistory();
+      var listEl = document.getElementById('historyList');
+      
+      if (history.length === 0) {
+        listEl.innerHTML = '<div class="empty-state"><p>📋</p><p style="font-size: 16px; font-weight: 600;">' + t('noRecords') + '</p><p style="font-size: 14px; margin-top: 8px; opacity: 0.7;">' + t('noRecordsDesc') + '</p></div>';
+        return;
+      }
+
+      var html = '';
+      history.forEach(function(record, index) {
+        var dateObj = new Date(record.date + 'T00:00:00');
+        var formattedDate = dateObj.toLocaleDateString(currentLang === 'ml' ? 'ml-IN' : 'en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        html += '<div class="history-item">';
+        html += '<div class="history-date">' + formattedDate + '</div>';
+        html += '<div class="history-details">';
+        html += '<strong>' + t('parish') + ':</strong> ' + record.parishName + '<br>';
+        html += '<strong>' + t('celebrant') + ':</strong> ' + record.celebrant + '<br>';
+        if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
+          html += '<strong>' + t('coCelebrantsLabel') + ':</strong> ' + record.coCelebrants + '<br>';
+        }
+        html += '<strong>' + t('sermon') + ':</strong> ' + record.sermon + '<br>';
+        html += '<strong>' + t('scripture') + ':</strong> ' + record.scripture + '<br>';
+        html += '<strong>' + t('attendance') + ':</strong> ' + t('male') + ': ' + record.male + ', ' + t('female') + ': ' + record.female + ', ' + t('total') + ': ' + record.total;
+        html += '</div>';
+        html += '<div class="history-actions">';
+        html += '<button class="history-btn load-btn" onclick="loadRecord(' + index + ')">' + t('loadBtn') + '</button>';
+        html += '<button class="history-btn delete-btn" onclick="deleteRecord(' + index + ')">' + t('deleteBtn') + '</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+
+      listEl.innerHTML = html;
+    }
+
+    function loadRecord(index) {
+      var history = getHistory();
+      var record = history[index];
+      
+      document.getElementById('date').value = record.date;
+      document.getElementById('parishName').value = record.parishName === t('notSpecified') ? '' : record.parishName;
+      document.getElementById('celebrant').value = record.celebrant === t('notSpecified') ? '' : record.celebrant;
+      
+      // Handle co-celebrants
+      if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
+        document.getElementById('coCelebrants').value = record.coCelebrants;
+        if (!document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+          toggleCoCelebrants();
+        }
+      } else {
+        document.getElementById('coCelebrants').value = '';
+      }
+      
+      document.getElementById('sermon').value = record.sermon === t('notSpecified') ? '' : record.sermon;
+      
+      if (record.scripture && record.scripture !== t('notSpecified')) {
+        var parts = record.scripture.split(' ');
+        var bookName = parts.slice(0, -1).join(' ');
+        var chapterVerse = parts[parts.length - 1];
+        
+        if (chapterVerse) {
+          var cv = chapterVerse.split(':');
+          document.getElementById('book').value = bookName;
+          document.getElementById('chapter').value = cv[0] || '';
+          document.getElementById('verse').value = cv[1] || '';
+        }
+      }
+      
+      male = record.male;
+      female = record.female;
+      updateDisplay();
+      
+      switchTab('counter');
+      triggerHaptic('success');
+    }
+
+    function deleteRecord(index) {
+      if (confirm(t('deleteConfirm'))) {
+        var history = getHistory();
+        history.splice(index, 1);
+        saveHistory(history);
+        displayHistory();
+        triggerHaptic('error');
+      }
+    }
+
+    function switchTab(tab) {
+      var tabs = document.querySelectorAll('.tab');
+      tabs.forEach(function(t) {
+        t.classList.remove('active');
+      });
+      
+      document.getElementById('counterTab').classList.remove('active');
+      document.getElementById('historyTab').classList.remove('active');
+      
+      if (tab === 'counter') {
+        tabs[0].classList.add('active');
+        document.getElementById('counterTab').classList.add('active');
+      } else {
+        tabs[1].classList.add('active');
+        document.getElementById('historyTab').classList.add('active');
+        displayHistory();
+      }
+      
+      triggerHaptic('light');
+    }
+
+    function exportData() {
+      var date = document.getElementById('date').value;
+      var parishName = document.getElementById('parishName').value || t('notSpecified');
+      var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
+      var sermon = document.getElementById('sermon').value || t('notSpecified');
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = t('notSpecified');
+      }
+      
+      var dateObj = new Date(date + 'T00:00:00');
+      var formattedDate = dateObj.toLocaleDateString(currentLang === 'ml' ? 'ml-IN' : 'en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      var text = t('serviceDetails') + ' - ' + formattedDate + '\n\n' +
+                 t('parish') + ': ' + parishName + '\n' +
+                 t('celebrant') + ': ' + celebrant + '\n';
+      
+      if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
+        text += t('coCelebrantsLabel') + ': ' + coCelebrants + '\n';
+      }
+      
+      text += t('sermon') + ': ' + sermon + '\n' +
+              t('scripture') + ': ' + scripture + '\n\n';
+      
+      // Calculate totals (use rounds if available, otherwise current counters)
+      var totalMale = male;
+      var totalFemale = female;
+      
+      if (rounds.length > 0) {
+        totalMale = 0;
+        totalFemale = 0;
+        rounds.forEach(function(round) {
+          totalMale += round.male;
+          totalFemale += round.female;
+        });
+      }
+      
+      text += t('attendanceSummary') + ':\n' +
+              '• ' + t('male') + ': ' + totalMale + '\n' +
+              '• ' + t('female') + ': ' + totalFemale + '\n' +
+              '• ' + t('totalAttendanceFull') + ': ' + (totalMale + totalFemale);
+
+      navigator.clipboard.writeText(text).then(function() {
+        var msg = document.getElementById('successMsg');
+        msg.querySelector('[data-i18n="successMsg"]').textContent = t('copiedToClipboard');
+        msg.style.display = 'block';
+        triggerHaptic('success');
+        setTimeout(function() {
+          msg.style.display = 'none';
+          msg.querySelector('[data-i18n="successMsg"]').textContent = t('successMsg');
+        }, 3000);
+      }).catch(function(err) {
+        alert('Copy this text:\n\n' + text);
+        triggerHaptic('error');
+      });
+    }
+
+    function shareToWhatsApp() {
+      var date = document.getElementById('date').value;
+      var parishName = document.getElementById('parishName').value || t('notSpecified');
+      var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
+      var sermon = document.getElementById('sermon').value || t('notSpecified');
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = t('notSpecified');
+      }
+      
+      var dateObj = new Date(date + 'T00:00:00');
+      var formattedDate = dateObj.toLocaleDateString(currentLang === 'ml' ? 'ml-IN' : 'en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      var text = t('serviceDetails') + ' - ' + formattedDate + '\n\n' +
+                 t('parish') + ': ' + parishName + '\n' +
+                 t('celebrant') + ': ' + celebrant + '\n';
+      
+      if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
+        text += t('coCelebrantsLabel') + ': ' + coCelebrants + '\n';
+      }
+      
+      text += t('sermon') + ': ' + sermon + '\n' +
+              t('scripture') + ': ' + scripture + '\n\n';
+      
+      // Calculate totals (use rounds if available, otherwise current counters)
+      var totalMale = male;
+      var totalFemale = female;
+      
+      if (rounds.length > 0) {
+        totalMale = 0;
+        totalFemale = 0;
+        rounds.forEach(function(round) {
+          totalMale += round.male;
+          totalFemale += round.female;
+        });
+      }
+      
+      text += t('attendanceSummary') + ':\n' +
+              '• ' + t('male') + ': ' + totalMale + '\n' +
+              '• ' + t('female') + ': ' + totalFemale + '\n' +
+              '• ' + t('totalAttendanceFull') + ': ' + (totalMale + totalFemale);
+
+      // URL encode the text for WhatsApp
+      var whatsappText = encodeURIComponent(text);
+      var whatsappUrl = 'https://wa.me/?text=' + whatsappText;
+      
+      // Open WhatsApp in new window
+      window.open(whatsappUrl, '_blank');
+      triggerHaptic('success');
+    }
+
+    function exportPDF() {
+      var date = document.getElementById('date').value;
+      var parishName = document.getElementById('parishName').value || t('notSpecified');
+      var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var coCelebrants = '';
+      if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
+        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+      }
+      var sermon = document.getElementById('sermon').value || t('notSpecified');
+      var book = document.getElementById('book').value;
+      var chapter = document.getElementById('chapter').value;
+      var verse = document.getElementById('verse').value;
+      
+      var scripture = '';
+      if (book) {
+        scripture = book;
+        if (chapter) {
+          scripture += ' ' + chapter;
+          if (verse) {
+            scripture += ':' + verse;
+          }
+        }
+      } else {
+        scripture = t('notSpecified');
+      }
+      
+      var dateObj = new Date(date + 'T00:00:00');
+      var formattedDate = dateObj.toLocaleDateString(currentLang === 'ml' ? 'ml-IN' : 'en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      if (typeof window.jspdf === 'undefined') {
+        alert('PDF library not loaded. Please check your internet connection and refresh the page.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      doc.setFontSize(20);
+      doc.setFont(undefined, 'bold');
+      doc.text(currentLang === 'ml' ? 'മാർത്തോമ്മാ പള്ളി' : '⛪ MarThoma Church', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.text(t('serviceDetails'), 105, 30, { align: 'center' });
+      
+      doc.setLineWidth(0.5);
+      doc.line(20, 35, 190, 35);
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(t('serviceDetails'), 20, 45);
+      
+      doc.setFont(undefined, 'normal');
+      var yPos = 55;
+      doc.text(t('dateLabel') + ': ' + formattedDate, 20, yPos);
+      yPos += 8;
+      doc.text(t('parish') + ': ' + parishName, 20, yPos);
+      yPos += 8;
+      doc.text(t('celebrant') + ': ' + celebrant, 20, yPos);
+      
+      if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
+        yPos += 8;
+        doc.text(t('coCelebrantsLabel') + ': ' + coCelebrants, 20, yPos);
+      }
+      
+      yPos += 8;
+      doc.text(t('sermon') + ': ' + sermon, 20, yPos);
+      yPos += 8;
+      doc.text(t('scripture') + ': ' + scripture, 20, yPos);
+      
+      yPos += 13;
+      
+      // Calculate totals (use rounds if available, otherwise current counters)
+      var totalMale = male;
+      var totalFemale = female;
+      
+      if (rounds.length > 0) {
+        totalMale = 0;
+        totalFemale = 0;
+        rounds.forEach(function(round) {
+          totalMale += round.male;
+          totalFemale += round.female;
+        });
+      }
+      
+      // Show attendance summary
+      doc.setFont(undefined, 'bold');
+      doc.text(t('attendanceSummary'), 20, yPos);
+      
+      yPos += 10;
+      doc.setFont(undefined, 'normal');
+      doc.text(t('male') + ': ' + totalMale, 20, yPos);
+      yPos += 8;
+      doc.text(t('female') + ': ' + totalFemale, 20, yPos);
+      
+      yPos += 12;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(14);
+      doc.text(t('totalAttendanceFull') + ': ' + (totalMale + totalFemale), 20, yPos);
+      
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'italic');
+      doc.text('Generated by MTC Counter App', 105, 280, { align: 'center' });
+      doc.text(new Date().toLocaleString(), 105, 285, { align: 'center' });
+      
+      var filename = 'MTC_Attendance_' + date + '.pdf';
+      doc.save(filename);
+      
+      var msg = document.getElementById('successMsg');
+      msg.querySelector('[data-i18n="successMsg"]').textContent = t('pdfDownloaded');
+      msg.style.display = 'block';
+      triggerHaptic('success');
+      setTimeout(function() {
+        msg.style.display = 'none';
+        msg.querySelector('[data-i18n="successMsg"]').textContent = t('successMsg');
+      }, 3000);
+    }
+
+    // Dark mode functionality
+    function toggleDarkMode() {
+      document.body.classList.toggle('light-mode');
+      var isLight = document.body.classList.contains('light-mode');
+      var btn = document.querySelector('.dark-mode-toggle');
+      btn.textContent = isLight ? '🌙' : '☀️';
+      localStorage.setItem('darkMode', isLight ? 'disabled' : 'enabled');
+      triggerHaptic('light');
+    }
+
+    if (localStorage.getItem('darkMode') === 'disabled') {
+      document.body.classList.add('light-mode');
+      document.querySelector('.dark-mode-toggle').textContent = '🌙';
+    }
+
+    // PWA Install Prompt
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      setTimeout(function() {
+        if (!window.matchMedia('(display-mode: standalone)').matches) {
+          document.getElementById('installPrompt').classList.add('show');
+        }
+      }, 3000);
+    });
+
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choiceResult) {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('App installed');
+          }
+          deferredPrompt = null;
+          closeInstallPrompt();
+        });
+      }
+    }
+
+    function closeInstallPrompt() {
+      document.getElementById('installPrompt').classList.remove('show');
+      localStorage.setItem('installPromptDismissed', 'true');
+    }
+
+    if (localStorage.getItem('installPromptDismissed') === 'true') {
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+      });
+    }
+
+    // Celebrant Management Functions
+    function getSavedCelebrants() {
+      var saved = localStorage.getItem('savedCelebrants');
+      return saved ? JSON.parse(saved) : [];
+    }
+
+    function saveCelebrants(celebrants) {
+      localStorage.setItem('savedCelebrants', JSON.stringify(celebrants));
+      updateCelebrantDatalist();
+      displayCelebrantList();
+    }
+
+    function updateCelebrantDatalist() {
+      var celebrants = getSavedCelebrants();
+      var datalist = document.getElementById('celebrantList');
+      datalist.innerHTML = '';
+      
+      celebrants.forEach(function(name) {
+        var option = document.createElement('option');
+        option.value = name;
+        datalist.appendChild(option);
+      });
+    }
+
+    function openCelebrantManager() {
+      document.getElementById('celebrantManager').classList.add('show');
+      displayCelebrantList();
+      triggerHaptic('light');
+    }
+
+    function closeCelebrantManager() {
+      document.getElementById('celebrantManager').classList.remove('show');
+      document.getElementById('newCelebrantName').value = '';
+      triggerHaptic('light');
+    }
+
+    function addCelebrant() {
+      var nameInput = document.getElementById('newCelebrantName');
+      var name = nameInput.value.trim();
+      
+      if (!name) {
+        alert(t('enterCelebrantName'));
+        return;
+      }
+      
+      var celebrants = getSavedCelebrants();
+      
+      // Check if celebrant already exists
+      if (celebrants.includes(name)) {
+        alert(t('celebrantExists'));
+        triggerHaptic('error');
+        return;
+      }
+      
+      celebrants.push(name);
+      celebrants.sort(); // Keep alphabetically sorted
+      saveCelebrants(celebrants);
+      
+      nameInput.value = '';
+      
+      // Show success message
+      var msg = document.getElementById('successMsg');
+      var originalText = msg.querySelector('[data-i18n="successMsg"]').textContent;
+      msg.querySelector('[data-i18n="successMsg"]').textContent = t('celebrantAdded');
+      msg.style.display = 'block';
+      triggerHaptic('success');
+      
+      setTimeout(function() {
+        msg.style.display = 'none';
+        msg.querySelector('[data-i18n="successMsg"]').textContent = originalText;
+      }, 2000);
+    }
+
+    function deleteCelebrant(name) {
+      if (confirm('Delete "' + name + '"?')) {
+        var celebrants = getSavedCelebrants();
+        celebrants = celebrants.filter(function(c) { return c !== name; });
+        saveCelebrants(celebrants);
+        
+        // Show success message
+        var msg = document.getElementById('successMsg');
+        var originalText = msg.querySelector('[data-i18n="successMsg"]').textContent;
+        msg.querySelector('[data-i18n="successMsg"]').textContent = t('celebrantDeleted');
+        msg.style.display = 'block';
+        triggerHaptic('double');
+        
+        setTimeout(function() {
+          msg.style.display = 'none';
+          msg.querySelector('[data-i18n="successMsg"]').textContent = originalText;
+        }, 2000);
+      }
+    }
+
+    function displayCelebrantList() {
+      var celebrants = getSavedCelebrants();
+      var display = document.getElementById('celebrantListDisplay');
+      
+      if (celebrants.length === 0) {
+        display.innerHTML = '<div class="celebrant-empty-state">' + t('noCelebrants') + '</div>';
+        return;
+      }
+      
+      var html = '';
+      celebrants.forEach(function(name) {
+        html += '<div class="celebrant-item">';
+        html += '<span class="celebrant-name">' + name + '</span>';
+        html += '<button class="delete-celebrant-btn" onclick="deleteCelebrant(\'' + name.replace(/'/g, "\\'") + '\')">';
+        html += '<span data-i18n="deleteCelebrant">' + t('deleteCelebrant') + '</span>';
+        html += '</button>';
+        html += '</div>';
+      });
+      
+      display.innerHTML = html;
+    }
+
+    // Initialize celebrant datalist on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      updateCelebrantDatalist();
+    });
+
+    // Add Enter key support for adding celebrants
+    document.addEventListener('DOMContentLoaded', function() {
+      var input = document.getElementById('newCelebrantName');
+      if (input) {
+        input.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            addCelebrant();
+          }
+        });
+      }
+    });
+
+    // Service Worker Registration for PWA
+    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js')
+          .then(function(registration) {
+            console.log('Service Worker registered successfully:', registration.scope);
+            
+            // Check for updates periodically
+            setInterval(function() {
+              registration.update();
+            }, 3600000); // Check every hour
+          })
+          .catch(function(error) {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    } else if (window.location.protocol === 'file:') {
+      console.log('Service Worker disabled: app is running from file:// protocol');
+      console.log('To enable PWA features, host this app on a web server');
+    }
+
+    // Offline/Online status
+    function updateOnlineStatus() {
+      var isOnline = navigator.onLine;
+      var indicator = document.getElementById('offlineIndicator');
+      
+      if (isOnline) {
+        indicator.classList.add('online');
+        indicator.innerHTML = '<span>🟢</span><span>' + t('online') + '</span>';
+        indicator.classList.add('show');
+        
+        setTimeout(function() {
+          indicator.classList.remove('show');
+        }, 3000);
+        
+        syncData();
+      } else {
+        indicator.classList.remove('online');
+        indicator.innerHTML = '<span>🔴</span><span>' + t('offline') + '</span>';
+        indicator.classList.add('show');
+      }
+      
+      console.log('Connection status:', isOnline ? '🟢 Online' : '🔴 Offline');
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    
+    setTimeout(function() {
+      if (!navigator.onLine) {
+        updateOnlineStatus();
+      }
+    }, 1000);
+
+    function syncData() {
+      var syncStatus = document.getElementById('syncStatus');
+      syncStatus.querySelector('[data-i18n="syncing"]').textContent = t('syncing');
+      syncStatus.classList.add('show');
+      
+      setTimeout(function() {
+        syncStatus.innerHTML = '<span>✓</span><span>' + t('synced') + '</span>';
+        syncStatus.style.background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
+        
+        setTimeout(function() {
+          syncStatus.classList.remove('show');
+          syncStatus.innerHTML = '<span>🔄</span><span data-i18n="syncing">' + t('syncing') + '</span>';
+          syncStatus.style.background = 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)';
+        }, 2000);
+      }, 1000);
+      
+      console.log('Syncing data...');
+    }
+
+    displayHistory();
+  </script>
+
+</body>
+</html>
