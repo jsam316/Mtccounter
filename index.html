@@ -1667,6 +1667,267 @@
       background: rgba(219, 234, 254, 0.8);
       border-color: #3b82f6;
     }
+
+    /* History search and toolbar */
+    .history-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .history-search {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      color: #ffffff;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .history-search::placeholder {
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    .history-search:focus {
+      outline: none;
+      border-color: rgba(96, 165, 250, 0.6);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .light-mode .history-search {
+      background: rgba(255, 255, 255, 0.6);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: #1e293b;
+    }
+
+    .light-mode .history-search::placeholder {
+      color: rgba(0, 0, 0, 0.35);
+    }
+
+    .history-actions-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .history-action-btn {
+      flex: 1;
+      min-width: 70px;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .backup-btn {
+      background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%);
+      color: white;
+    }
+
+    .backup-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+    }
+
+    .restore-btn {
+      background: linear-gradient(135deg, #0891b2 0%, #22d3ee 100%);
+      color: white;
+    }
+
+    .restore-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(8, 145, 178, 0.4);
+    }
+
+    .csv-btn {
+      background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+      color: white;
+    }
+
+    .csv-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+    }
+
+    .history-action-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Stats Tab */
+    .stats-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .stat-card.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .stat-icon {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 2px;
+    }
+
+    .light-mode .stat-card {
+      background: rgba(255, 255, 255, 0.6);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    .light-mode .stat-card:hover {
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .light-mode .stat-value {
+      color: #1e293b;
+    }
+
+    .light-mode .stat-label {
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    .light-mode .stat-sub {
+      color: rgba(0, 0, 0, 0.4);
+    }
+
+    /* Trend bar chart */
+    .trend-section {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .trend-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+    }
+
+    .light-mode .trend-section {
+      background: rgba(255, 255, 255, 0.6);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    .light-mode .trend-title {
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    .trend-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 80px;
+    }
+
+    .trend-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      gap: 4px;
+    }
+
+    .trend-bar-inner {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .trend-bar {
+      width: 100%;
+      background: linear-gradient(180deg, #818cf8 0%, #6366f1 100%);
+      border-radius: 6px 6px 0 0;
+      min-height: 4px;
+      transition: height 0.5s ease;
+    }
+
+    .trend-bar-label {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .trend-bar-val {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      text-align: center;
+    }
+
+    .light-mode .trend-bar-label,
+    .light-mode .trend-bar-val {
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    .stats-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .light-mode .stats-empty {
+      color: rgba(0, 0, 0, 0.4);
+    }
   </style>
 </head>
 <body>
@@ -1698,6 +1959,7 @@
     <div class="tabs">
       <button class="tab active" onclick="switchTab('counter')"><span data-i18n="counterTab">📊 Counter</span></button>
       <button class="tab" onclick="switchTab('history')"><span data-i18n="historyTab">📅 History</span></button>
+      <button class="tab" onclick="switchTab('stats')"><span data-i18n="statsTab">📈 Stats</span></button>
     </div>
 
     <!-- Counter Tab -->
@@ -1931,6 +2193,23 @@
 
     <!-- History Tab -->
     <div id="historyTab" class="tab-content">
+      <div class="history-toolbar">
+        <input type="text" id="historySearch" class="history-search"
+          data-i18n-placeholder="searchPlaceholder" placeholder="Search records..."
+          oninput="filterHistory(this.value)">
+        <div class="history-actions-bar">
+          <button class="history-action-btn backup-btn" onclick="exportBackupJSON()">
+            <span data-i18n="backupBtn">Backup</span>
+          </button>
+          <button class="history-action-btn restore-btn" onclick="document.getElementById('restoreFileInput').click()">
+            <span data-i18n="restoreBtn">Restore</span>
+          </button>
+          <button class="history-action-btn csv-btn" onclick="exportCSV()">
+            <span data-i18n="exportCsvBtn">CSV</span>
+          </button>
+        </div>
+      </div>
+      <input type="file" id="restoreFileInput" accept=".json" style="display:none" onchange="importBackup(event)">
       <div id="historyList" class="history-list">
         <div class="empty-state">
           <p>📋</p>
@@ -1938,6 +2217,11 @@
           <p style="font-size: 14px; margin-top: 8px; opacity: 0.7;" data-i18n="noRecordsDesc">Save your first service record to see it here!</p>
         </div>
       </div>
+    </div>
+
+    <!-- Stats Tab -->
+    <div id="statsTab" class="tab-content">
+      <div id="statsContent" class="stats-container"></div>
     </div>
   </div>
 
@@ -2100,7 +2384,27 @@
         deleteParish: "Delete",
         parishAdded: "✓ Parish added!",
         parishDeleted: "✓ Parish deleted!",
-        parishExists: "This parish already exists!"
+        parishExists: "This parish already exists!",
+        statsTab: "📈 Stats",
+        searchPlaceholder: "Search records...",
+        backupBtn: "Backup",
+        restoreBtn: "Restore",
+        exportCsvBtn: "CSV",
+        backupSuccess: "✓ Backup downloaded!",
+        restoreSuccess: "✓ Data restored successfully!",
+        restoreError: "Invalid backup file. Please select a valid MTC backup.",
+        statsTitle: "Attendance Statistics",
+        totalServices: "Total Services",
+        avgAttendance: "Avg Attendance",
+        avgMale: "Avg Male",
+        avgFemale: "Avg Female",
+        highestService: "Highest",
+        lowestService: "Lowest",
+        csvExported: "✓ CSV exported!",
+        noDataForStats: "No records yet. Save service records to see statistics.",
+        recentTrend: "Recent Trend (Last 5)",
+        dataManagement: "Data Management",
+        confirmRestore: "This will replace ALL current data with the backup. Continue?"
       },
       ml: {
         appTitle: "⛪ എം.ടി.സി കൗണ്ടർ",
@@ -2190,7 +2494,27 @@
         deleteParish: "ഇല്ലാതാക്കുക",
         parishAdded: "✓ ഇടവക ചേർത്തു!",
         parishDeleted: "✓ ഇടവക ഇല്ലാതാക്കി!",
-        parishExists: "ഈ ഇടവക ഇതിനകം നിലവിലുണ്ട്!"
+        parishExists: "ഈ ഇടവക ഇതിനകം നിലവിലുണ്ട്!",
+        statsTab: "📈 സ്ഥിതിവിവരം",
+        searchPlaceholder: "റെക്കോർഡുകൾ തിരയുക...",
+        backupBtn: "ബാക്കപ്പ്",
+        restoreBtn: "പുനഃസ്ഥാപിക്കുക",
+        exportCsvBtn: "CSV",
+        backupSuccess: "✓ ബാക്കപ്പ് ഡൗൺലോഡ് ചെയ്തു!",
+        restoreSuccess: "✓ ഡാറ്റ വിജയകരമായി പുനഃസ്ഥാപിച്ചു!",
+        restoreError: "അസാധുവായ ബാക്കപ്പ് ഫയൽ. സാധുവായ MTC ബാക്കപ്പ് തിരഞ്ഞെടുക്കുക.",
+        statsTitle: "ഹാജർ സ്ഥിതിവിവരക്കണക്കുകൾ",
+        totalServices: "ആകെ സേവനങ്ങൾ",
+        avgAttendance: "ശരാശരി ഹാജർ",
+        avgMale: "ശരാശരി പുരുഷൻ",
+        avgFemale: "ശരാശരി സ്ത്രീ",
+        highestService: "ഏറ്റവും ഉയർന്നത്",
+        lowestService: "ഏറ്റവും കുറഞ്ഞത്",
+        csvExported: "✓ CSV കയറ്റുമതി ചെയ്തു!",
+        noDataForStats: "ഇതുവരെ റെക്കോർഡുകളില്ല. സ്ഥിതിവിവരക്കണക്കുകൾ കാണാൻ സേവന റെക്കോർഡുകൾ സേവ് ചെയ്യുക.",
+        recentTrend: "സമീപകാല ട്രെൻഡ് (അവസാനം 5)",
+        dataManagement: "ഡാറ്റ മാനേജ്മെന്റ്",
+        confirmRestore: "ഇത് നിലവിലെ എല്ലാ ഡാറ്റയും ബാക്കപ്പ് ഉപയോഗിച്ച് മാറ്റിസ്ഥാപിക്കും. തുടരണോ?"
       }
     };
 
@@ -2657,44 +2981,13 @@
     }
 
     function displayHistory() {
+      // Clear the search box on a fresh display
+      var searchEl = document.getElementById('historySearch');
+      if (searchEl) searchEl.value = '';
+
       var history = getHistory();
       var listEl = document.getElementById('historyList');
-      
-      if (history.length === 0) {
-        listEl.innerHTML = '<div class="empty-state"><p>📋</p><p style="font-size: 16px; font-weight: 600;">' + t('noRecords') + '</p><p style="font-size: 14px; margin-top: 8px; opacity: 0.7;">' + t('noRecordsDesc') + '</p></div>';
-        return;
-      }
-
-      var html = '';
-      history.forEach(function(record, index) {
-        var dateObj = new Date(record.date + 'T00:00:00');
-        var formattedDate = dateObj.toLocaleDateString(currentLang === 'ml' ? 'ml-IN' : 'en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-
-        html += '<div class="history-item">';
-        html += '<div class="history-date">' + formattedDate + '</div>';
-        html += '<div class="history-details">';
-        html += '<strong>' + t('parish') + ':</strong> ' + record.parishName + '<br>';
-        html += '<strong>' + t('celebrant') + ':</strong> ' + record.celebrant + '<br>';
-        if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
-          html += '<strong>' + t('coCelebrantsLabel') + ':</strong> ' + record.coCelebrants + '<br>';
-        }
-        html += '<strong>' + t('sermon') + ':</strong> ' + record.sermon + '<br>';
-        html += '<strong>' + t('scripture') + ':</strong> ' + record.scripture + '<br>';
-        html += '<strong>' + t('attendance') + ':</strong> ' + t('male') + ': ' + record.male + ', ' + t('female') + ': ' + record.female + ', ' + t('total') + ': ' + record.total;
-        html += '</div>';
-        html += '<div class="history-actions">';
-        html += '<button class="history-btn load-btn" onclick="loadRecord(' + index + ')">' + t('loadBtn') + '</button>';
-        html += '<button class="history-btn delete-btn" onclick="deleteRecord(' + index + ')">' + t('deleteBtn') + '</button>';
-        html += '</div>';
-        html += '</div>';
-      });
-
-      listEl.innerHTML = html;
+      renderHistoryItems(history, listEl);
     }
 
     function loadRecord(index) {
@@ -2753,19 +3046,24 @@
       tabs.forEach(function(t) {
         t.classList.remove('active');
       });
-      
+
       document.getElementById('counterTab').classList.remove('active');
       document.getElementById('historyTab').classList.remove('active');
-      
+      document.getElementById('statsTab').classList.remove('active');
+
       if (tab === 'counter') {
         tabs[0].classList.add('active');
         document.getElementById('counterTab').classList.add('active');
-      } else {
+      } else if (tab === 'history') {
         tabs[1].classList.add('active');
         document.getElementById('historyTab').classList.add('active');
         displayHistory();
+      } else if (tab === 'stats') {
+        tabs[2].classList.add('active');
+        document.getElementById('statsTab').classList.add('active');
+        displayStats();
       }
-      
+
       triggerHaptic('light');
     }
 
@@ -3477,6 +3775,271 @@
       }, 1000);
       
       console.log('Syncing data...');
+    }
+
+    // ─── History Search / Filter ──────────────────────────────────────────────
+
+    function filterHistory(query) {
+      var history = getHistory();
+      var listEl = document.getElementById('historyList');
+      var q = (query || '').trim().toLowerCase();
+
+      var filtered = q
+        ? history.filter(function(r) {
+            return (r.parishName || '').toLowerCase().indexOf(q) !== -1
+              || (r.celebrant || '').toLowerCase().indexOf(q) !== -1
+              || (r.sermon || '').toLowerCase().indexOf(q) !== -1
+              || (r.scripture || '').toLowerCase().indexOf(q) !== -1
+              || (r.date || '').indexOf(q) !== -1;
+          })
+        : history;
+
+      renderHistoryItems(filtered, listEl);
+    }
+
+    // Refactored render helper (used by filterHistory and displayHistory)
+    function renderHistoryItems(history, listEl) {
+      if (!listEl) return;
+
+      if (history.length === 0) {
+        listEl.innerHTML = '<div class="empty-state"><p>📋</p><p style="font-size: 16px; font-weight: 600;">'
+          + t('noRecords') + '</p><p style="font-size: 14px; margin-top: 8px; opacity: 0.7;">'
+          + t('noRecordsDesc') + '</p></div>';
+        return;
+      }
+
+      var allHistory = getHistory(); // needed for correct index lookup on load/delete
+
+      var html = '';
+      history.forEach(function(record) {
+        var realIndex = allHistory.findIndex(function(r) { return r.date === record.date && r.timestamp === record.timestamp; });
+        if (realIndex === -1) realIndex = allHistory.findIndex(function(r) { return r.date === record.date; });
+
+        var dateObj = new Date(record.date + 'T00:00:00');
+        var formattedDate = dateObj.toLocaleDateString(currentLang === 'ml' ? 'ml-IN' : 'en-US', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        html += '<div class="history-item">';
+        html += '<div class="history-date">' + formattedDate + '</div>';
+        html += '<div class="history-details">';
+        html += '<strong>' + t('parish') + ':</strong> ' + record.parishName + '<br>';
+        html += '<strong>' + t('celebrant') + ':</strong> ' + record.celebrant + '<br>';
+        if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
+          html += '<strong>' + t('coCelebrantsLabel') + ':</strong> ' + record.coCelebrants + '<br>';
+        }
+        html += '<strong>' + t('sermon') + ':</strong> ' + record.sermon + '<br>';
+        html += '<strong>' + t('scripture') + ':</strong> ' + record.scripture + '<br>';
+        html += '<strong>' + t('attendance') + ':</strong> '
+          + t('male') + ': ' + record.male + ', '
+          + t('female') + ': ' + record.female + ', '
+          + t('total') + ': ' + record.total;
+        html += '</div>';
+        html += '<div class="history-actions">';
+        html += '<button class="history-btn load-btn" onclick="loadRecord(' + realIndex + ')">' + t('loadBtn') + '</button>';
+        html += '<button class="history-btn delete-btn" onclick="deleteRecord(' + realIndex + ')">' + t('deleteBtn') + '</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+
+      listEl.innerHTML = html;
+    }
+
+    // ─── Data Backup / Restore ────────────────────────────────────────────────
+
+    function exportBackupJSON() {
+      var backup = {
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        app: 'MTC Counter',
+        data: {
+          mtcHistory: getHistory(),
+          savedCelebrants: getSavedCelebrants(),
+          savedParishes: getSavedParishes()
+        }
+      };
+
+      var json = JSON.stringify(backup, null, 2);
+      var blob = new Blob([json], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      var dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = 'MTC_Backup_' + dateStr + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showSuccessMsg(t('backupSuccess'));
+      triggerHaptic('success');
+    }
+
+    function importBackup(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var backup = JSON.parse(e.target.result);
+          if (!backup || !backup.data || !backup.app || backup.app !== 'MTC Counter') {
+            alert(t('restoreError'));
+            triggerHaptic('error');
+            return;
+          }
+
+          if (!confirm(t('confirmRestore'))) {
+            event.target.value = '';
+            return;
+          }
+
+          if (backup.data.mtcHistory) {
+            localStorage.setItem('mtcHistory', JSON.stringify(backup.data.mtcHistory));
+          }
+          if (backup.data.savedCelebrants) {
+            localStorage.setItem('savedCelebrants', JSON.stringify(backup.data.savedCelebrants));
+          }
+          if (backup.data.savedParishes) {
+            localStorage.setItem('savedParishes', JSON.stringify(backup.data.savedParishes));
+          }
+
+          displayHistory();
+          updateCelebrantDatalist();
+          updateParishDatalist();
+          showSuccessMsg(t('restoreSuccess'));
+          triggerHaptic('success');
+        } catch (err) {
+          alert(t('restoreError'));
+          triggerHaptic('error');
+        }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    function showSuccessMsg(msg) {
+      var el = document.getElementById('successMsg');
+      var span = el.querySelector('[data-i18n="successMsg"]');
+      var original = span.textContent;
+      span.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(function() {
+        el.style.display = 'none';
+        span.textContent = original;
+      }, 3000);
+    }
+
+    // ─── CSV Export ───────────────────────────────────────────────────────────
+
+    function exportCSV() {
+      var history = getHistory();
+      if (history.length === 0) {
+        alert(t('noDataForStats'));
+        return;
+      }
+
+      var headers = ['Date', 'Parish', 'Celebrant', 'Co-Celebrants', 'Sermon', 'Scripture', 'Male', 'Female', 'Total'];
+      var rows = history.map(function(r) {
+        return [
+          r.date,
+          '"' + (r.parishName || '').replace(/"/g, '""') + '"',
+          '"' + (r.celebrant || '').replace(/"/g, '""') + '"',
+          '"' + (r.coCelebrants || '').replace(/"/g, '""') + '"',
+          '"' + (r.sermon || '').replace(/"/g, '""') + '"',
+          '"' + (r.scripture || '').replace(/"/g, '""') + '"',
+          r.male,
+          r.female,
+          r.total
+        ].join(',');
+      });
+
+      var csv = [headers.join(',')].concat(rows).join('\n');
+      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      var dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = 'MTC_Attendance_' + dateStr + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showSuccessMsg(t('csvExported'));
+      triggerHaptic('success');
+    }
+
+    // ─── Attendance Statistics ────────────────────────────────────────────────
+
+    function displayStats() {
+      var contentEl = document.getElementById('statsContent');
+      var history = getHistory();
+
+      if (history.length === 0) {
+        contentEl.innerHTML = '<div class="stats-empty">📊<br><br>' + t('noDataForStats') + '</div>';
+        return;
+      }
+
+      var totals = history.map(function(r) { return Number(r.total) || 0; });
+      var males  = history.map(function(r) { return Number(r.male)  || 0; });
+      var females = history.map(function(r) { return Number(r.female) || 0; });
+
+      var sumTotal  = totals.reduce(function(a, b) { return a + b; }, 0);
+      var sumMale   = males.reduce(function(a, b)  { return a + b; }, 0);
+      var sumFemale = females.reduce(function(a, b) { return a + b; }, 0);
+
+      var avgTotal  = Math.round(sumTotal  / history.length);
+      var avgMale   = Math.round(sumMale   / history.length);
+      var avgFemale = Math.round(sumFemale / history.length);
+
+      var maxTotal = Math.max.apply(null, totals);
+      var minTotal = Math.min.apply(null, totals);
+      var maxRecord = history[totals.indexOf(maxTotal)];
+      var minRecord = history[totals.indexOf(minTotal)];
+
+      function fmtDate(d) {
+        var obj = new Date(d + 'T00:00:00');
+        return obj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      // Recent 5 records for trend (chronological order)
+      var recent = history.slice().reverse().slice(-5);
+      var maxRecentTotal = Math.max.apply(null, recent.map(function(r) { return Number(r.total) || 0; }));
+
+      var trendHtml = '<div class="trend-section">';
+      trendHtml += '<div class="trend-title">' + t('recentTrend') + '</div>';
+      trendHtml += '<div class="trend-bars">';
+      recent.forEach(function(r) {
+        var val = Number(r.total) || 0;
+        var heightPct = maxRecentTotal > 0 ? Math.max(8, Math.round((val / maxRecentTotal) * 100)) : 8;
+        var shortDate = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        trendHtml += '<div class="trend-bar-wrap">';
+        trendHtml += '<div class="trend-bar-val">' + val + '</div>';
+        trendHtml += '<div class="trend-bar-inner"><div class="trend-bar" style="height:' + heightPct + '%"></div></div>';
+        trendHtml += '<div class="trend-bar-label">' + shortDate + '</div>';
+        trendHtml += '</div>';
+      });
+      trendHtml += '</div></div>';
+
+      var html = '<div class="stats-grid">'
+        + statCard('⛪', history.length, t('totalServices'), '')
+        + statCard('👥', avgTotal, t('avgAttendance'), t('male') + ': ' + avgMale + ' · ' + t('female') + ': ' + avgFemale)
+        + statCard('📈', maxTotal, t('highestService'), fmtDate(maxRecord.date))
+        + statCard('📉', minTotal, t('lowestService'), fmtDate(minRecord.date))
+        + '</div>'
+        + trendHtml;
+
+      contentEl.innerHTML = html;
+    }
+
+    function statCard(icon, value, label, sub) {
+      return '<div class="stat-card">'
+        + '<div class="stat-icon">' + icon + '</div>'
+        + '<div class="stat-value">' + value + '</div>'
+        + '<div class="stat-label">' + label + '</div>'
+        + (sub ? '<div class="stat-sub">' + sub + '</div>' : '')
+        + '</div>';
     }
 
     displayHistory();
