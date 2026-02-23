@@ -2943,6 +2943,14 @@
         scripture = t('notSpecified');
       }
 
+      // Compute grand totals including any rounds
+      var saveMale = male;
+      var saveFemale = female;
+      rounds.forEach(function(round) {
+        saveMale += round.male;
+        saveFemale += round.female;
+      });
+
       var record = {
         date: date,
         parishName: parishName,
@@ -2950,9 +2958,9 @@
         coCelebrants: coCelebrants,
         sermon: sermon,
         scripture: scripture,
-        male: male,
-        female: female,
-        total: male + female,
+        male: saveMale,
+        female: saveFemale,
+        total: saveMale + saveFemale,
         timestamp: new Date().toISOString()
       };
 
