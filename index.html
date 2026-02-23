@@ -1868,7 +1868,7 @@
       display: flex;
       align-items: flex-end;
       gap: 8px;
-      height: 80px;
+      padding-bottom: 4px;
     }
 
     .trend-bar-wrap {
@@ -1876,15 +1876,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      height: 100%;
       gap: 4px;
-    }
-
-    .trend-bar-inner {
-      flex: 1;
-      width: 100%;
-      display: flex;
-      align-items: flex-end;
     }
 
     .trend-bar {
@@ -4007,16 +3999,17 @@
       var recent = history.slice().reverse().slice(-5);
       var maxRecentTotal = Math.max.apply(null, recent.map(function(r) { return Number(r.total) || 0; }));
 
+      var maxBarPx = 60;
       var trendHtml = '<div class="trend-section">';
       trendHtml += '<div class="trend-title">' + t('recentTrend') + '</div>';
       trendHtml += '<div class="trend-bars">';
       recent.forEach(function(r) {
         var val = Number(r.total) || 0;
-        var heightPct = maxRecentTotal > 0 ? Math.max(8, Math.round((val / maxRecentTotal) * 100)) : 8;
+        var heightPx = maxRecentTotal > 0 ? Math.max(4, Math.round((val / maxRecentTotal) * maxBarPx)) : 4;
         var shortDate = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         trendHtml += '<div class="trend-bar-wrap">';
         trendHtml += '<div class="trend-bar-val">' + val + '</div>';
-        trendHtml += '<div class="trend-bar-inner"><div class="trend-bar" style="height:' + heightPct + '%"></div></div>';
+        trendHtml += '<div class="trend-bar" style="height:' + heightPx + 'px"></div>';
         trendHtml += '<div class="trend-bar-label">' + shortDate + '</div>';
         trendHtml += '</div>';
       });
