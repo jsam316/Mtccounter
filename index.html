@@ -2943,6 +2943,13 @@
         scripture = t('notSpecified');
       }
 
+      var savedMale = male;
+      var savedFemale = female;
+      rounds.forEach(function(round) {
+        savedMale += round.male;
+        savedFemale += round.female;
+      });
+
       var record = {
         date: date,
         parishName: parishName,
@@ -2950,9 +2957,9 @@
         coCelebrants: coCelebrants,
         sermon: sermon,
         scripture: scripture,
-        male: male,
-        female: female,
-        total: male + female,
+        male: savedMale,
+        female: savedFemale,
+        total: savedMale + savedFemale,
         timestamp: new Date().toISOString()
       };
 
