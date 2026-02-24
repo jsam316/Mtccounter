@@ -1978,8 +1978,9 @@
       <div class="input-group">
         <label data-i18n="parishLabel">⛪ Parish Name</label>
         <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="text" id="parishName" list="parishList" data-i18n-placeholder="parishPlaceholder" placeholder="Enter parish name" style="flex: 1;">
-          <datalist id="parishList"></datalist>
+          <select id="parishName" style="flex: 1;">
+            <option value="">-- Select Parish --</option>
+          </select>
           <button class="manage-celebrants-btn" onclick="openParishManager()" title="Manage Parishes">⚙️</button>
         </div>
       </div>
@@ -1992,8 +1993,9 @@
       <div class="input-group">
         <label data-i18n="celebrantLabel">👤 Celebrant Name</label>
         <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="text" id="celebrant" list="celebrantList" data-i18n-placeholder="celebrantPlaceholder" placeholder="Enter celebrant name" style="flex: 1;">
-          <datalist id="celebrantList"></datalist>
+          <select id="celebrant" style="flex: 1;">
+            <option value="">-- Select Celebrant --</option>
+          </select>
           <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants">⚙️</button>
         </div>
       </div>
@@ -3431,14 +3433,20 @@
 
     function updateCelebrantDatalist() {
       var celebrants = getSavedCelebrants();
-      var datalist = document.getElementById('celebrantList');
-      datalist.innerHTML = '';
-      
+      var select = document.getElementById('celebrant');
+      var currentValue = select.value;
+      select.innerHTML = '<option value="">-- Select Celebrant --</option>';
+
       celebrants.forEach(function(name) {
         var option = document.createElement('option');
         option.value = name;
-        datalist.appendChild(option);
+        option.textContent = name;
+        select.appendChild(option);
       });
+
+      if (currentValue) {
+        select.value = currentValue;
+      }
     }
 
     function openCelebrantManager() {
@@ -3563,14 +3571,20 @@
 
     function updateParishDatalist() {
       var parishes = getSavedParishes();
-      var datalist = document.getElementById('parishList');
-      datalist.innerHTML = '';
-      
+      var select = document.getElementById('parishName');
+      var currentValue = select.value;
+      select.innerHTML = '<option value="">-- Select Parish --</option>';
+
       parishes.forEach(function(name) {
         var option = document.createElement('option');
         option.value = name;
-        datalist.appendChild(option);
+        option.textContent = name;
+        select.appendChild(option);
       });
+
+      if (currentValue) {
+        select.value = currentValue;
+      }
     }
 
     function openParishManager() {
