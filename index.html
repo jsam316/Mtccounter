@@ -363,7 +363,7 @@
     
     .verse-group {
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
       gap: 10px;
     }
     
@@ -2096,7 +2096,12 @@
           <select id="chapter">
             <option value="" data-i18n="selectChapter">Ch</option>
           </select>
-          <input type="text" id="verse" data-i18n-placeholder="versePlaceholder" placeholder="Verse">
+          <select id="verseStart">
+            <option value="" data-i18n="verseFrom">From</option>
+          </select>
+          <select id="verseEnd">
+            <option value="" data-i18n="verseTo">To</option>
+          </select>
         </div>
       </div>
 
@@ -2328,6 +2333,8 @@
         selectChapter: "Ch",
         chPlaceholder: "Ch",
         versePlaceholder: "Verse",
+        verseFrom: "From",
+        verseTo: "To",
         totalAttendance: "Total Attendance",
         male: "Male",
         female: "Female",
@@ -2439,6 +2446,8 @@
         selectChapter: "അദ്ധ്യാ",
         chPlaceholder: "അദ്ധ്യാ",
         versePlaceholder: "വാക്യം",
+        verseFrom: "മുതൽ",
+        verseTo: "വരെ",
         totalAttendance: "മൊത്തം ഹാജർ",
         male: "പുരുഷൻ",
         female: "സ്ത്രീ",
@@ -2615,16 +2624,23 @@
       "Revelation":     [20,29,22,11,14,17,17,13,21,11,19,17,18,20,8,21,18,24,21,15,27,21]
     };
 
+    function resetVerseSelects() {
+      var vs = document.getElementById('verseStart');
+      var ve = document.getElementById('verseEnd');
+      while (vs.options.length > 1) vs.remove(1);
+      while (ve.options.length > 1) ve.remove(1);
+      vs.value = '';
+      ve.value = '';
+    }
+
     function updateChapterOptions(book) {
       var chapterSelect = document.getElementById('chapter');
-      var verseInput = document.getElementById('verse');
-      var firstOpt = chapterSelect.querySelector('option[data-i18n="selectChapter"]');
       // Remove all options except the first placeholder option
       while (chapterSelect.options.length > 1) {
         chapterSelect.remove(1);
       }
       chapterSelect.value = '';
-      verseInput.placeholder = t('versePlaceholder');
+      resetVerseSelects();
 
       var chapters = bibleData[book];
       if (!chapters) return;
@@ -2637,14 +2653,25 @@
       }
     }
 
-    function updateVerseHint(book, chapterNum) {
-      var verseInput = document.getElementById('verse');
+    function updateVerseOptions(book, chapterNum) {
+      resetVerseSelects();
       var chapters = bibleData[book];
-      if (chapters && chapterNum >= 1 && chapterNum <= chapters.length) {
-        var maxVerse = chapters[chapterNum - 1];
-        verseInput.placeholder = '1-' + maxVerse;
-      } else {
-        verseInput.placeholder = t('versePlaceholder');
+      if (!chapters || chapterNum < 1 || chapterNum > chapters.length) return;
+
+      var maxVerse = chapters[chapterNum - 1];
+      var vs = document.getElementById('verseStart');
+      var ve = document.getElementById('verseEnd');
+
+      for (var i = 1; i <= maxVerse; i++) {
+        var o1 = document.createElement('option');
+        o1.value = String(i);
+        o1.textContent = String(i);
+        vs.appendChild(o1);
+
+        var o2 = document.createElement('option');
+        o2.value = String(i);
+        o2.textContent = String(i);
+        ve.appendChild(o2);
       }
     }
 
@@ -2657,13 +2684,11 @@
       // Scripture reference: cascade book → chapter → verse
       document.getElementById('book').addEventListener('change', function() {
         updateChapterOptions(this.value);
-        document.getElementById('verse').value = '';
       });
 
       document.getElementById('chapter').addEventListener('change', function() {
         var book = document.getElementById('book').value;
-        updateVerseHint(book, parseInt(this.value, 10));
-        document.getElementById('verse').value = '';
+        updateVerseOptions(book, parseInt(this.value, 10));
       });
       
       // Test haptic feedback support
@@ -3076,15 +3101,19 @@
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
       var chapter = document.getElementById('chapter').value;
-      var verse = document.getElementById('verse').value;
-      
+      var verseStart = document.getElementById('verseStart').value;
+      var verseEnd = document.getElementById('verseEnd').value;
+
       var scripture = '';
       if (book) {
         scripture = book;
         if (chapter) {
           scripture += ' ' + chapter;
-          if (verse) {
-            scripture += ':' + verse;
+          if (verseStart) {
+            scripture += ':' + verseStart;
+            if (verseEnd && verseEnd !== verseStart) {
+              scripture += '-' + verseEnd;
+            }
           }
         }
       } else {
@@ -3169,8 +3198,12 @@
           updateChapterOptions(bookName);
           var chNum = parseInt(cv[0], 10);
           document.getElementById('chapter').value = cv[0] || '';
-          updateVerseHint(bookName, chNum);
-          document.getElementById('verse').value = cv[1] || '';
+          updateVerseOptions(bookName, chNum);
+          if (cv[1]) {
+            var vParts = cv[1].split('-');
+            document.getElementById('verseStart').value = vParts[0] || '';
+            document.getElementById('verseEnd').value = vParts[1] || vParts[0] || '';
+          }
         }
       }
       
@@ -3229,15 +3262,19 @@
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
       var chapter = document.getElementById('chapter').value;
-      var verse = document.getElementById('verse').value;
-      
+      var verseStart = document.getElementById('verseStart').value;
+      var verseEnd = document.getElementById('verseEnd').value;
+
       var scripture = '';
       if (book) {
         scripture = book;
         if (chapter) {
           scripture += ' ' + chapter;
-          if (verse) {
-            scripture += ':' + verse;
+          if (verseStart) {
+            scripture += ':' + verseStart;
+            if (verseEnd && verseEnd !== verseStart) {
+              scripture += '-' + verseEnd;
+            }
           }
         }
       } else {
@@ -3307,15 +3344,19 @@
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
       var chapter = document.getElementById('chapter').value;
-      var verse = document.getElementById('verse').value;
-      
+      var verseStart = document.getElementById('verseStart').value;
+      var verseEnd = document.getElementById('verseEnd').value;
+
       var scripture = '';
       if (book) {
         scripture = book;
         if (chapter) {
           scripture += ' ' + chapter;
-          if (verse) {
-            scripture += ':' + verse;
+          if (verseStart) {
+            scripture += ':' + verseStart;
+            if (verseEnd && verseEnd !== verseStart) {
+              scripture += '-' + verseEnd;
+            }
           }
         }
       } else {
@@ -3379,15 +3420,19 @@
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
       var chapter = document.getElementById('chapter').value;
-      var verse = document.getElementById('verse').value;
-      
+      var verseStart = document.getElementById('verseStart').value;
+      var verseEnd = document.getElementById('verseEnd').value;
+
       var scripture = '';
       if (book) {
         scripture = book;
         if (chapter) {
           scripture += ' ' + chapter;
-          if (verse) {
-            scripture += ':' + verse;
+          if (verseStart) {
+            scripture += ':' + verseStart;
+            if (verseEnd && verseEnd !== verseStart) {
+              scripture += '-' + verseEnd;
+            }
           }
         }
       } else {
