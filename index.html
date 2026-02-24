@@ -2999,8 +2999,12 @@
     }
 
     function getHistory() {
-      var history = localStorage.getItem('mtcHistory');
-      return history ? JSON.parse(history) : [];
+      try {
+        var history = localStorage.getItem('mtcHistory');
+        return history ? JSON.parse(history) : [];
+      } catch (e) {
+        return [];
+      }
     }
 
     function saveHistory(records) {
@@ -4001,65 +4005,77 @@
 
     function displayStats() {
       var contentEl = document.getElementById('statsContent');
-      var history = getHistory();
+      if (!contentEl) return;
 
-      if (history.length === 0) {
+      try {
+        var history = getHistory();
+
+        if (history.length === 0) {
+          contentEl.innerHTML = '<div class="stats-empty">📊<br><br>' + t('noDataForStats') + '</div>';
+          return;
+        }
+
+        var totals = history.map(function(r) { return Number(r.total) || 0; });
+        var males  = history.map(function(r) { return Number(r.male)  || 0; });
+        var females = history.map(function(r) { return Number(r.female) || 0; });
+
+        var sumTotal  = totals.reduce(function(a, b) { return a + b; }, 0);
+        var sumMale   = males.reduce(function(a, b)  { return a + b; }, 0);
+        var sumFemale = females.reduce(function(a, b) { return a + b; }, 0);
+
+        var avgTotal  = Math.round(sumTotal  / history.length);
+        var avgMale   = Math.round(sumMale   / history.length);
+        var avgFemale = Math.round(sumFemale / history.length);
+
+        var maxTotal = Math.max.apply(null, totals);
+        var minTotal = Math.min.apply(null, totals);
+        var maxRecord = history[totals.indexOf(maxTotal)];
+        var minRecord = history[totals.indexOf(minTotal)];
+
+        function fmtDate(d) {
+          if (!d) return '';
+          try {
+            var obj = new Date(d + 'T00:00:00');
+            return obj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          } catch (e) {
+            return d;
+          }
+        }
+
+        // Recent 5 records for trend (chronological order)
+        var recent = history.slice().reverse().slice(-5);
+        var recentTotals = recent.map(function(r) { return Number(r.total) || 0; });
+        var maxRecentTotal = recentTotals.length > 0 ? Math.max.apply(null, recentTotals) : 0;
+
+        var trendHtml = '<div class="trend-section">';
+        trendHtml += '<div class="trend-title">' + t('recentTrend') + '</div>';
+        trendHtml += '<div class="trend-bars">';
+        recent.forEach(function(r) {
+          var val = Number(r.total) || 0;
+          var barMaxPx = 60;
+          var barPx = maxRecentTotal > 0 ? Math.max(4, Math.round((val / maxRecentTotal) * barMaxPx)) : 4;
+          var shortDate = fmtDate(r.date) || '';
+          trendHtml += '<div class="trend-bar-wrap">';
+          trendHtml += '<div class="trend-bar-val">' + val + '</div>';
+          trendHtml += '<div class="trend-bar-inner"><div class="trend-bar" style="height:' + barPx + 'px"></div></div>';
+          trendHtml += '<div class="trend-bar-label">' + shortDate + '</div>';
+          trendHtml += '</div>';
+        });
+        trendHtml += '</div></div>';
+
+        var html = '<div class="stats-section-title">' + t('statsTitle') + '</div>'
+          + '<div class="stats-grid">'
+          + statCard('⛪', history.length, t('totalServices'), '')
+          + statCard('👥', avgTotal, t('avgAttendance'), t('male') + ': ' + avgMale + ' · ' + t('female') + ': ' + avgFemale)
+          + statCard('📈', maxTotal, t('highestService'), maxRecord ? fmtDate(maxRecord.date) : '')
+          + statCard('📉', minTotal, t('lowestService'), minRecord ? fmtDate(minRecord.date) : '')
+          + '</div>'
+          + trendHtml;
+
+        contentEl.innerHTML = html;
+      } catch (e) {
         contentEl.innerHTML = '<div class="stats-empty">📊<br><br>' + t('noDataForStats') + '</div>';
-        return;
       }
-
-      var totals = history.map(function(r) { return Number(r.total) || 0; });
-      var males  = history.map(function(r) { return Number(r.male)  || 0; });
-      var females = history.map(function(r) { return Number(r.female) || 0; });
-
-      var sumTotal  = totals.reduce(function(a, b) { return a + b; }, 0);
-      var sumMale   = males.reduce(function(a, b)  { return a + b; }, 0);
-      var sumFemale = females.reduce(function(a, b) { return a + b; }, 0);
-
-      var avgTotal  = Math.round(sumTotal  / history.length);
-      var avgMale   = Math.round(sumMale   / history.length);
-      var avgFemale = Math.round(sumFemale / history.length);
-
-      var maxTotal = Math.max.apply(null, totals);
-      var minTotal = Math.min.apply(null, totals);
-      var maxRecord = history[totals.indexOf(maxTotal)];
-      var minRecord = history[totals.indexOf(minTotal)];
-
-      function fmtDate(d) {
-        var obj = new Date(d + 'T00:00:00');
-        return obj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      }
-
-      // Recent 5 records for trend (chronological order)
-      var recent = history.slice().reverse().slice(-5);
-      var maxRecentTotal = Math.max.apply(null, recent.map(function(r) { return Number(r.total) || 0; }));
-
-      var trendHtml = '<div class="trend-section">';
-      trendHtml += '<div class="trend-title">' + t('recentTrend') + '</div>';
-      trendHtml += '<div class="trend-bars">';
-      recent.forEach(function(r) {
-        var val = Number(r.total) || 0;
-        var barMaxPx = 60;
-        var barPx = maxRecentTotal > 0 ? Math.max(4, Math.round((val / maxRecentTotal) * barMaxPx)) : 4;
-        var shortDate = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        trendHtml += '<div class="trend-bar-wrap">';
-        trendHtml += '<div class="trend-bar-val">' + val + '</div>';
-        trendHtml += '<div class="trend-bar-inner"><div class="trend-bar" style="height:' + barPx + 'px"></div></div>';
-        trendHtml += '<div class="trend-bar-label">' + shortDate + '</div>';
-        trendHtml += '</div>';
-      });
-      trendHtml += '</div></div>';
-
-      var html = '<div class="stats-section-title">' + t('statsTitle') + '</div>'
-        + '<div class="stats-grid">'
-        + statCard('⛪', history.length, t('totalServices'), '')
-        + statCard('👥', avgTotal, t('avgAttendance'), t('male') + ': ' + avgMale + ' · ' + t('female') + ': ' + avgFemale)
-        + statCard('📈', maxTotal, t('highestService'), fmtDate(maxRecord.date))
-        + statCard('📉', minTotal, t('lowestService'), fmtDate(minRecord.date))
-        + '</div>'
-        + trendHtml;
-
-      contentEl.innerHTML = html;
     }
 
     function statCard(icon, value, label, sub) {
@@ -4072,6 +4088,7 @@
     }
 
     displayHistory();
+    displayStats();
   </script>
 
 </body>
