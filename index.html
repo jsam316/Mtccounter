@@ -1767,6 +1767,19 @@
       gap: 16px;
     }
 
+    .stats-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: -4px;
+    }
+
+    .light-mode .stats-section-title {
+      color: rgba(0, 0, 0, 0.45);
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1868,7 +1881,6 @@
       display: flex;
       align-items: flex-end;
       gap: 8px;
-      height: 80px;
     }
 
     .trend-bar-wrap {
@@ -1876,13 +1888,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      height: 100%;
       gap: 4px;
     }
 
     .trend-bar-inner {
-      flex: 1;
       width: 100%;
+      height: 60px;
       display: flex;
       align-items: flex-end;
     }
@@ -2701,9 +2712,11 @@
         }
       });
 
-      // Refresh history display to update language
+      // Refresh active tab display to update language
       if (document.getElementById('historyTab').classList.contains('active')) {
         displayHistory();
+      } else if (document.getElementById('statsTab').classList.contains('active')) {
+        displayStats();
       }
     }
 
@@ -2816,17 +2829,31 @@
       var swipeThreshold = 100;
       var swipeDistance = touchEndX - touchStartX;
       var verticalDistance = Math.abs(touchEndY - touchStartY);
-      
+
       if (verticalDistance < 100 && Math.abs(swipeDistance) > swipeThreshold) {
+        var isCounter = document.getElementById('counterTab').classList.contains('active');
+        var isHistory = document.getElementById('historyTab').classList.contains('active');
+        var isStats = document.getElementById('statsTab').classList.contains('active');
+
         if (swipeDistance > 0) {
-          if (!document.getElementById('counterTab').classList.contains('active')) {
+          // Swipe right = go to previous tab
+          if (isHistory) {
             switchTab('counter');
+            showSwipeIndicator('right');
+            triggerHaptic('medium');
+          } else if (isStats) {
+            switchTab('history');
             showSwipeIndicator('right');
             triggerHaptic('medium');
           }
         } else {
-          if (!document.getElementById('historyTab').classList.contains('active')) {
+          // Swipe left = go to next tab
+          if (isCounter) {
             switchTab('history');
+            showSwipeIndicator('left');
+            triggerHaptic('medium');
+          } else if (isHistory) {
+            switchTab('stats');
             showSwipeIndicator('left');
             triggerHaptic('medium');
           }
@@ -4012,17 +4039,19 @@
       trendHtml += '<div class="trend-bars">';
       recent.forEach(function(r) {
         var val = Number(r.total) || 0;
-        var heightPct = maxRecentTotal > 0 ? Math.max(8, Math.round((val / maxRecentTotal) * 100)) : 8;
+        var barMaxPx = 60;
+        var barPx = maxRecentTotal > 0 ? Math.max(4, Math.round((val / maxRecentTotal) * barMaxPx)) : 4;
         var shortDate = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         trendHtml += '<div class="trend-bar-wrap">';
         trendHtml += '<div class="trend-bar-val">' + val + '</div>';
-        trendHtml += '<div class="trend-bar-inner"><div class="trend-bar" style="height:' + heightPct + '%"></div></div>';
+        trendHtml += '<div class="trend-bar-inner"><div class="trend-bar" style="height:' + barPx + 'px"></div></div>';
         trendHtml += '<div class="trend-bar-label">' + shortDate + '</div>';
         trendHtml += '</div>';
       });
       trendHtml += '</div></div>';
 
-      var html = '<div class="stats-grid">'
+      var html = '<div class="stats-section-title">' + t('statsTitle') + '</div>'
+        + '<div class="stats-grid">'
         + statCard('⛪', history.length, t('totalServices'), '')
         + statCard('👥', avgTotal, t('avgAttendance'), t('male') + ': ' + avgMale + ' · ' + t('female') + ': ' + avgFemale)
         + statCard('📈', maxTotal, t('highestService'), fmtDate(maxRecord.date))
