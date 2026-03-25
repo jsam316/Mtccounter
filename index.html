@@ -2870,6 +2870,14 @@
       return translations[currentLang][key] || translations['en'][key] || key;
     }
 
+    // Returns true if a stored field value means "not specified" (handles both
+    // empty strings and legacy records saved with any language's translation).
+    function isNotSpecified(val) {
+      return !val
+        || val === translations['en']['notSpecified']
+        || val === translations['ml']['notSpecified'];
+    }
+
     function toggleCoCelebrants() {
       var toggle = document.getElementById('coCelebrantsToggle');
       var field = document.getElementById('coCelebrantsField');
@@ -3092,13 +3100,13 @@
         return;
       }
 
-      var parishName = document.getElementById('parishName').value || t('notSpecified');
-      var celebrant = document.getElementById('celebrant').value || t('notSpecified');
+      var parishName = document.getElementById('parishName').value || '';
+      var celebrant = document.getElementById('celebrant').value || '';
       var coCelebrants = '';
       if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
-        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+        coCelebrants = document.getElementById('coCelebrants').value || '';
       }
-      var sermon = document.getElementById('sermon').value || t('notSpecified');
+      var sermon = document.getElementById('sermon').value || '';
       var book = document.getElementById('book').value;
       var chapter = document.getElementById('chapter').value;
       var verseStart = document.getElementById('verseStart').value;
@@ -3116,8 +3124,6 @@
             }
           }
         }
-      } else {
-        scripture = t('notSpecified');
       }
 
       var record = {
@@ -3172,11 +3178,11 @@
       var record = history[index];
       
       document.getElementById('date').value = record.date;
-      document.getElementById('parishName').value = record.parishName === t('notSpecified') ? '' : record.parishName;
-      document.getElementById('celebrant').value = record.celebrant === t('notSpecified') ? '' : record.celebrant;
-      
+      document.getElementById('parishName').value = isNotSpecified(record.parishName) ? '' : record.parishName;
+      document.getElementById('celebrant').value = isNotSpecified(record.celebrant) ? '' : record.celebrant;
+
       // Handle co-celebrants
-      if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
+      if (record.coCelebrants && !isNotSpecified(record.coCelebrants)) {
         document.getElementById('coCelebrants').value = record.coCelebrants;
         if (!document.getElementById('coCelebrantsToggle').classList.contains('active')) {
           toggleCoCelebrants();
@@ -3184,10 +3190,10 @@
       } else {
         document.getElementById('coCelebrants').value = '';
       }
-      
-      document.getElementById('sermon').value = record.sermon === t('notSpecified') ? '' : record.sermon;
-      
-      if (record.scripture && record.scripture !== t('notSpecified')) {
+
+      document.getElementById('sermon').value = isNotSpecified(record.sermon) ? '' : record.sermon;
+
+      if (record.scripture && !isNotSpecified(record.scripture)) {
         var parts = record.scripture.split(' ');
         var bookName = parts.slice(0, -1).join(' ');
         var chapterVerse = parts[parts.length - 1];
@@ -4031,13 +4037,13 @@
         html += '<div class="history-item">';
         html += '<div class="history-date">' + formattedDate + '</div>';
         html += '<div class="history-details">';
-        html += '<strong>' + t('parish') + ':</strong> ' + record.parishName + '<br>';
-        html += '<strong>' + t('celebrant') + ':</strong> ' + record.celebrant + '<br>';
-        if (record.coCelebrants && record.coCelebrants !== t('notSpecified') && record.coCelebrants !== '') {
+        html += '<strong>' + t('parish') + ':</strong> ' + (record.parishName || t('notSpecified')) + '<br>';
+        html += '<strong>' + t('celebrant') + ':</strong> ' + (record.celebrant || t('notSpecified')) + '<br>';
+        if (record.coCelebrants && !isNotSpecified(record.coCelebrants)) {
           html += '<strong>' + t('coCelebrantsLabel') + ':</strong> ' + record.coCelebrants + '<br>';
         }
-        html += '<strong>' + t('sermon') + ':</strong> ' + record.sermon + '<br>';
-        html += '<strong>' + t('scripture') + ':</strong> ' + record.scripture + '<br>';
+        html += '<strong>' + t('sermon') + ':</strong> ' + (record.sermon || t('notSpecified')) + '<br>';
+        html += '<strong>' + t('scripture') + ':</strong> ' + (record.scripture || t('notSpecified')) + '<br>';
         html += '<strong>' + t('attendance') + ':</strong> '
           + t('male') + ': ' + record.male + ', '
           + t('female') + ': ' + record.female + ', '
