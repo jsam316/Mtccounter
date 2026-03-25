@@ -3126,6 +3126,13 @@
         }
       }
 
+      var totalMale = male;
+      var totalFemale = female;
+      rounds.forEach(function(round) {
+        totalMale += round.male;
+        totalFemale += round.female;
+      });
+
       var record = {
         date: date,
         parishName: parishName,
@@ -3133,9 +3140,9 @@
         coCelebrants: coCelebrants,
         sermon: sermon,
         scripture: scripture,
-        male: male,
-        female: female,
-        total: male + female,
+        male: totalMale,
+        female: totalFemale,
+        total: totalMale + totalFemale,
         timestamp: new Date().toISOString()
       };
 
