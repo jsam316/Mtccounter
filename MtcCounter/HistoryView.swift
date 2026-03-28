@@ -10,7 +10,8 @@ struct HistoryView: View {
             $0.celebrant.localizedCaseInsensitiveContains(searchText) ||
             $0.parish.localizedCaseInsensitiveContains(searchText) ||
             $0.date.localizedCaseInsensitiveContains(searchText) ||
-            $0.scriptureReference.localizedCaseInsensitiveContains(searchText)
+            $0.scriptureReference.localizedCaseInsensitiveContains(searchText) ||
+            $0.sermon.localizedCaseInsensitiveContains(searchText)
         }
     }
 
@@ -72,6 +73,11 @@ struct RecordRow: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
+            if !record.parish.isEmpty {
+                Text(record.parish)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
             HStack(spacing: 16) {
                 Label("\(record.totalMale) Male", systemImage: "person.fill")
                     .font(.caption)
@@ -99,13 +105,21 @@ struct RecordDetailView: View {
                 LabeledContent("Total", value: "\(record.total)")
             }
 
-            if !record.celebrant.isEmpty || !record.parish.isEmpty || !record.scriptureReference.isEmpty {
+            if !record.celebrant.isEmpty || !record.parish.isEmpty ||
+               !record.coCelebrants.isEmpty || !record.sermon.isEmpty ||
+               !record.scriptureReference.isEmpty {
                 Section("Service") {
+                    if !record.parish.isEmpty {
+                        LabeledContent("Parish", value: record.parish)
+                    }
                     if !record.celebrant.isEmpty {
                         LabeledContent("Celebrant", value: record.celebrant)
                     }
-                    if !record.parish.isEmpty {
-                        LabeledContent("Parish", value: record.parish)
+                    if !record.coCelebrants.isEmpty {
+                        LabeledContent("Co-Celebrants", value: record.coCelebrants)
+                    }
+                    if !record.sermon.isEmpty {
+                        LabeledContent("Sermon", value: record.sermon)
                     }
                     if !record.scriptureReference.isEmpty {
                         LabeledContent("Scripture", value: record.scriptureReference)
@@ -133,6 +147,17 @@ struct RecordDetailView: View {
                         .foregroundColor(.secondary)
                 }
             }
+
+            Section("Share") {
+                Button(action: shareWhatsApp) {
+                    Label("Share to WhatsApp", systemImage: "message.fill")
+                        .foregroundColor(.green)
+                }
+                ShareLink(item: record.shareText) {
+                    Label("Share as Text", systemImage: "square.and.arrow.up")
+                        .foregroundColor(.indigo)
+                }
+            }
         }
         .navigationTitle(record.date)
         .navigationBarTitleDisplayMode(.inline)
@@ -144,6 +169,14 @@ struct RecordDetailView: View {
             }
         }
     }
+
+    private func shareWhatsApp() {
+        let text = record.shareText
+        if let encoded = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+           let url = URL(string: "https://wa.me/?text=\(encoded)") {
+            UIApplication.shared.open(url)
+        }
+    }
 }
 
 // MARK: - Share text helper
@@ -151,10 +184,15 @@ struct RecordDetailView: View {
 extension AttendanceRecord {
     var shareText: String {
         var lines: [String] = ["MTC Attendance — \(date)"]
-        if !celebrant.isEmpty { lines.append("Celebrant: \(celebrant)") }
         if !parish.isEmpty { lines.append("Parish: \(parish)") }
+        if !celebrant.isEmpty { lines.append("Celebrant: \(celebrant)") }
+        if !coCelebrants.isEmpty { lines.append("Co-Celebrants: \(coCelebrants)") }
+        if !sermon.isEmpty { lines.append("Sermon: \(sermon)") }
         if !scriptureReference.isEmpty { lines.append("Scripture: \(scriptureReference)") }
         lines.append("Male: \(totalMale)  Female: \(totalFemale)  Total: \(total)")
+        if !rounds.isEmpty {
+            lines.append("Rounds: \(rounds.count)")
+        }
         if !notes.isEmpty { lines.append("Notes: \(notes)") }
         return lines.joined(separator: "\n")
     }
