@@ -3126,6 +3126,13 @@
         }
       }
 
+      var totalMale = male;
+      var totalFemale = female;
+      rounds.forEach(function(round) {
+        totalMale += round.male;
+        totalFemale += round.female;
+      });
+
       var record = {
         date: date,
         parishName: parishName,
@@ -3133,9 +3140,10 @@
         coCelebrants: coCelebrants,
         sermon: sermon,
         scripture: scripture,
-        male: male,
-        female: female,
-        total: male + female,
+        male: totalMale,
+        female: totalFemale,
+        total: totalMale + totalFemale,
+        rounds: rounds.length > 0 ? rounds.slice() : [],
         timestamp: new Date().toISOString()
       };
 
@@ -3213,10 +3221,19 @@
         }
       }
       
-      male = record.male;
-      female = record.female;
+      if (record.rounds && record.rounds.length > 0) {
+        rounds = record.rounds.slice();
+        male = 0;
+        female = 0;
+      } else {
+        rounds = [];
+        male = record.male;
+        female = record.female;
+      }
+      saveRounds();
+      displayRounds();
       updateDisplay();
-      
+
       switchTab('counter');
       triggerHaptic('success');
     }
