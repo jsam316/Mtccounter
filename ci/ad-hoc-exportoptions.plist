@@ -5,7 +5,7 @@
     <key>method</key>
     <string>ad-hoc</string>
     <key>signingStyle</key>
-    <string>manual</string>
+    <string>automatic</string>
     <key>teamID</key>
     <string>Y78DX5D6JD</string>
     <key>compileBitcode</key>
