@@ -5,9 +5,16 @@
     <key>method</key>
     <string>ad-hoc</string>
     <key>signingStyle</key>
-    <string>automatic</string>
+    <string>manual</string>
     <key>teamID</key>
     <string>Y78DX5D6JD</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.mtc.counter</key>
+        <string>match AdHoc com.mtc.counter</string>
+        <key>com.mtc.counter.watchkitapp</key>
+        <string>match AdHoc com.mtc.counter.watchkitapp</string>
+    </dict>
     <key>compileBitcode</key>
     <false/>
     <key>stripSwiftSymbols</key>
