@@ -1,36 +1,120 @@
 {
   "images" : [
     {
+      "filename" : "AppIcon.png",
       "idiom" : "watch",
       "role" : "appLauncher",
       "size" : "1024x1024",
       "subtype" : "38mm"
     },
     {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "AppIcon-dark.png",
+      "idiom" : "watch",
+      "role" : "appLauncher",
+      "size" : "1024x1024",
+      "subtype" : "38mm"
+    },
+    {
+      "filename" : "AppIcon.png",
       "idiom" : "watch",
       "role" : "appLauncher",
       "size" : "1024x1024",
       "subtype" : "40mm"
     },
     {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "AppIcon-dark.png",
+      "idiom" : "watch",
+      "role" : "appLauncher",
+      "size" : "1024x1024",
+      "subtype" : "40mm"
+    },
+    {
+      "filename" : "AppIcon.png",
       "idiom" : "watch",
       "role" : "appLauncher",
       "size" : "1024x1024",
       "subtype" : "41mm"
     },
     {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "AppIcon-dark.png",
+      "idiom" : "watch",
+      "role" : "appLauncher",
+      "size" : "1024x1024",
+      "subtype" : "41mm"
+    },
+    {
+      "filename" : "AppIcon.png",
       "idiom" : "watch",
       "role" : "appLauncher",
       "size" : "1024x1024",
       "subtype" : "44mm"
     },
     {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "AppIcon-dark.png",
+      "idiom" : "watch",
+      "role" : "appLauncher",
+      "size" : "1024x1024",
+      "subtype" : "44mm"
+    },
+    {
+      "filename" : "AppIcon.png",
       "idiom" : "watch",
       "role" : "appLauncher",
       "size" : "1024x1024",
       "subtype" : "45mm"
     },
     {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "AppIcon-dark.png",
+      "idiom" : "watch",
+      "role" : "appLauncher",
+      "size" : "1024x1024",
+      "subtype" : "45mm"
+    },
+    {
+      "filename" : "AppIcon.png",
+      "idiom" : "watch",
+      "role" : "appLauncher",
+      "size" : "1024x1024",
+      "subtype" : "49mm"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "AppIcon-dark.png",
       "idiom" : "watch",
       "role" : "appLauncher",
       "size" : "1024x1024",
