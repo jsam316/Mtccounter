@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MTC Counter – Support</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sky: #5ba4cf;
+      --sky-light: #d6eaf8;
+      --sky-dark: #2e7bb5;
+      --sand: #f5efe6;
+      --ink: #1c2b3a;
+      --muted: #6b7f8e;
+      --white: #ffffff;
+      --radius: 18px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--sand);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(160deg, #e8f4fd 0%, #cce4f6 50%, #b0d4ef 100%);
+      padding: 72px 24px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 30%, rgba(255,255,255,0.45) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-icon {
+      width: 110px;
+      height: 110px;
+      border-radius: 26px;
+      box-shadow: 0 12px 40px rgba(46,123,181,0.25), 0 2px 8px rgba(0,0,0,0.08);
+      margin: 0 auto 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      background: linear-gradient(145deg, #6ab9e8, #3d8fc4);
+    }
+    .hero h1 {
+      font-family: 'Lora', serif;
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto 36px;
+      line-height: 1.65;
+      font-weight: 300;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--white);
+      border: 1.5px solid rgba(91,164,207,0.3);
+      border-radius: 100px;
+      padding: 8px 20px;
+      font-size: 0.85rem;
+      color: var(--sky-dark);
+      font-weight: 500;
+      box-shadow: 0 2px 10px rgba(91,164,207,0.15);
+    }
+
+    /* ── CONTENT ── */
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section { padding: 56px 0; }
+    section + section { border-top: 1px solid rgba(91,164,207,0.15); }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--sky-dark);
+      margin-bottom: 16px;
+    }
+    h2 {
+      font-family: 'Lora', serif;
+      font-size: clamp(1.4rem, 4vw, 1.9rem);
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 20px;
+      letter-spacing: -0.01em;
+    }
+    p { color: var(--muted); line-height: 1.75; font-size: 0.97rem; margin-bottom: 14px; }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── FAQ ── */
+    .faq-list { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+    .faq-item {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid rgba(91,164,207,0.15);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .faq-item:hover { box-shadow: 0 4px 20px rgba(91,164,207,0.12); }
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 20px 24px;
+      text-align: left;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.97rem;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .faq-q .arrow {
+      width: 22px; height: 22px; flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--sky-light);
+      color: var(--sky-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      transition: transform 0.25s, background 0.2s;
+    }
+    .faq-item.open .faq-q .arrow { transform: rotate(180deg); background: var(--sky); color: white; }
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s;
+      padding: 0 24px;
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.75;
+    }
+    .faq-item.open .faq-a { max-height: 300px; padding: 0 24px 20px; }
+
+    /* ── CONTACT ── */
+    .contact-card {
+      background: linear-gradient(135deg, #e8f4fd, #d0e9f7);
+      border-radius: var(--radius);
+      padding: 40px 36px;
+      border: 1px solid rgba(91,164,207,0.2);
+      text-align: center;
+    }
+    .contact-card h3 {
+      font-family: 'Lora', serif;
+      font-size: 1.4rem;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+    .contact-card p { margin-bottom: 24px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--sky-dark);
+      color: white;
+      text-decoration: none;
+      padding: 13px 28px;
+      border-radius: 100px;
+      font-size: 0.94rem;
+      font-weight: 500;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(46,123,181,0.3);
+    }
+    .btn:hover {
+      background: var(--sky);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(46,123,181,0.35);
+    }
+
+    /* ── NAV ── */
+    .topnav {
+      background: var(--white);
+      border-bottom: 1px solid rgba(91,164,207,0.15);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topnav a {
+      font-size: 0.88rem;
+      color: var(--sky-dark);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .topnav a:hover { text-decoration: underline; }
+    .topnav-logo {
+      font-family: 'Lora', serif;
+      font-size: 1rem;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* ── FEATURES GRID ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .feature-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      border: 1px solid rgba(91,164,207,0.15);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .feature-card:hover { box-shadow: 0 4px 20px rgba(91,164,207,0.12); transform: translateY(-2px); }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 12px; }
+    .feature-card h4 { font-size: 0.95rem; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+    .feature-card p { font-size: 0.86rem; margin: 0; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: rgba(255,255,255,0.45);
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 0.82rem;
+      line-height: 1.8;
+    }
+    footer a { color: rgba(255,255,255,0.6); text-decoration: none; }
+    footer a:hover { color: white; }
+
+    @media (max-width: 540px) {
+      .contact-card { padding: 28px 20px; }
+      section { padding: 40px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="topnav">
+    <span class="topnav-logo">⛪ MTC Counter</span>
+    <a href="/">← Back to App</a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-icon">🛟</div>
+    <h1>Support</h1>
+    <p>Need help with MTC Counter? You're in the right place.</p>
+    <div class="badge"><span>📱</span> iOS App · Version 1.0</div>
+  </div>
+
+  <div class="container">
+
+    <!-- ABOUT -->
+    <section>
+      <div class="section-label">About the App</div>
+      <h2>Built for Church Communities</h2>
+      <p>MTC Counter is a lightweight attendance tracking app designed for Mar Thoma Church congregations. Quickly count and record attendance for Sunday services, prayer meetings, and special events — with full English and Malayalam language support.</p>
+      <p>No account needed. No data sent to the cloud. Everything stays on your device.</p>
+    </section>
+
+    <!-- FEATURES -->
+    <section>
+      <div class="section-label">Features</div>
+      <h2>What's Inside</h2>
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-icon">🔢</div>
+          <h4>Tap to Count</h4>
+          <p>Instant counter with haptic feedback for accurate tracking.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h4>Bilingual</h4>
+          <p>Full English and Malayalam interface support.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h4>Session History</h4>
+          <p>View and review past attendance records by date.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📄</div>
+          <h4>PDF Export</h4>
+          <p>Export attendance reports as PDFs to share or archive.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h4>Private</h4>
+          <p>All data stays on your device. No accounts, no tracking.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h4>Lightweight</h4>
+          <p>Fast, simple, and works offline — always ready when you are.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section>
+      <div class="section-label">FAQ</div>
+      <h2>Frequently Asked Questions</h2>
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggle(this)">
+            How do I reset the counter for a new service?
+            <span class="arrow">▾</span>
+          </button>
+          <div class="faq-a">Tap the Reset button at the bottom of the counter screen. You'll be prompted to confirm before the count is cleared so you don't lose data accidentally.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggle(this)">
+            How do I switch between English and Malayalam?
+            <span class="arrow">▾</span>
+          </button>
+          <div class="faq-a">Go to Settings within the app and select your preferred language. The entire interface will update immediately without needing to restart.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggle(this)">
+            Can I export attendance records?
+            <span class="arrow">▾</span>
+          </button>
+          <div class="faq-a">Yes — tap the Export button in the History tab to generate a PDF of your attendance records. You can then share it via email, AirDrop, or save it to Files.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggle(this)">
+            Is my data backed up to the cloud?
+            <span class="arrow">▾</span>
+          </button>
+          <div class="faq-a">No cloud backup is performed. All data is stored locally on your device. We recommend exporting PDFs regularly if you need long-term records.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggle(this)">
+            Does the app work on iPad?
+            <span class="arrow">▾</span>
+          </button>
+          <div class="faq-a">Yes, MTC Counter supports both iPhone and iPad, including all modern screen sizes.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggle(this)">
+            The app isn't counting correctly — what should I do?
+            <span class="arrow">▾</span>
+          </button>
+          <div class="faq-a">Try force-closing the app and reopening it. If the issue persists, use the Reset button to start a fresh session, then contact us using the form below so we can investigate.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section>
+      <div class="contact-card">
+        <h3>Still Need Help?</h3>
+        <p>If your question isn't covered above or you've found a bug, reach out and we'll get back to you as soon as possible.</p>
+        <a href="mailto:jsam316@gmail.com" class="btn">✉️ &nbsp;Contact Support</a>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 John George &nbsp;·&nbsp; MTC Counter</p>
+    <p style="margin-top:6px;">
+      <a href="https://jsam316.github.io/Mtccounter/">Home</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:jsam316@gmail.com">jsam316@gmail.com</a>
+    </p>
+  </footer>
+
+  <script>
+    function toggle(btn) {
+      const item = btn.closest('.faq-item');
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    }
+  </script>
+
+</body>
+</html>
