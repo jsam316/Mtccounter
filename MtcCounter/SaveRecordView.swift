@@ -32,7 +32,7 @@ struct SaveRecordView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // Service Details
                 Section("Service Details") {
@@ -223,7 +223,7 @@ struct ManageListView: View {
     @State private var newItem = ""
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section {
                     HStack {

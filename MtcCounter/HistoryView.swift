@@ -2,7 +2,9 @@ import SwiftUI
 
 struct HistoryView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var searchText = ""
+    @State private var selectedRecordID: UUID?
 
     var filteredRecords: [AttendanceRecord] {
         guard !searchText.isEmpty else { return appState.records }
@@ -16,40 +18,100 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        NavigationView {
-            Group {
-                if appState.records.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "clock.badge.questionmark")
-                            .font(.system(size: 64))
-                            .foregroundColor(.secondary)
-                        Text("No records yet")
-                            .font(.title3)
-                            .foregroundColor(.secondary)
-                        Text("Save your first attendance record from the Counter tab.")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List {
-                        ForEach(filteredRecords) { record in
-                            NavigationLink(destination: RecordDetailView(record: record)) {
-                                RecordRow(record: record)
-                            }
-                        }
-                        .onDelete { offsets in
-                            let ids = offsets.map { filteredRecords[$0].id }
-                            ids.forEach { appState.deleteRecord(id: $0) }
-                        }
-                    }
-                    .searchable(text: $searchText, prompt: "Search by date, celebrant, parish…")
+        if horizontalSizeClass == .regular {
+            NavigationSplitView {
+                sidebarContent
+                    .navigationTitle("History")
+            } detail: {
+                splitDetailContent
+            }
+        } else {
+            NavigationStack {
+                phoneListContent
+                    .navigationTitle("History")
+            }
+        }
+    }
+
+    // MARK: - iPad sidebar list
+
+    @ViewBuilder private var sidebarContent: some View {
+        if appState.records.isEmpty {
+            emptyState
+        } else {
+            List(selection: $selectedRecordID) {
+                ForEach(filteredRecords) { record in
+                    RecordRow(record: record)
+                        .tag(record.id)
+                }
+                .onDelete { offsets in
+                    let ids = offsets.map { filteredRecords[$0].id }
+                    ids.forEach { appState.deleteRecord(id: $0) }
                 }
             }
-            .navigationTitle("History")
+            .searchable(text: $searchText, prompt: "Search by date, celebrant, parish…")
         }
+    }
+
+    // MARK: - iPad detail pane
+
+    @ViewBuilder private var splitDetailContent: some View {
+        if let id = selectedRecordID,
+           let record = appState.records.first(where: { $0.id == id }) {
+            RecordDetailView(record: record)
+        } else {
+            VStack(spacing: 12) {
+                Image(systemName: "clock")
+                    .font(.system(size: 52))
+                    .foregroundColor(.secondary)
+                Text("Select a record")
+                    .font(.title3)
+                    .foregroundColor(.secondary)
+                Text("Choose a record from the sidebar to view details.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+        }
+    }
+
+    // MARK: - iPhone list
+
+    @ViewBuilder private var phoneListContent: some View {
+        if appState.records.isEmpty {
+            emptyState
+        } else {
+            List {
+                ForEach(filteredRecords) { record in
+                    NavigationLink(destination: RecordDetailView(record: record)) {
+                        RecordRow(record: record)
+                    }
+                }
+                .onDelete { offsets in
+                    let ids = offsets.map { filteredRecords[$0].id }
+                    ids.forEach { appState.deleteRecord(id: $0) }
+                }
+            }
+            .searchable(text: $searchText, prompt: "Search by date, celebrant, parish…")
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "clock.badge.questionmark")
+                .font(.system(size: 64))
+                .foregroundColor(.secondary)
+            Text("No records yet")
+                .font(.title3)
+                .foregroundColor(.secondary)
+            Text("Save your first attendance record from the Counter tab.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

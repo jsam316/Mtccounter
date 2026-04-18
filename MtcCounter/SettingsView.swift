@@ -21,7 +21,7 @@ struct SettingsView: View {
     private var totalFemale: Int { appState.records.reduce(0) { $0 + $1.totalFemale } }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // MARK: Statistics
                 Section("Statistics") {
