@@ -2,76 +2,117 @@ import SwiftUI
 
 struct CounterView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showingSaveSheet = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
-                    // Header
-                    VStack(spacing: 4) {
-                        Text("MTC Counter")
-                            .font(.largeTitle.bold())
-                        Text("MarThoma Church Attendance")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.top, 8)
-
-                    // Grand total card
-                    VStack(spacing: 6) {
-                        Text("\(appState.grandTotal)")
-                            .font(.system(size: 72, weight: .bold, design: .rounded))
-                            .foregroundColor(.indigo)
-                        Text("Grand Total")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        if !appState.rounds.isEmpty {
-                            Text("\(appState.rounds.count) round(s) saved")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
-
-                    // Counters
-                    CounterRow(label: "Male", count: $appState.male, color: .blue)
-                    CounterRow(label: "Female", count: $appState.female, color: .pink)
-
-                    // Action buttons
-                    HStack(spacing: 12) {
-                        Button(action: {
-                            appState.addRound()
-                            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-                        }) {
-                            Label("Add Round", systemImage: "plus.circle.fill")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.indigo)
-
-                        Button(action: { showingSaveSheet = true }) {
-                            Label("Save Record", systemImage: "square.and.arrow.down.fill")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(.green)
-                    }
-
-                    // Rounds list
-                    if !appState.rounds.isEmpty {
-                        RoundsSectionView()
-                    }
+                if horizontalSizeClass == .regular {
+                    iPadContent
+                } else {
+                    phoneContent
                 }
-                .padding()
             }
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
         }
         .sheet(isPresented: $showingSaveSheet) {
             SaveRecordView()
+        }
+    }
+
+    // MARK: - Layout variants
+
+    private var phoneContent: some View {
+        VStack(spacing: 20) {
+            headerView
+            grandTotalCard
+            CounterRow(label: "Male", count: $appState.male, color: .blue)
+            CounterRow(label: "Female", count: $appState.female, color: .pink)
+            actionButtons
+            if !appState.rounds.isEmpty {
+                RoundsSectionView()
+            }
+        }
+        .padding()
+    }
+
+    @ViewBuilder private var iPadContent: some View {
+        if !appState.rounds.isEmpty {
+            HStack(alignment: .top, spacing: 24) {
+                VStack(spacing: 20) { counterColumnContent }
+                RoundsSectionView()
+            }
+            .padding(24)
+            .frame(maxWidth: 900)
+            .frame(maxWidth: .infinity)
+        } else {
+            VStack(spacing: 20) { counterColumnContent }
+                .padding(24)
+                .frame(maxWidth: 560)
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    // MARK: - Shared subviews
+
+    @ViewBuilder private var counterColumnContent: some View {
+        headerView
+        grandTotalCard
+        CounterRow(label: "Male", count: $appState.male, color: .blue)
+        CounterRow(label: "Female", count: $appState.female, color: .pink)
+        actionButtons
+    }
+
+    private var headerView: some View {
+        VStack(spacing: 4) {
+            Text("MTC Counter")
+                .font(.largeTitle.bold())
+            Text("MarThoma Church Attendance")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding(.top, 8)
+    }
+
+    private var grandTotalCard: some View {
+        VStack(spacing: 6) {
+            Text("\(appState.grandTotal)")
+                .font(.system(size: 72, weight: .bold, design: .rounded))
+                .foregroundColor(.indigo)
+            Text("Grand Total")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            if !appState.rounds.isEmpty {
+                Text("\(appState.rounds.count) round(s) saved")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(16)
+    }
+
+    private var actionButtons: some View {
+        HStack(spacing: 12) {
+            Button(action: {
+                appState.addRound()
+                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+            }) {
+                Label("Add Round", systemImage: "plus.circle.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.indigo)
+
+            Button(action: { showingSaveSheet = true }) {
+                Label("Save Record", systemImage: "square.and.arrow.down.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .tint(.green)
         }
     }
 }
