@@ -18,6 +18,7 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
+        .tabViewStyle(.tabBar)
         .accentColor(.indigo)
     }
 }
