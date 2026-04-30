@@ -2,22 +2,17 @@ import SwiftUI
 
 struct CounterView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var showingSaveSheet = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
-                    headerView
-                    grandTotalCard
-                    CounterRow(label: "Male", count: $appState.male, color: .blue)
-                    CounterRow(label: "Female", count: $appState.female, color: .pink)
-                    actionButtons
-                    if !appState.rounds.isEmpty {
-                        RoundsSectionView()
-                    }
+                if horizontalSizeClass == .regular {
+                    iPadContent
+                } else {
+                    phoneContent
                 }
-                .padding()
             }
             .toolbar(.hidden, for: .navigationBar)
         }
@@ -25,6 +20,49 @@ struct CounterView: View {
             SaveRecordView()
         }
     }
+
+    // MARK: - Layout variants
+
+    private var phoneContent: some View {
+        VStack(spacing: 20) {
+            headerView
+            grandTotalCard
+            CounterRow(label: "Male", count: $appState.male, color: .blue)
+            CounterRow(label: "Female", count: $appState.female, color: .pink)
+            actionButtons
+            if !appState.rounds.isEmpty {
+                RoundsSectionView()
+            }
+        }
+        .padding()
+    }
+
+    @ViewBuilder private var iPadContent: some View {
+        if !appState.rounds.isEmpty {
+            HStack(alignment: .top, spacing: 24) {
+                VStack(spacing: 20) { counterColumnContent }
+                RoundsSectionView()
+            }
+            .padding(24)
+            .frame(maxWidth: 900)
+            .frame(maxWidth: .infinity)
+        } else {
+            VStack(spacing: 20) { counterColumnContent }
+                .padding(24)
+                .frame(maxWidth: 560)
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    @ViewBuilder private var counterColumnContent: some View {
+        headerView
+        grandTotalCard
+        CounterRow(label: "Male", count: $appState.male, color: .blue)
+        CounterRow(label: "Female", count: $appState.female, color: .pink)
+        actionButtons
+    }
+
+    // MARK: - Shared subviews
 
     private var headerView: some View {
         VStack(spacing: 4) {
