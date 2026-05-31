@@ -1357,6 +1357,15 @@
     </div>
   </div>
 
+  <!-- Reload when the service worker controller changes, even if the module
+       below fails to load (e.g. stale cache serving wrong path). -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+    }
+  </script>
   <script type="module" src="./src/main.js"></script>
 
 </body>
