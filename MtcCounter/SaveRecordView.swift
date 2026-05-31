@@ -16,8 +16,10 @@ struct SaveRecordView: View {
     @State private var verseTo = ""
     @State private var notes = ""
 
+    @State private var selectedCoCelebrants: Set<String> = []
     @State private var showingManageCelebrants = false
     @State private var showingManageParishes = false
+    @State private var showingCoCelebrantPicker = false
 
     var scriptureString: String {
         guard !scriptureBook.isEmpty else { return "" }
@@ -90,7 +92,38 @@ struct SaveRecordView: View {
                     Toggle("Co-Celebrants", isOn: $coCelebrantsEnabled)
                         .tint(.indigo)
                     if coCelebrantsEnabled {
-                        TextField("Co-celebrant names (comma-separated)", text: $coCelebrants)
+                        if appState.celebrants.isEmpty {
+                            HStack {
+                                TextField("Co-celebrant names (comma-separated)", text: $coCelebrants)
+                                Button("Manage") { showingManageCelebrants = true }
+                                    .font(.caption)
+                                    .foregroundColor(.indigo)
+                            }
+                        } else {
+                            HStack {
+                                Button {
+                                    showingCoCelebrantPicker = true
+                                } label: {
+                                    HStack {
+                                        Text(selectedCoCelebrants.isEmpty
+                                             ? "Select Co-Celebrants"
+                                             : selectedCoCelebrants.sorted().joined(separator: ", "))
+                                            .foregroundColor(selectedCoCelebrants.isEmpty ? .secondary : .primary)
+                                            .multilineTextAlignment(.leading)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(.secondary)
+                                            .font(.caption)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                                Button { showingManageCelebrants = true } label: {
+                                    Image(systemName: "gear")
+                                        .foregroundColor(.indigo)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                 }
 
@@ -175,11 +208,18 @@ struct SaveRecordView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
+                        let coValue: String = {
+                            guard coCelebrantsEnabled else { return "" }
+                            if appState.celebrants.isEmpty {
+                                return coCelebrants
+                            }
+                            return selectedCoCelebrants.sorted().joined(separator: ", ")
+                        }()
                         appState.saveRecord(
                             date: date,
                             parish: parish,
                             celebrant: celebrant,
-                            coCelebrants: coCelebrantsEnabled ? coCelebrants : "",
+                            coCelebrants: coValue,
                             sermon: sermon,
                             scripture: scriptureString.isEmpty ? "" : scriptureString,
                             notes: notes
@@ -196,6 +236,10 @@ struct SaveRecordView: View {
                                onAdd: { appState.addCelebrant($0) },
                                onDelete: { appState.deleteCelebrant($0) })
             }
+            .sheet(isPresented: $showingCoCelebrantPicker) {
+                CoCelebrantPickerView(celebrants: appState.celebrants,
+                                      selected: $selectedCoCelebrants)
+            }
             .sheet(isPresented: $showingManageParishes) {
                 ManageListView(title: "Manage Parishes",
                                items: appState.parishes,
@@ -207,6 +251,46 @@ struct SaveRecordView: View {
             let f = DateFormatter()
             f.dateStyle = .long
             date = f.string(from: Date())
+        }
+    }
+}
+
+// MARK: - Co-Celebrant multi-select sheet
+
+struct CoCelebrantPickerView: View {
+    @Environment(\.dismiss) private var dismiss
+    let celebrants: [String]
+    @Binding var selected: Set<String>
+
+    var body: some View {
+        NavigationStack {
+            List(celebrants, id: \.self) { name in
+                Button {
+                    if selected.contains(name) {
+                        selected.remove(name)
+                    } else {
+                        selected.insert(name)
+                    }
+                } label: {
+                    HStack {
+                        Text(name)
+                            .foregroundColor(.primary)
+                        Spacer()
+                        if selected.contains(name) {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.indigo)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Co-Celebrants")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .fontWeight(.bold)
+                }
+            }
         }
     }
 }
