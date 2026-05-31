@@ -138,8 +138,7 @@ export function registerServiceWorker() {
       })
       .catch(err => console.log('Service Worker registration failed:', err));
 
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
+    // controllerchange → reload is handled by the inline script in index.html
+    // so it fires even when this module fails to load.
   });
 }

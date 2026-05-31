@@ -1,6 +1,6 @@
 // IMPORTANT: Update this version number every time you deploy!
 // Format: YYYY-MM-DD-HH-MM (or increment manually)
-const CACHE_VERSION = 'v2026-05-31-01';
+const CACHE_VERSION = 'v2026-05-31-02';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [
   './',
@@ -45,38 +45,39 @@ self.addEventListener('install', event => {
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
   console.log('Service Worker activating...', CACHE_NAME);
+  let hadOldCaches = false;
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName.startsWith('mtc-counter-') && cacheName !== CACHE_NAME) {
             console.log('Deleting old cache:', cacheName);
+            hadOldCaches = true;
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => {
-      // Notify all clients about the update
-      return self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({
-            type: 'CACHE_UPDATED',
-            version: CACHE_VERSION
-          });
-        });
-      });
     })
+    .then(() => self.clients.claim())
+    .then(() => self.clients.matchAll({ type: 'window' }))
+    .then(clients => Promise.all(clients.map(client => {
+      client.postMessage({ type: 'CACHE_UPDATED', version: CACHE_VERSION });
+      // Force-reload any client that may be stuck on an old cached version.
+      // This handles clients whose module failed to load (so they have no
+      // controllerchange listener) — e.g. after the /src/main.js path fix.
+      if (hadOldCaches && client.navigate) {
+        return client.navigate(client.url);
+      }
+    })))
   );
-  // Take control of all clients immediately
-  return self.clients.claim();
 });
 
 // Fetch event - Network first for HTML, cache first for assets
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // Network-first strategy for HTML files (always check for updates)
-  if (event.request.headers.get('accept').includes('text/html')) {
+  // Network-first strategy for HTML navigation requests (always check for updates)
+  if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
