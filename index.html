@@ -320,7 +320,7 @@
       opacity: 0;
       margin-bottom: 0;
     }
-    .co-celebrants-field.active { max-height: 180px; opacity: 1; margin-bottom: 16px; }
+    .co-celebrants-field.active { max-height: 220px; opacity: 1; margin-bottom: 16px; }
 
     /* Grand Total Box */
     .total-box {
@@ -1052,7 +1052,11 @@
       <div class="co-celebrants-field" id="coCelebrantsField">
         <div class="input-group">
           <label data-i18n="coCelebrantsInputLabel">👥 Co-Celebrants Names</label>
-          <input type="text" id="coCelebrants" data-i18n-placeholder="coCelebrantsPlaceholder" placeholder="Enter co-celebrants names (comma separated)">
+          <div style="display: flex; gap: 8px; align-items: flex-start;">
+            <select id="coCelebrants" multiple size="3" style="flex: 1;">
+            </select>
+            <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants">⚙️</button>
+          </div>
         </div>
       </div>
 
@@ -2144,7 +2148,7 @@
       var celebrant = document.getElementById('celebrant').value || '';
       var coCelebrants = '';
       if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
-        coCelebrants = document.getElementById('coCelebrants').value || '';
+        coCelebrants = getCoCelebrantsValue();
       }
       var sermon = document.getElementById('sermon').value || '';
       var book = document.getElementById('book').value;
@@ -2230,13 +2234,16 @@
       document.getElementById('celebrant').value = isNotSpecified(record.celebrant) ? '' : record.celebrant;
 
       // Handle co-celebrants
+      var coSelect = document.getElementById('coCelebrants');
+      Array.from(coSelect.options).forEach(function(o) { o.selected = false; });
       if (record.coCelebrants && !isNotSpecified(record.coCelebrants)) {
-        document.getElementById('coCelebrants').value = record.coCelebrants;
+        var names = record.coCelebrants.split(',').map(function(n) { return n.trim(); });
+        Array.from(coSelect.options).forEach(function(o) {
+          if (names.includes(o.value)) { o.selected = true; }
+        });
         if (!document.getElementById('coCelebrantsToggle').classList.contains('active')) {
           toggleCoCelebrants();
         }
-      } else {
-        document.getElementById('coCelebrants').value = '';
       }
 
       document.getElementById('sermon').value = isNotSpecified(record.sermon) ? '' : record.sermon;
@@ -2320,7 +2327,7 @@
       var celebrant = document.getElementById('celebrant').value || t('notSpecified');
       var coCelebrants = '';
       if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
-        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+        coCelebrants = getCoCelebrantsValue() || t('notSpecified');
       }
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
@@ -2402,7 +2409,7 @@
       var celebrant = document.getElementById('celebrant').value || t('notSpecified');
       var coCelebrants = '';
       if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
-        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+        coCelebrants = getCoCelebrantsValue() || t('notSpecified');
       }
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
@@ -2478,7 +2485,7 @@
       var celebrant = document.getElementById('celebrant').value || t('notSpecified');
       var coCelebrants = '';
       if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
-        coCelebrants = document.getElementById('coCelebrants').value || t('notSpecified');
+        coCelebrants = getCoCelebrantsValue() || t('notSpecified');
       }
       var sermon = document.getElementById('sermon').value || t('notSpecified');
       var book = document.getElementById('book').value;
@@ -2663,20 +2670,39 @@
 
     function updateCelebrantDatalist() {
       var celebrants = getSavedCelebrants();
+
+      // Update primary celebrant select
       var select = document.getElementById('celebrant');
       var currentValue = select.value;
       select.innerHTML = '<option value="">-- Select Celebrant --</option>';
-
       celebrants.forEach(function(name) {
         var option = document.createElement('option');
         option.value = name;
         option.textContent = name;
         select.appendChild(option);
       });
-
       if (currentValue) {
         select.value = currentValue;
       }
+
+      // Update co-celebrants multi-select, preserving selected values
+      var coSelect = document.getElementById('coCelebrants');
+      var selectedValues = Array.from(coSelect.selectedOptions).map(function(o) { return o.value; });
+      coSelect.innerHTML = '';
+      celebrants.forEach(function(name) {
+        var option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        if (selectedValues.includes(name)) {
+          option.selected = true;
+        }
+        coSelect.appendChild(option);
+      });
+    }
+
+    function getCoCelebrantsValue() {
+      var coSelect = document.getElementById('coCelebrants');
+      return Array.from(coSelect.selectedOptions).map(function(o) { return o.value; }).join(', ');
     }
 
     function openCelebrantManager() {
