@@ -1,13 +1,28 @@
 // IMPORTANT: Update this version number every time you deploy!
 // Format: YYYY-MM-DD-HH-MM (or increment manually)
-const CACHE_VERSION = 'v2025-12-30-01';
+const CACHE_VERSION = 'v2026-05-31-01';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './src/main.js',
+  './src/state.js',
+  './src/translations.js',
+  './src/bibleData.js',
+  './src/utils.js',
+  './src/haptic.js',
+  './src/language.js',
+  './src/scripture.js',
+  './src/counter.js',
+  './src/history.js',
+  './src/celebrants.js',
+  './src/parishes.js',
+  './src/export.js',
+  './src/stats.js',
+  './src/ui.js',
 ];
 
 // Install event - cache resources
