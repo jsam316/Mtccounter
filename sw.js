@@ -1,6 +1,6 @@
 // IMPORTANT: Update this version number every time you deploy!
 // Format: YYYY-MM-DD-HH-MM (or increment manually)
-const CACHE_VERSION = 'v2026-06-12-01';
+const CACHE_VERSION = 'v2026-06-12-02';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [
   './',
@@ -23,6 +23,7 @@ const urlsToCache = [
   './src/export.js',
   './src/stats.js',
   './src/ui.js',
+  './vendor/jspdf.umd.min.js',
 ];
 
 // Install event - cache resources
