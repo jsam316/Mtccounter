@@ -91,9 +91,34 @@ export function shareToWhatsApp() {
   triggerHaptic('success');
 }
 
-export function exportPDF() {
-  if (typeof window.jspdf === 'undefined') {
-    alert('PDF library not loaded. Please check your internet connection and refresh the page.');
+// jsPDF is vendored locally and lazy-loaded on first use so it works
+// offline (the service worker precaches it) without slowing page load.
+let _jspdfLoader = null;
+
+function loadJsPDF() {
+  if (window.jspdf) return Promise.resolve();
+  if (!_jspdfLoader) {
+    _jspdfLoader = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = './vendor/jspdf.umd.min.js';
+      script.onload = resolve;
+      script.onerror = () => {
+        script.remove();
+        _jspdfLoader = null; // allow retry
+        reject(new Error('jsPDF failed to load'));
+      };
+      document.head.appendChild(script);
+    });
+  }
+  return _jspdfLoader;
+}
+
+export async function exportPDF() {
+  try {
+    await loadJsPDF();
+  } catch {
+    alert('PDF library failed to load. Please refresh the page and try again.');
+    triggerHaptic('error');
     return;
   }
   const lang        = getCurrentLang();

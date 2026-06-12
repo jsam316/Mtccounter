@@ -3,7 +3,7 @@
 import { updateLanguage, toggleLanguage }                       from './language.js';
 import { updateChapterOptions, updateVerseOptions }             from './scripture.js';
 import { changeMale, changeFemale, newRecord, addToRoundTotal,
-         removeRound, clearRounds, loadRounds }                 from './counter.js';
+         removeRound, clearRounds, loadRounds, loadLiveCounts } from './counter.js';
 import { saveRecord, displayHistory, loadRecord, deleteRecord,
          filterHistory }                                        from './history.js';
 import { toggleDarkMode, initDarkMode, installApp,
@@ -11,7 +11,7 @@ import { toggleDarkMode, initDarkMode, installApp,
          showUpdateNotification, closeUpdateNotification,
          applyUpdate, updateOnlineStatus, syncData,
          registerServiceWorker, setTabSwitchCallback,
-         switchTab }                                            from './ui.js';
+         switchTab, initWakeLock }                              from './ui.js';
 import { openCelebrantManager, closeCelebrantManager,
          addCelebrant, deleteCelebrant, toggleCoCelebrants,
          initCoCelebrantsToggle, updateCelebrantDatalist }      from './celebrants.js';
@@ -100,7 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initDarkMode();
   initInstallPrompt();
   initCoCelebrantsToggle();
+  loadLiveCounts();
   loadRounds();
+  initWakeLock();
   updateCelebrantDatalist();
   updateParishDatalist();
   displayHistory();
@@ -124,3 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 registerServiceWorker();
+
+// Ask the browser not to evict our data (attendance history lives in
+// localStorage). Best-effort: ignored where unsupported or denied.
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persisted()
+    .then(persisted => { if (!persisted) return navigator.storage.persist(); })
+    .catch(() => {});
+}

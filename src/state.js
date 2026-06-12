@@ -5,6 +5,7 @@ export const KEYS = Object.freeze({
   celebrants:             'savedCelebrants',
   parishes:               'savedParishes',
   rounds:                 'mtcRounds',
+  liveCounts:             'mtcLiveCounts',
   language:               'language',
   darkMode:               'darkMode',
   installPromptDismissed: 'installPromptDismissed',
