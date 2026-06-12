@@ -1,6 +1,6 @@
 // IMPORTANT: Update this version number every time you deploy!
 // Format: YYYY-MM-DD-HH-MM (or increment manually)
-const CACHE_VERSION = 'v2026-05-31-02';
+const CACHE_VERSION = 'v2026-06-12-01';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [
   './',
@@ -38,8 +38,10 @@ self.addEventListener('install', event => {
         console.log('Cache addAll error:', err);
       })
   );
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
+  // Note: no skipWaiting() here. The new worker waits until the user accepts
+  // the in-app update notification (SKIP_WAITING message below) or all tabs
+  // are closed. Activating immediately would force-reload open clients and
+  // could interrupt an in-progress count.
 });
 
 // Activate event - clean up old caches

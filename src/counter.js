@@ -11,8 +11,24 @@ export function getMale()   { return male; }
 export function getFemale() { return female; }
 export function getRounds() { return rounds; }
 
+// Persist live counts so an in-progress count survives the tab being
+// killed (e.g. app switch on mobile). Never let a storage failure break
+// counting itself.
+function saveLiveCounts() {
+  try { save(KEYS.liveCounts, { male, female }); } catch { /* keep counting */ }
+}
+
+export function loadLiveCounts() {
+  const saved = load(KEYS.liveCounts, null);
+  if (saved) {
+    male   = Math.max(0, parseInt(saved.male,   10) || 0);
+    female = Math.max(0, parseInt(saved.female, 10) || 0);
+  }
+}
+
 export function changeMale(amount) {
   male = Math.max(0, male + amount);
+  saveLiveCounts();
   updateDisplay();
   triggerHaptic(amount > 0 ? 'light' : 'medium');
   addHapticAnimation(document.getElementById('maleCount'));
@@ -20,6 +36,7 @@ export function changeMale(amount) {
 
 export function changeFemale(amount) {
   female = Math.max(0, female + amount);
+  saveLiveCounts();
   updateDisplay();
   triggerHaptic(amount > 0 ? 'light' : 'medium');
   addHapticAnimation(document.getElementById('femaleCount'));
@@ -43,6 +60,7 @@ export function newRecord() {
   male = 0;
   female = 0;
   rounds = [];
+  saveLiveCounts();
   saveRounds();
   updateDisplay();
   displayRounds();
@@ -59,6 +77,7 @@ export function addToRoundTotal() {
   displayRounds();
   male = 0;
   female = 0;
+  saveLiveCounts();
   updateDisplay();
   showSuccessMsg(t('roundAdded'), 2000);
   triggerHaptic('success');
@@ -131,6 +150,7 @@ export function resetCounters(m, f, savedRounds) {
   male   = m;
   female = f;
   rounds = savedRounds ? savedRounds.slice() : [];
+  saveLiveCounts();
   saveRounds();
   displayRounds();
   updateDisplay();

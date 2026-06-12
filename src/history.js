@@ -63,6 +63,7 @@ export function saveRecord() {
   };
 
   let history = getHistory();
+  if (history.some(r => r.date === date) && !confirm(t('overwriteConfirm'))) return;
   history = history.filter(r => r.date !== date);
   history.unshift(record);
   saveHistory(history);

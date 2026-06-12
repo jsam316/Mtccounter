@@ -17,7 +17,42 @@ export function switchTab(tab) {
   document.getElementById('statsTab').classList.toggle('active',   tab === 'stats');
 
   if (_onTabSwitch) _onTabSwitch(tab);
+
+  // Keep the screen awake only while counting.
+  if (tab === 'counter') _requestWakeLock();
+  else _releaseWakeLock();
+
   triggerHaptic('light');
+}
+
+// ── Screen wake lock (keeps the display on during a count) ───────────────────
+
+let _wakeLock = null;
+
+async function _requestWakeLock() {
+  if (!('wakeLock' in navigator) || _wakeLock) return;
+  try {
+    _wakeLock = await navigator.wakeLock.request('screen');
+    // The browser releases the lock automatically when the page is hidden.
+    _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+  } catch {
+    _wakeLock = null; // denied (e.g. low battery) — not critical
+  }
+}
+
+function _releaseWakeLock() {
+  if (_wakeLock) {
+    _wakeLock.release().catch(() => {});
+    _wakeLock = null;
+  }
+}
+
+export function initWakeLock() {
+  _requestWakeLock(); // counter is the initial tab
+  document.addEventListener('visibilitychange', () => {
+    const counterActive = document.getElementById('counterTab')?.classList.contains('active');
+    if (!document.hidden && counterActive) _requestWakeLock();
+  });
 }
 
 export function toggleDarkMode() {
@@ -123,6 +158,12 @@ export function registerServiceWorker() {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then(registration => {
+        // An update may already be waiting (downloaded on a previous visit
+        // but not yet applied). Offer it again.
+        if (registration.waiting && navigator.serviceWorker.controller) {
+          _newWorker = registration.waiting;
+          showUpdateNotification();
+        }
         registration.addEventListener('updatefound', () => {
           _newWorker = registration.installing;
           _newWorker.addEventListener('statechange', () => {
