@@ -6,6 +6,7 @@ import { getMale, getFemale, getRounds, resetCounters } from './counter.js';
 import { getCoCelebrantsValue } from './celebrants.js';
 import { updateChapterOptions, updateVerseOptions } from './scripture.js';
 import { switchTab } from './ui.js';
+import { updateLectionaryHint } from './lectionary.js';
 
 export function getHistory() {
   return load(KEYS.history, []);
@@ -188,6 +189,7 @@ export function loadRecord(index) {
     resetCounters(record.male, record.female, []);
   }
 
+  updateLectionaryHint();
   switchTab('counter');
   triggerHaptic('success');
 }

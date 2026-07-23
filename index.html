@@ -257,6 +257,29 @@
       gap: 8px;
     }
 
+    /* Sabha lectionary hint under the sermon field */
+    .lectionary-hint {
+      margin-top: 8px;
+      padding: 9px 12px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: var(--radius-sm);
+      color: var(--accent-light);
+      font-size: 12.5px;
+      font-weight: 600;
+      line-height: 1.45;
+      cursor: pointer;
+      transition: var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .lectionary-hint:hover { background: rgba(99, 102, 241, 0.18); }
+    .lectionary-hint:active { transform: scale(0.98); }
+    .light-mode .lectionary-hint {
+      background: rgba(99, 102, 241, 0.07);
+      border-color: rgba(99, 102, 241, 0.2);
+      color: var(--accent);
+    }
+
     .toggle-section {
       display: flex;
       align-items: center;
@@ -1064,6 +1087,7 @@
       <div class="input-group">
         <label data-i18n="sermonLabel">📖 Sermon Title</label>
         <input type="text" id="sermon" data-i18n-placeholder="sermonPlaceholder" placeholder="Enter sermon title">
+        <div id="lectionaryHint" class="lectionary-hint" style="display:none" onclick="applyLectionaryTheme()"></div>
       </div>
 
       <div class="input-group">
