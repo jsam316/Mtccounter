@@ -8,8 +8,8 @@ import { triggerHaptic } from './haptic.js';
 // published lectionary (obvious print/OCR typos corrected, e.g. "Yolk" →
 // "Yoke"). Civil holidays without a sermon theme are omitted.
 //
-// The weekly (Sunday) theme also applies to midweek services on Friday and
-// Tuesday — see getLectionaryEntry().
+// A Sunday's theme is shared by the surrounding midweek services: the
+// preceding Friday and the following Tuesday — see getLectionaryEntry().
 export const LECTIONARY = {
   // ── January 2026 ──
   '2026-01-01': { occasion: 'New Year Day — Circumcision of our Lord', theme: 'Freedom under the Yoke of Christ' },
@@ -134,10 +134,10 @@ function _shiftDateStr(dateStr, days) {
  * Lectionary lookup for a date.
  *
  * - An exact entry for the date always wins.
- * - The weekly (Sunday) theme also applies to the midweek services on
- *   Friday and Tuesday: those days inherit the preceding Sunday's theme
- *   when they have no theme of their own. The result is then marked
- *   { weekly: true }.
+ * - A Sunday's theme is shared by the surrounding midweek services:
+ *   the preceding Friday (2 days before) and the following Tuesday
+ *   (2 days after) inherit it when they have no theme of their own.
+ *   The result is then marked { weekly: true }.
  */
 export function getLectionaryEntry(dateStr) {
   if (!dateStr) return null;
@@ -150,7 +150,8 @@ export function getLectionaryEntry(dateStr) {
   const isMidweekService = day === 5 || day === 2; // Friday or Tuesday
   if (!isMidweekService) return exact;
 
-  const sundayStr = _shiftDateStr(dateStr, day === 5 ? -5 : -2);
+  // Friday looks ahead to the upcoming Sunday; Tuesday looks back.
+  const sundayStr = _shiftDateStr(dateStr, day === 5 ? 2 : -2);
   const sunday = LECTIONARY[sundayStr];
   if (!sunday || !sunday.theme) return exact;
 
