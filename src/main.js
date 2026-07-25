@@ -20,6 +20,7 @@ import { openParishManager, closeParishManager,
 import { exportData, shareToWhatsApp, exportPDF,
          exportCSV, exportBackupJSON, importBackup }            from './export.js';
 import { displayStats }                                         from './stats.js';
+import { updateLectionaryHint, applyLectionaryTheme }           from './lectionary.js';
 
 // Wire switchTab to also trigger renders.
 setTabSwitchCallback(tab => {
@@ -44,6 +45,7 @@ Object.assign(window, {
   exportData, shareToWhatsApp, exportPDF,
   exportCSV, exportBackupJSON, importBackup,
   displayStats,
+  applyLectionaryTheme,
 });
 
 // ── Initialisation ────────────────────────────────────────────────────────────
@@ -106,6 +108,10 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCelebrantDatalist();
   updateParishDatalist();
   displayHistory();
+
+  // Sabha lectionary: suggest the sermon theme for the selected date.
+  updateLectionaryHint();
+  document.getElementById('date').addEventListener('change', updateLectionaryHint);
 
   // Scripture cascade selectors.
   document.getElementById('book').addEventListener('change', function () {
