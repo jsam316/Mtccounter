@@ -53,19 +53,42 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* iOS 27 Liquid Glass: stronger content diffusion, a darkened edge rim
+       for depth, and brighter specular highlights along the top edge. */
     .container {
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(24px) saturate(160%);
-      -webkit-backdrop-filter: blur(24px) saturate(160%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       color: #f8fafc;
       border-radius: 28px;
       padding: 28px 24px 24px;
       max-width: 480px;
       width: 100%;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+      box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.12);
       position: relative;
       z-index: 1;
+    }
+
+    /* Shared glass-edge treatment for raised surfaces */
+    .total-box, .counter-box, .round-total-section, .toggle-section,
+    .stat-card, .trend-section, .history-item, .tabs {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        0 1px 3px rgba(0, 0, 0, 0.18),
+        0 0 0 0.5px rgba(0, 0, 0, 0.2);
+    }
+    .light-mode .total-box, .light-mode .counter-box, .light-mode .round-total-section,
+    .light-mode .toggle-section, .light-mode .stat-card, .light-mode .trend-section,
+    .light-mode .history-item, .light-mode .tabs {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        0 1px 3px rgba(0, 0, 0, 0.06),
+        0 0 0 0.5px rgba(0, 0, 0, 0.05);
     }
     
     h1 {
@@ -128,7 +151,11 @@
     .light-mode .container {
       background: rgba(255, 255, 255, 0.85);
       border-color: rgba(0, 0, 0, 0.07);
-      box-shadow: 0 8px 40px rgba(79, 70, 229, 0.1), 0 2px 8px rgba(0,0,0,0.06);
+      box-shadow:
+        0 8px 40px rgba(79, 70, 229, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
       color: #1e293b;
     }
     .light-mode h1 {
@@ -388,15 +415,23 @@
     .light-mode .female-total { color: #a855f7; }
     .light-mode .grand-total { color: var(--accent); }
 
-    /* Counter boxes */
+    /* Counter boxes — the whole box is the +1 tap target */
     .counter-box {
       border-radius: var(--radius-lg);
-      padding: 20px;
+      padding: 20px 20px 16px;
       margin-bottom: 12px;
       border: 1px solid;
       transition: var(--transition);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      position: relative;
+      overflow: hidden;
     }
-    .counter-box:active { transform: scale(0.99); }
+    .counter-box:active { transform: scale(0.985); }
+    .counter-box:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
     .male-box {
       background: rgba(59, 130, 246, 0.1);
       border-color: rgba(59, 130, 246, 0.22);
@@ -405,22 +440,62 @@
       background: rgba(168, 85, 247, 0.1);
       border-color: rgba(168, 85, 247, 0.22);
     }
+    .male-box.flash { background: rgba(59, 130, 246, 0.26); }
+    .female-box.flash { background: rgba(168, 85, 247, 0.26); }
     .light-mode .male-box { background: rgba(59, 130, 246, 0.07); border-color: rgba(59, 130, 246, 0.18); }
     .light-mode .female-box { background: rgba(168, 85, 247, 0.07); border-color: rgba(168, 85, 247, 0.18); }
+    .light-mode .male-box.flash { background: rgba(59, 130, 246, 0.18); }
+    .light-mode .female-box.flash { background: rgba(168, 85, 247, 0.18); }
 
     .counter-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
     .counter-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
     .male-title { color: #60a5fa; }
     .female-title { color: #c084fc; }
     .light-mode .male-title { color: var(--blue); }
     .light-mode .female-title { color: #a855f7; }
-    .counter-value { font-size: 40px; font-weight: 700; }
-    .counter-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .counter-value { font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .counter-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .male-minus, .female-minus {
+      width: 72px;
+      height: 46px;
+      padding: 0;
+      font-size: 20px;
+    }
+    .tap-hint {
+      flex: 1;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.35);
+      letter-spacing: 0.2px;
+    }
+    .light-mode .tap-hint { color: rgba(0, 0, 0, 0.3); }
+
+    /* Floating +1 feedback where the finger lands */
+    .count-float {
+      position: absolute;
+      font-size: 22px;
+      font-weight: 700;
+      pointer-events: none;
+      animation: floatUp 0.6s ease-out forwards;
+    }
+    @keyframes floatUp {
+      from { opacity: 1; transform: translateY(0); }
+      to   { opacity: 0; transform: translateY(-34px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .count-float { animation-duration: 0.01s; }
+    }
 
     /* Rounds section */
     .round-total-section {
@@ -570,15 +645,13 @@
     }
     button:active { transform: scale(0.96); }
 
-    /* +/- counter buttons */
+    /* − correction buttons (the + target is the whole counter box) */
     .male-minus, .female-minus {
       background: rgba(255, 255, 255, 0.1);
       border: 1.5px solid;
     }
     .male-minus { color: #60a5fa; border-color: rgba(96, 165, 250, 0.28); }
     .female-minus { color: #c084fc; border-color: rgba(192, 132, 252, 0.28); }
-    .male-plus { background: var(--blue); color: white; border: none; }
-    .female-plus { background: #a855f7; color: white; border: none; }
     .light-mode .male-minus { background: rgba(59, 130, 246, 0.08); color: var(--blue); border-color: rgba(59, 130, 246, 0.28); }
     .light-mode .female-minus { background: rgba(168, 85, 247, 0.08); color: #a855f7; border-color: rgba(168, 85, 247, 0.28); }
 
@@ -664,7 +737,7 @@
       transition: var(--transition);
     }
     .history-item:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.2); }
-    .light-mode .history-item { background: rgba(255,255,255,0.65); border-color: rgba(0,0,0,0.07); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .light-mode .history-item { background: rgba(255,255,255,0.65); border-color: rgba(0,0,0,0.07); }
     .light-mode .history-item:hover { background: #ffffff; border-color: var(--accent); box-shadow: var(--shadow); }
 
     .history-date { font-weight: 700; color: var(--accent-light); margin-bottom: 8px; font-size: 15px; }
@@ -1192,25 +1265,25 @@
         </div>
       </div>
 
-      <div class="counter-box male-box">
+      <div class="counter-box male-box" id="maleBox" role="button" tabindex="0" aria-label="Add one male" onclick="tapCounterBox(event, 'male')">
         <div class="counter-header">
           <span class="counter-title male-title"><span data-i18n="maleCounter">👨 Male</span></span>
           <span class="counter-value male-total" id="maleCount">0</span>
         </div>
-        <div class="counter-buttons">
-          <button class="male-minus" onclick="changeMale(-1)">−</button>
-          <button class="male-plus" onclick="changeMale(1)">+</button>
+        <div class="counter-footer">
+          <button class="male-minus" aria-label="Subtract one male" onclick="event.stopPropagation(); changeMale(-1)">−</button>
+          <span class="tap-hint" data-i18n="tapHint">Tap anywhere to add +1</span>
         </div>
       </div>
 
-      <div class="counter-box female-box">
+      <div class="counter-box female-box" id="femaleBox" role="button" tabindex="0" aria-label="Add one female" onclick="tapCounterBox(event, 'female')">
         <div class="counter-header">
           <span class="counter-title female-title"><span data-i18n="femaleCounter">👩 Female</span></span>
           <span class="counter-value female-total" id="femaleCount">0</span>
         </div>
-        <div class="counter-buttons">
-          <button class="female-minus" onclick="changeFemale(-1)">−</button>
-          <button class="female-plus" onclick="changeFemale(1)">+</button>
+        <div class="counter-footer">
+          <button class="female-minus" aria-label="Subtract one female" onclick="event.stopPropagation(); changeFemale(-1)">−</button>
+          <span class="tap-hint" data-i18n="tapHint">Tap anywhere to add +1</span>
         </div>
       </div>
 

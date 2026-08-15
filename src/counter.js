@@ -42,6 +42,27 @@ export function changeFemale(amount) {
   addHapticAnimation(document.getElementById('femaleCount'));
 }
 
+/** +1 from tapping anywhere on a counter box; shows feedback at the tap point. */
+export function tapCounterBox(event, which) {
+  if (which === 'male') changeMale(1); else changeFemale(1);
+  const box = event && event.currentTarget;
+  if (!box || !box.getBoundingClientRect) return;
+
+  box.classList.add('flash');
+  setTimeout(() => box.classList.remove('flash'), 140);
+
+  const float = document.createElement('span');
+  float.className = 'count-float ' + (which === 'male' ? 'male-total' : 'female-total');
+  float.textContent = '+1';
+  const r = box.getBoundingClientRect();
+  const x = typeof event.clientX === 'number' && event.clientX ? event.clientX - r.left : r.width / 2;
+  const y = typeof event.clientY === 'number' && event.clientY ? event.clientY - r.top : r.height / 2;
+  float.style.left = Math.min(Math.max(x - 10, 8), r.width - 34) + 'px';
+  float.style.top  = Math.max(y - 28, 4) + 'px';
+  box.appendChild(float);
+  setTimeout(() => float.remove(), 650);
+}
+
 export function updateDisplay() {
   let totalMale   = male;
   let totalFemale = female;

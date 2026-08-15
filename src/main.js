@@ -3,7 +3,8 @@
 import { updateLanguage, toggleLanguage }                       from './language.js';
 import { updateChapterOptions, updateVerseOptions }             from './scripture.js';
 import { changeMale, changeFemale, newRecord, addToRoundTotal,
-         removeRound, clearRounds, loadRounds, loadLiveCounts } from './counter.js';
+         removeRound, clearRounds, loadRounds, loadLiveCounts,
+         tapCounterBox }                                        from './counter.js';
 import { saveRecord, displayHistory, loadRecord, deleteRecord,
          filterHistory }                                        from './history.js';
 import { toggleDarkMode, initDarkMode, installApp,
@@ -31,7 +32,7 @@ setTabSwitchCallback(tab => {
 // Expose everything called from inline HTML onclick handlers.
 Object.assign(window, {
   changeMale, changeFemale, newRecord, addToRoundTotal,
-  removeRound, clearRounds,
+  removeRound, clearRounds, tapCounterBox,
   saveRecord, loadRecord, deleteRecord, filterHistory,
   switchTab,
   toggleDarkMode, installApp, closeInstallPrompt,
@@ -108,6 +109,16 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCelebrantDatalist();
   updateParishDatalist();
   displayHistory();
+
+  // Keyboard support for the tap-anywhere counter boxes.
+  [['maleBox', 'male'], ['femaleBox', 'female']].forEach(([id, which]) => {
+    document.getElementById(id)?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        tapCounterBox({ currentTarget: e.currentTarget }, which);
+      }
+    });
+  });
 
   // Sabha lectionary: suggest the sermon theme for the selected date.
   updateLectionaryHint();
