@@ -162,11 +162,16 @@ export function getLectionaryEntry(dateStr) {
   };
 }
 
+// Last value this module wrote into the sermon field. Lets a date change
+// replace a theme WE auto-filled while never touching user-typed text.
+let _lastAutoFill = null;
+
 /**
  * Refresh the lectionary hint for the currently selected date.
- * If an entry with a theme exists and the sermon field is empty, the theme
- * is filled in automatically; the hint stays visible either way so the
- * user can tap it to (re)apply the theme.
+ * If an entry with a theme exists and the sermon field is empty (or still
+ * holds a previously auto-filled theme), the theme is filled in
+ * automatically; the hint stays visible either way so the user can tap it
+ * to (re)apply the theme.
  */
 export function updateLectionaryHint() {
   const hint   = document.getElementById('lectionaryHint');
@@ -176,6 +181,11 @@ export function updateLectionaryHint() {
   const entry = getLectionaryEntry(document.getElementById('date').value);
   if (!entry) {
     hint.style.display = 'none';
+    // Clear a stale auto-filled theme; leave user-typed text alone.
+    if (_lastAutoFill && sermon.value === _lastAutoFill) {
+      sermon.value = '';
+      _lastAutoFill = null;
+    }
     return;
   }
 
@@ -188,7 +198,11 @@ export function updateLectionaryHint() {
   hint.title         = entry.theme ? t('lectionaryTapHint') : '';
   hint.style.display = 'block';
 
-  if (entry.theme && !sermon.value.trim()) sermon.value = entry.theme;
+  const replaceable = !sermon.value.trim() || (_lastAutoFill && sermon.value === _lastAutoFill);
+  if (entry.theme && replaceable) {
+    sermon.value = entry.theme;
+    _lastAutoFill = entry.theme;
+  }
 }
 
 /** Fill the sermon field with the lectionary theme for the selected date. */
@@ -196,5 +210,6 @@ export function applyLectionaryTheme() {
   const entry = getLectionaryEntry(document.getElementById('date').value);
   if (!entry || !entry.theme) return;
   document.getElementById('sermon').value = entry.theme;
+  _lastAutoFill = entry.theme;
   triggerHaptic('light');
 }
