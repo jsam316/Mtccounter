@@ -864,6 +864,155 @@
       100% { transform: scale(1); }
     }
 
+    /* Count Assist (Beta) */
+    .assist-launch-btn {
+      width: 100%;
+      margin-bottom: 16px;
+      padding: 11px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px dashed rgba(255, 255, 255, 0.22);
+      border-radius: var(--radius-md);
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .assist-launch-btn:hover { background: rgba(255, 255, 255, 0.12); color: rgba(255,255,255,0.9); }
+    .light-mode .assist-launch-btn {
+      background: rgba(255,255,255,0.6);
+      border-color: rgba(0,0,0,0.2);
+      color: rgba(0,0,0,0.55);
+    }
+
+    .assist-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0b1120;
+      z-index: 3000;
+      flex-direction: column;
+    }
+    .assist-overlay.show { display: flex; }
+    .assist-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      padding-top: max(14px, env(safe-area-inset-top));
+    }
+    .assist-live {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.75);
+      line-height: 1.4;
+    }
+    .assist-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--red);
+      flex-shrink: 0;
+      animation: assistBlink 1.4s ease-in-out infinite;
+    }
+    @keyframes assistBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @media (prefers-reduced-motion: reduce) { .assist-dot { animation: none; } }
+
+    .assist-stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background: #000000;
+    }
+    #assistVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    #assistCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .assist-status {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 15px;
+      font-weight: 600;
+      background: rgba(11, 17, 32, 0.85);
+      line-height: 1.5;
+    }
+
+    .assist-panel {
+      padding: 16px;
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #0b1120;
+    }
+    .assist-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .assist-count-item {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      text-align: center;
+    }
+    .assist-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 4px;
+    }
+    .assist-number {
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--accent-light);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .assist-number-dim { color: rgba(255, 255, 255, 0.85); }
+    .assist-controls { display: flex; gap: 10px; }
+    .assist-controls select {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.14);
+      color: #f8fafc;
+    }
+    .assist-reset-btn {
+      padding: 0 22px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--red);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .assist-note {
+      font-size: 12px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.45);
+      text-align: center;
+    }
+
     /* Manage buttons */
     .manage-celebrants-btn {
       padding: 7px 10px;
@@ -1287,6 +1436,10 @@
         </div>
       </div>
 
+      <button class="assist-launch-btn" onclick="openAssist()">
+        <span data-i18n="assistBtn">📷 Count Assist (Beta)</span>
+      </button>
+
       <!-- Round Total Section -->
       <div class="round-total-section">
         <div class="round-header">
@@ -1408,6 +1561,43 @@
     <div class="update-buttons">
       <button class="update-btn" onclick="applyUpdate()">Refresh Now</button>
       <button class="update-btn update-close" onclick="closeUpdateNotification()">Later</button>
+    </div>
+  </div>
+
+  <!-- Count Assist (Beta) Overlay -->
+  <div id="assistOverlay" class="assist-overlay">
+    <div class="assist-header">
+      <span class="assist-live">
+        <span class="assist-dot"></span>
+        <span data-i18n="assistLive">On-device only — nothing is recorded or uploaded</span>
+      </span>
+      <button class="close-manager-btn" onclick="closeAssist()" aria-label="Close count assist">✕</button>
+    </div>
+    <div class="assist-stage">
+      <video id="assistVideo" autoplay playsinline muted></video>
+      <canvas id="assistCanvas"></canvas>
+      <div id="assistStatus" class="assist-status"></div>
+    </div>
+    <div class="assist-panel">
+      <div class="assist-counts">
+        <div class="assist-count-item">
+          <div class="assist-label" data-i18n="assistCameraCount">Camera count</div>
+          <div id="assistCount" class="assist-number">0</div>
+        </div>
+        <div class="assist-count-item">
+          <div class="assist-label" data-i18n="assistManualTotal">Manual total</div>
+          <div id="assistManualVal" class="assist-number assist-number-dim">0</div>
+        </div>
+      </div>
+      <div class="assist-controls">
+        <select id="assistDirection" onchange="changeAssistDirection()" aria-label="Counting direction">
+          <option value="lr" data-i18n="assistDirLR">Count left → right</option>
+          <option value="rl" data-i18n="assistDirRL">Count right → left</option>
+          <option value="both" data-i18n="assistDirBoth">Count both directions</option>
+        </select>
+        <button class="assist-reset-btn" onclick="resetAssist()"><span data-i18n="assistReset">Reset</span></button>
+      </div>
+      <div class="assist-note" data-i18n="assistNote">Beta — a cross-check only. Camera counts are never saved to records.</div>
     </div>
   </div>
 
