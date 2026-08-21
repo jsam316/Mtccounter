@@ -1010,6 +1010,47 @@
       color: #d8b4fe;
     }
     .assist-male-btn:active, .assist-female-btn:active { transform: scale(0.96); }
+    .assist-chooser {
+      position: absolute;
+      display: none;
+      gap: 10px;
+      background: rgba(11, 17, 32, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 8px;
+      z-index: 10;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .assist-chooser button {
+      width: 58px;
+      height: 50px;
+      font-size: 26px;
+      padding: 0;
+      border-radius: 12px;
+      border: 1px solid;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .assist-chooser-male { background: rgba(59, 130, 246, 0.28); border-color: rgba(59, 130, 246, 0.5); }
+    .assist-chooser-female { background: rgba(168, 85, 247, 0.28); border-color: rgba(168, 85, 247, 0.5); }
+
+    .assist-child-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .assist-child-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+    }
     .assist-controls { display: flex; gap: 10px; }
     .assist-controls select {
       flex: 1;
@@ -1595,10 +1636,14 @@
       </span>
       <button class="close-manager-btn" onclick="closeAssist()" aria-label="Close count assist">✕</button>
     </div>
-    <div class="assist-stage">
+    <div class="assist-stage" onclick="assistStageTap(event)">
       <video id="assistVideo" autoplay playsinline muted></video>
       <canvas id="assistCanvas"></canvas>
       <div id="assistStatus" class="assist-status"></div>
+      <div id="assistChooser" class="assist-chooser">
+        <button class="assist-chooser-male" onclick="assistTagPerson(event, 'male')" aria-label="Count as male">👨</button>
+        <button class="assist-chooser-female" onclick="assistTagPerson(event, 'female')" aria-label="Count as female">👩</button>
+      </div>
     </div>
     <div class="assist-panel">
       <div class="assist-counts">
@@ -1619,6 +1664,12 @@
           <span data-i18n="assistAddFemale">👩 Female +1</span>
         </button>
       </div>
+      <div class="assist-child-row" onclick="toggleAssistChildren(event)">
+        <span class="assist-child-label" data-i18n="assistIgnoreChildren">👶 Ignore small children</span>
+        <div class="toggle-switch active" id="assistChildToggle">
+          <div class="toggle-slider"></div>
+        </div>
+      </div>
       <div class="assist-controls">
         <select id="assistDirection" onchange="changeAssistDirection()" aria-label="Counting direction">
           <option value="lr" data-i18n="assistDirLR">Count left → right</option>
@@ -1627,7 +1678,10 @@
         </select>
         <button class="assist-reset-btn" onclick="resetAssist()"><span data-i18n="assistReset">Reset</span></button>
       </div>
-      <div class="assist-note" data-i18n="assistNote">Beta — a cross-check only. Camera counts are never saved to records.</div>
+      <div class="assist-note">
+        <span data-i18n="assistLineHint">Tap the video to move the counting line away from bystanders.</span>
+        <span data-i18n="assistNote">Beta — a cross-check only. Camera counts are never saved to records.</span>
+      </div>
     </div>
   </div>
 
@@ -1679,7 +1733,12 @@
        below fails to load (e.g. stale cache serving wrong path). -->
   <script>
     if ('serviceWorker' in navigator) {
+      // Reload only on a real update takeover. On the very first visit the
+      // new worker claims the page (clients.claim) and controllerchange
+      // fires without any update — reloading then would wipe in-progress UI.
+      let hadController = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController) { hadController = true; return; }
         window.location.reload();
       });
     }
