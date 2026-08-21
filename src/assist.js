@@ -195,8 +195,20 @@ export function toggleAssistChildren(event) {
 }
 
 let _lastKept = [];        // most recent kept detections (with trackId/bbox)
-let _lastScale = { x: 1, y: 1 };
+let _lastMap = null;       // video→display mapping (object-fit: cover)
 let _pendingTagId = null;  // track awaiting a male/female choice
+
+/**
+ * The video fills the stage with object-fit: cover — uniformly scaled and
+ * center-cropped. Boxes must be drawn and taps hit-tested through this
+ * mapping or they drift away from where people actually appear on screen.
+ */
+function _videoMap(video) {
+  const w = video.clientWidth, h = video.clientHeight;
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const scale = Math.max(w / vw, h / vh);
+  return { scale, ox: (w - vw * scale) / 2, oy: (h - vh * scale) / 2, vw, vh };
+}
 
 function _hidePersonChooser() {
   _pendingTagId = null;
@@ -215,24 +227,35 @@ export function assistStageTap(event) {
 
   if (_pendingTagId !== null) { _hidePersonChooser(); return; }
 
-  // Hit-test against the latest person boxes (display coordinates).
-  for (const p of _lastKept) {
-    if (p.trackId == null) continue;
-    const [bx, by, bw, bh] = p.bbox;
-    if (x >= bx * _lastScale.x && x <= (bx + bw) * _lastScale.x
-      && y >= by * _lastScale.y && y <= (by + bh) * _lastScale.y) {
-      if (p.sex) return; // already tagged — never treat as a line move
-      _pendingTagId = p.trackId;
-      const chooser = document.getElementById('assistChooser');
-      chooser.style.display = 'flex';
-      chooser.style.left = Math.min(Math.max(x - 70, 8), rect.width - 148) + 'px';
-      chooser.style.top = Math.max(y - 66, 8) + 'px';
-      triggerHaptic('light');
-      return;
-    }
-  }
+  if (_lastMap) {
+    // Convert the tap from display to video coordinates (object-fit: cover).
+    const vx = (x - _lastMap.ox) / _lastMap.scale;
+    const vy = (y - _lastMap.oy) / _lastMap.scale;
+    // Forgiveness margin (~16 display px) — people move between frames.
+    const pad = 16 / _lastMap.scale;
 
-  _lineRatio = Math.min(0.9, Math.max(0.1, x / rect.width));
+    for (const p of _lastKept) {
+      if (p.trackId == null) continue;
+      const [bx, by, bw, bh] = p.bbox;
+      if (vx >= bx - pad && vx <= bx + bw + pad
+        && vy >= by - pad && vy <= by + bh + pad) {
+        if (p.sex) return; // already tagged — never treat as a line move
+        _pendingTagId = p.trackId;
+        const chooser = document.getElementById('assistChooser');
+        chooser.style.display = 'flex';
+        chooser.style.left = Math.min(Math.max(x - 70, 8), rect.width - 148) + 'px';
+        chooser.style.top = Math.max(y - 66, 8) + 'px';
+        triggerHaptic('light');
+        return;
+      }
+    }
+
+    // Empty space: move the counting line. The ratio lives in VIDEO
+    // coordinates — the space the tracker counts in.
+    _lineRatio = Math.min(0.9, Math.max(0.1, vx / _lastMap.vw));
+  } else {
+    _lineRatio = Math.min(0.9, Math.max(0.1, x / rect.width));
+  }
   _saveSettings();
   triggerHaptic('light');
 }
@@ -348,6 +371,7 @@ export function closeAssist() {
   _running = false;
   _hidePersonChooser();
   _lastKept = [];
+  _lastMap = null;
   if (_loopTimer) { clearTimeout(_loopTimer); _loopTimer = null; }
   if (_manualTimer) { clearInterval(_manualTimer); _manualTimer = null; }
   if (_stream) {
@@ -426,18 +450,20 @@ function _drawOverlay(persons, skipped, video) {
   const canvas = document.getElementById('assistCanvas');
   const w = video.clientWidth;
   const h = video.clientHeight;
-  if (!w || !h) return;
+  if (!w || !h || !video.videoWidth) return;
   if (canvas.width !== w) canvas.width = w;
   if (canvas.height !== h) canvas.height = h;
 
-  const scaleX = w / video.videoWidth;
-  const scaleY = h / video.videoHeight;
-  _lastScale = { x: scaleX, y: scaleY };
+  const map = _videoMap(video);
+  _lastMap = map;
+  const toX = vx => vx * map.scale + map.ox;
+  const toY = vy => vy * map.scale + map.oy;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, w, h);
 
-  // Counting line (movable — tap the video to place it)
-  const lx = w * _lineRatio;
+  // Counting line (movable — tap the video to place it). The ratio is in
+  // video coordinates, mapped to the display like everything else.
+  const lx = toX(map.vw * _lineRatio);
   ctx.strokeStyle = 'rgba(129, 140, 248, 0.9)';
   ctx.lineWidth = 2;
   ctx.setLineDash([8, 6]);
@@ -452,7 +478,8 @@ function _drawOverlay(persons, skipped, video) {
   ctx.lineWidth = 2;
   for (const p of persons) {
     const [bx, by, bw, bh] = p.bbox;
-    const dx = bx * scaleX, dy = by * scaleY, dw = bw * scaleX, dh = bh * scaleY;
+    const dx = toX(bx), dy = toY(by);
+    const dw = bw * map.scale, dh = bh * map.scale;
     if (p.sex === 'male') ctx.strokeStyle = 'rgba(96, 165, 250, 0.95)';
     else if (p.sex === 'female') ctx.strokeStyle = 'rgba(192, 132, 252, 0.95)';
     else ctx.strokeStyle = 'rgba(16, 185, 129, 0.9)';
@@ -467,6 +494,6 @@ function _drawOverlay(persons, skipped, video) {
   ctx.lineWidth = 1.5;
   for (const p of skipped) {
     const [bx, by, bw, bh] = p.bbox;
-    ctx.strokeRect(bx * scaleX, by * scaleY, bw * scaleX, bh * scaleY);
+    ctx.strokeRect(toX(bx), toY(by), bw * map.scale, bh * map.scale);
   }
 }
