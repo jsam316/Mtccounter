@@ -10,6 +10,7 @@ export const KEYS = Object.freeze({
   darkMode:               'darkMode',
   installPromptDismissed: 'installPromptDismissed',
   coCelebrantsEnabled:    'coCelebrantsEnabled',
+  assistSettings:         'mtcAssistSettings',
 });
 
 function _showStorageWarning() {

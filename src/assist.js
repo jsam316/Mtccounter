@@ -12,10 +12,17 @@
 import { t } from './translations.js';
 import { triggerHaptic } from './haptic.js';
 import { getMale, getFemale, getRounds, changeMale, changeFemale } from './counter.js';
+import { save, load, KEYS } from './state.js';
 
 const MODEL_IDB_URL = 'indexeddb://mtc-coco-ssd-lite';
 const DETECT_INTERVAL_MS = 180;
 const TRACK_EXPIRY_MS = 1500;
+const MAX_DETECTIONS = 40;
+// A crossing only counts if the person has actually travelled this fraction
+// of the frame width horizontally. Stationary people near the line (e.g. a
+// choir standing beside the communion path) jitter a few pixels between
+// frames — far below this — so they are never counted.
+const MIN_TRAVEL_RATIO = 0.12;
 
 /**
  * Line-crossing counter over per-frame person detections.
@@ -33,10 +40,14 @@ export function createLineCounter(direction = 'lr') {
   return {
     get count() { return count; },
 
-    /** persons: [{x, y}] centroids in frame pixels. Returns running count. */
-    update(persons, frameWidth, now) {
-      const lineX = frameWidth / 2;
+    /**
+     * persons: [{x, y}] centroids in frame pixels. lineX: the counting
+     * line's x position in frame pixels (defaults to center). Returns the
+     * running count.
+     */
+    update(persons, frameWidth, now, lineX = frameWidth / 2) {
       const maxMatchDist = frameWidth * 0.22;
+      const minTravel = frameWidth * MIN_TRAVEL_RATIO;
 
       for (const p of persons) {
         let best = null;
@@ -54,15 +65,20 @@ export function createLineCounter(direction = 'lr') {
           if (!best.counted) {
             const crossedLR = prevX < lineX && p.x >= lineX;
             const crossedRL = prevX > lineX && p.x <= lineX;
-            if ((direction === 'lr' && crossedLR)
-              || (direction === 'rl' && crossedRL)
-              || (direction === 'both' && (crossedLR || crossedRL))) {
+            // Net horizontal travel since the track began — stationary
+            // people jittering on the line never accumulate this.
+            const travelled = p.x - best.originX;
+            const okLR = crossedLR && travelled >= minTravel;
+            const okRL = crossedRL && -travelled >= minTravel;
+            if ((direction === 'lr' && okLR)
+              || (direction === 'rl' && okRL)
+              || (direction === 'both' && (okLR || okRL))) {
               best.counted = true;
               count++;
             }
           }
         } else {
-          tracks.push({ id: nextId++, x: p.x, y: p.y, lastSeen: now, counted: false, matched: true });
+          tracks.push({ id: nextId++, x: p.x, y: p.y, originX: p.x, lastSeen: now, counted: false, matched: true });
         }
       }
 
@@ -86,6 +102,37 @@ let _loopTimer = null;
 let _manualTimer = null;
 let _tracker = null;
 let _libsLoader = null;
+let _lineRatio = 0.5; // counting line x as a fraction of frame width
+
+function _loadSettings() {
+  const s = load(KEYS.assistSettings, null);
+  if (s) {
+    if (typeof s.lineRatio === 'number') _lineRatio = Math.min(0.9, Math.max(0.1, s.lineRatio));
+    if (s.direction) {
+      const sel = document.getElementById('assistDirection');
+      if ([...sel.options].some(o => o.value === s.direction)) sel.value = s.direction;
+    }
+  }
+}
+
+function _saveSettings() {
+  try {
+    save(KEYS.assistSettings, {
+      lineRatio: _lineRatio,
+      direction: document.getElementById('assistDirection').value,
+    });
+  } catch { /* best-effort */ }
+}
+
+/** Tap on the video moves the counting line to that spot. */
+export function moveAssistLine(event) {
+  const stage = event.currentTarget;
+  const rect = stage.getBoundingClientRect();
+  const ratio = (event.clientX - rect.left) / rect.width;
+  _lineRatio = Math.min(0.9, Math.max(0.1, ratio));
+  _saveSettings();
+  triggerHaptic('light');
+}
 
 function _inject(src) {
   return new Promise((resolve, reject) => {
@@ -147,6 +194,7 @@ function _setStatus(msg) {
 export async function openAssist() {
   const overlay = document.getElementById('assistOverlay');
   overlay.classList.add('show');
+  _loadSettings();
   document.getElementById('assistCount').textContent = '0';
   document.getElementById('assistManualVal').textContent = _manualTotal();
   _manualTimer = setInterval(() => {
@@ -218,6 +266,7 @@ export function changeAssistDirection() {
   // New direction starts a fresh count — old crossings used the old rule.
   _tracker = createLineCounter(document.getElementById('assistDirection').value);
   document.getElementById('assistCount').textContent = '0';
+  _saveSettings();
 }
 
 // ── Detection loop ────────────────────────────────────────────────────────────
@@ -229,7 +278,7 @@ async function _detectLoop() {
   if (video.readyState >= 2 && video.videoWidth > 0) {
     let predictions = [];
     try {
-      predictions = await _model.detect(video, 20, 0.45);
+      predictions = await _model.detect(video, MAX_DETECTIONS, 0.45);
     } catch { /* skip frame */ }
 
     const persons = predictions
@@ -241,7 +290,8 @@ async function _detectLoop() {
       }));
 
     if (_tracker) {
-      const count = _tracker.update(persons, video.videoWidth, performance.now());
+      const count = _tracker.update(persons, video.videoWidth, performance.now(),
+        video.videoWidth * _lineRatio);
       document.getElementById('assistCount').textContent = count;
     }
     _drawOverlay(persons, video);
@@ -263,13 +313,14 @@ function _drawOverlay(persons, video) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, w, h);
 
-  // Counting line
+  // Counting line (movable — tap the video to place it)
+  const lx = w * _lineRatio;
   ctx.strokeStyle = 'rgba(129, 140, 248, 0.9)';
   ctx.lineWidth = 2;
   ctx.setLineDash([8, 6]);
   ctx.beginPath();
-  ctx.moveTo(w / 2, 0);
-  ctx.lineTo(w / 2, h);
+  ctx.moveTo(lx, 0);
+  ctx.lineTo(lx, h);
   ctx.stroke();
   ctx.setLineDash([]);
 

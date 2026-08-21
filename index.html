@@ -1595,7 +1595,7 @@
       </span>
       <button class="close-manager-btn" onclick="closeAssist()" aria-label="Close count assist">✕</button>
     </div>
-    <div class="assist-stage">
+    <div class="assist-stage" onclick="moveAssistLine(event)">
       <video id="assistVideo" autoplay playsinline muted></video>
       <canvas id="assistCanvas"></canvas>
       <div id="assistStatus" class="assist-status"></div>
@@ -1627,7 +1627,10 @@
         </select>
         <button class="assist-reset-btn" onclick="resetAssist()"><span data-i18n="assistReset">Reset</span></button>
       </div>
-      <div class="assist-note" data-i18n="assistNote">Beta — a cross-check only. Camera counts are never saved to records.</div>
+      <div class="assist-note">
+        <span data-i18n="assistLineHint">Tap the video to move the counting line away from bystanders.</span>
+        <span data-i18n="assistNote">Beta — a cross-check only. Camera counts are never saved to records.</span>
+      </div>
     </div>
   </div>
 
