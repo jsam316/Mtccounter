@@ -988,6 +988,28 @@
       line-height: 1;
     }
     .assist-number-dim { color: rgba(255, 255, 255, 0.85); }
+    .assist-manual-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .assist-male-btn, .assist-female-btn {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .assist-male-btn {
+      background: rgba(59, 130, 246, 0.22);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+    }
+    .assist-female-btn {
+      background: rgba(168, 85, 247, 0.22);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #d8b4fe;
+    }
+    .assist-male-btn:active, .assist-female-btn:active { transform: scale(0.96); }
     .assist-controls { display: flex; gap: 10px; }
     .assist-controls select {
       flex: 1;
@@ -1588,6 +1610,14 @@
           <div class="assist-label" data-i18n="assistManualTotal">Manual total</div>
           <div id="assistManualVal" class="assist-number assist-number-dim">0</div>
         </div>
+      </div>
+      <div class="assist-manual-btns">
+        <button class="assist-male-btn" onclick="assistAddMale()">
+          <span data-i18n="assistAddMale">👨 Male +1</span>
+        </button>
+        <button class="assist-female-btn" onclick="assistAddFemale()">
+          <span data-i18n="assistAddFemale">👩 Female +1</span>
+        </button>
       </div>
       <div class="assist-controls">
         <select id="assistDirection" onchange="changeAssistDirection()" aria-label="Counting direction">

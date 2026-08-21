@@ -11,7 +11,7 @@
 
 import { t } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { getMale, getFemale, getRounds } from './counter.js';
+import { getMale, getFemale, getRounds, changeMale, changeFemale } from './counter.js';
 
 const MODEL_IDB_URL = 'indexeddb://mtc-coco-ssd-lite';
 const DETECT_INTERVAL_MS = 180;
@@ -200,6 +200,18 @@ export function resetAssist() {
   if (_tracker) _tracker.reset();
   document.getElementById('assistCount').textContent = '0';
   triggerHaptic('light');
+}
+
+/** Manual +1 from inside the assist view, for people the camera misses.
+ *  Uses the real counters (persistence + haptics included). */
+export function assistAddMale() {
+  changeMale(1);
+  document.getElementById('assistManualVal').textContent = _manualTotal();
+}
+
+export function assistAddFemale() {
+  changeFemale(1);
+  document.getElementById('assistManualVal').textContent = _manualTotal();
 }
 
 export function changeAssistDirection() {
