@@ -1010,6 +1010,30 @@
       color: #d8b4fe;
     }
     .assist-male-btn:active, .assist-female-btn:active { transform: scale(0.96); }
+    .assist-chooser {
+      position: absolute;
+      display: none;
+      gap: 10px;
+      background: rgba(11, 17, 32, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 8px;
+      z-index: 10;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .assist-chooser button {
+      width: 58px;
+      height: 50px;
+      font-size: 26px;
+      padding: 0;
+      border-radius: 12px;
+      border: 1px solid;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .assist-chooser-male { background: rgba(59, 130, 246, 0.28); border-color: rgba(59, 130, 246, 0.5); }
+    .assist-chooser-female { background: rgba(168, 85, 247, 0.28); border-color: rgba(168, 85, 247, 0.5); }
+
     .assist-child-row {
       display: flex;
       align-items: center;
@@ -1612,10 +1636,14 @@
       </span>
       <button class="close-manager-btn" onclick="closeAssist()" aria-label="Close count assist">✕</button>
     </div>
-    <div class="assist-stage" onclick="moveAssistLine(event)">
+    <div class="assist-stage" onclick="assistStageTap(event)">
       <video id="assistVideo" autoplay playsinline muted></video>
       <canvas id="assistCanvas"></canvas>
       <div id="assistStatus" class="assist-status"></div>
+      <div id="assistChooser" class="assist-chooser">
+        <button class="assist-chooser-male" onclick="assistTagPerson(event, 'male')" aria-label="Count as male">👨</button>
+        <button class="assist-chooser-female" onclick="assistTagPerson(event, 'female')" aria-label="Count as female">👩</button>
+      </div>
     </div>
     <div class="assist-panel">
       <div class="assist-counts">

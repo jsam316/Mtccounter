@@ -74,6 +74,8 @@ export function createLineCounter(direction = 'lr') {
           }
           best.x = p.x; best.y = p.y;
           best.lastSeen = now; best.matched = true;
+          p.trackId = best.id;
+          p.sex = best.sex;
           if (!best.counted) {
             const crossedLR = prevX < lineX && p.x >= lineX;
             const crossedRL = prevX > lineX && p.x <= lineX;
@@ -90,7 +92,10 @@ export function createLineCounter(direction = 'lr') {
             }
           }
         } else {
-          tracks.push({ id: nextId++, x: p.x, y: p.y, originX: p.x, vx: 0, vy: 0, lastSeen: now, counted: false, matched: true });
+          const tr = { id: nextId++, x: p.x, y: p.y, originX: p.x, vx: 0, vy: 0, lastSeen: now, counted: false, matched: true, sex: null };
+          tracks.push(tr);
+          p.trackId = tr.id;
+          p.sex = null;
         }
       }
 
@@ -102,6 +107,18 @@ export function createLineCounter(direction = 'lr') {
     },
 
     reset() { count = 0; tracks.length = 0; },
+
+    /**
+     * Mark a tracked person as male/female after the usher taps them.
+     * Returns true only the first time a track is tagged, so a person
+     * can never be counted twice by repeated taps.
+     */
+    tag(trackId, sex) {
+      const tr = tracks.find(t => t.id === trackId);
+      if (!tr || tr.sex) return false;
+      tr.sex = sex;
+      return true;
+    },
   };
 }
 
@@ -177,14 +194,57 @@ export function toggleAssistChildren(event) {
   triggerHaptic('light');
 }
 
-/** Tap on the video moves the counting line to that spot. */
-export function moveAssistLine(event) {
+let _lastKept = [];        // most recent kept detections (with trackId/bbox)
+let _lastScale = { x: 1, y: 1 };
+let _pendingTagId = null;  // track awaiting a male/female choice
+
+function _hidePersonChooser() {
+  _pendingTagId = null;
+  document.getElementById('assistChooser').style.display = 'none';
+}
+
+/**
+ * Tap on the video: on a detected person, open the male/female chooser;
+ * on empty space, move the counting line there.
+ */
+export function assistStageTap(event) {
   const stage = event.currentTarget;
   const rect = stage.getBoundingClientRect();
-  const ratio = (event.clientX - rect.left) / rect.width;
-  _lineRatio = Math.min(0.9, Math.max(0.1, ratio));
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+
+  if (_pendingTagId !== null) { _hidePersonChooser(); return; }
+
+  // Hit-test against the latest person boxes (display coordinates).
+  for (const p of _lastKept) {
+    if (p.trackId == null) continue;
+    const [bx, by, bw, bh] = p.bbox;
+    if (x >= bx * _lastScale.x && x <= (bx + bw) * _lastScale.x
+      && y >= by * _lastScale.y && y <= (by + bh) * _lastScale.y) {
+      if (p.sex) return; // already tagged — never treat as a line move
+      _pendingTagId = p.trackId;
+      const chooser = document.getElementById('assistChooser');
+      chooser.style.display = 'flex';
+      chooser.style.left = Math.min(Math.max(x - 70, 8), rect.width - 148) + 'px';
+      chooser.style.top = Math.max(y - 66, 8) + 'px';
+      triggerHaptic('light');
+      return;
+    }
+  }
+
+  _lineRatio = Math.min(0.9, Math.max(0.1, x / rect.width));
   _saveSettings();
   triggerHaptic('light');
+}
+
+/** The usher chose male/female for the tapped person. */
+export function assistTagPerson(event, sex) {
+  if (event) event.stopPropagation();
+  if (_pendingTagId !== null && _tracker && _tracker.tag(_pendingTagId, sex)) {
+    if (sex === 'male') changeMale(1); else changeFemale(1);
+    document.getElementById('assistManualVal').textContent = _manualTotal();
+  }
+  _hidePersonChooser();
 }
 
 function _inject(src) {
@@ -286,6 +346,8 @@ export async function openAssist() {
 
 export function closeAssist() {
   _running = false;
+  _hidePersonChooser();
+  _lastKept = [];
   if (_loopTimer) { clearTimeout(_loopTimer); _loopTimer = null; }
   if (_manualTimer) { clearInterval(_manualTimer); _manualTimer = null; }
   if (_stream) {
@@ -353,6 +415,7 @@ async function _detectLoop() {
         video.videoWidth * _lineRatio);
       document.getElementById('assistCount').textContent = count;
     }
+    _lastKept = kept;
     _drawOverlay(kept, skipped, video);
   }
 
@@ -369,6 +432,7 @@ function _drawOverlay(persons, skipped, video) {
 
   const scaleX = w / video.videoWidth;
   const scaleY = h / video.videoHeight;
+  _lastScale = { x: scaleX, y: scaleY };
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, w, h);
 
@@ -383,12 +447,21 @@ function _drawOverlay(persons, skipped, video) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Person boxes — green counts, faint grey is filtered out (children)
-  ctx.strokeStyle = 'rgba(16, 185, 129, 0.9)';
+  // Person boxes — green untagged, blue male, purple female;
+  // faint grey is filtered out (children)
   ctx.lineWidth = 2;
   for (const p of persons) {
     const [bx, by, bw, bh] = p.bbox;
-    ctx.strokeRect(bx * scaleX, by * scaleY, bw * scaleX, bh * scaleY);
+    const dx = bx * scaleX, dy = by * scaleY, dw = bw * scaleX, dh = bh * scaleY;
+    if (p.sex === 'male') ctx.strokeStyle = 'rgba(96, 165, 250, 0.95)';
+    else if (p.sex === 'female') ctx.strokeStyle = 'rgba(192, 132, 252, 0.95)';
+    else ctx.strokeStyle = 'rgba(16, 185, 129, 0.9)';
+    ctx.strokeRect(dx, dy, dw, dh);
+    if (p.sex) {
+      ctx.font = '700 16px -apple-system, sans-serif';
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fillText(p.sex === 'male' ? '✓♂' : '✓♀', dx + 4, Math.max(dy - 6, 14));
+    }
   }
   ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
   ctx.lineWidth = 1.5;
