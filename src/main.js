@@ -22,6 +22,8 @@ import { exportData, shareToWhatsApp, exportPDF,
          exportCSV, exportBackupJSON, importBackup }            from './export.js';
 import { displayStats }                                         from './stats.js';
 import { updateLectionaryHint, applyLectionaryTheme }           from './lectionary.js';
+import { openAssist, closeAssist, resetAssist,
+         changeAssistDirection, assistAddMale, assistAddFemale } from './assist.js';
 
 // Wire switchTab to also trigger renders.
 setTabSwitchCallback(tab => {
@@ -47,6 +49,8 @@ Object.assign(window, {
   exportCSV, exportBackupJSON, importBackup,
   displayStats,
   applyLectionaryTheme,
+  openAssist, closeAssist, resetAssist, changeAssistDirection,
+  assistAddMale, assistAddFemale,
 });
 
 // ── Initialisation ────────────────────────────────────────────────────────────

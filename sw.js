@@ -1,6 +1,6 @@
 // IMPORTANT: Update this version number every time you deploy!
 // Format: YYYY-MM-DD-HH-MM (or increment manually)
-const CACHE_VERSION = 'v2026-08-15-01';
+const CACHE_VERSION = 'v2026-08-15-03';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [
   './',
@@ -24,7 +24,11 @@ const urlsToCache = [
   './src/stats.js',
   './src/ui.js',
   './src/lectionary.js',
+  './src/assist.js',
   './vendor/jspdf.umd.min.js',
+  // Note: vendor/tf.min.js and vendor/coco-ssd.min.js are deliberately NOT
+  // precached (~1.5 MB) — the fetch handler runtime-caches them on first
+  // use of Count Assist, keeping the base install small.
 ];
 
 // Install event - cache resources
