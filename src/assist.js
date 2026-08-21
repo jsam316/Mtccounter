@@ -54,12 +54,24 @@ export function createLineCounter(direction = 'lr') {
         let bestDist = Infinity;
         for (const tr of tracks) {
           if (tr.matched) continue;
-          const d = Math.hypot(tr.x - p.x, tr.y - p.y);
+          // Match against the track's PREDICTED position so two people
+          // passing each other in opposite directions (one line going up
+          // while the previous returns) don't swap identities.
+          const dtSec = Math.max(0, (now - tr.lastSeen) / 1000);
+          const px = tr.x + tr.vx * dtSec;
+          const py = tr.y + tr.vy * dtSec;
+          const d = Math.hypot(px - p.x, py - p.y);
           if (d < bestDist) { bestDist = d; best = tr; }
         }
 
         if (best && bestDist <= maxMatchDist) {
           const prevX = best.x;
+          const dtSec = (now - best.lastSeen) / 1000;
+          if (dtSec > 0) {
+            // Smoothed velocity (EMA) for motion prediction.
+            best.vx = 0.6 * best.vx + 0.4 * ((p.x - best.x) / dtSec);
+            best.vy = 0.6 * best.vy + 0.4 * ((p.y - best.y) / dtSec);
+          }
           best.x = p.x; best.y = p.y;
           best.lastSeen = now; best.matched = true;
           if (!best.counted) {
@@ -78,7 +90,7 @@ export function createLineCounter(direction = 'lr') {
             }
           }
         } else {
-          tracks.push({ id: nextId++, x: p.x, y: p.y, originX: p.x, lastSeen: now, counted: false, matched: true });
+          tracks.push({ id: nextId++, x: p.x, y: p.y, originX: p.x, vx: 0, vy: 0, lastSeen: now, counted: false, matched: true });
         }
       }
 
@@ -93,6 +105,33 @@ export function createLineCounter(direction = 'lr') {
   };
 }
 
+/**
+ * Height filter for skipping small children. Learns the typical adult
+ * detection height from a rolling median of recent person boxes and skips
+ * detections meaningfully shorter. Pure logic (no DOM) for testability.
+ */
+export function createHeightFilter(minRatio = 0.62) {
+  const heights = [];
+  return {
+    /** persons: [{h, ...}] box heights in frame px. Returns {kept, skipped}. */
+    filter(persons, enabled) {
+      for (const p of persons) {
+        heights.push(p.h);
+        if (heights.length > 60) heights.shift();
+      }
+      // Need a little history before the median is trustworthy.
+      if (!enabled || heights.length < 8) return { kept: persons, skipped: [] };
+      const sorted = [...heights].sort((a, b) => a - b);
+      const median = sorted[Math.floor(sorted.length / 2)];
+      const kept = [], skipped = [];
+      for (const p of persons) {
+        (p.h >= median * minRatio ? kept : skipped).push(p);
+      }
+      return { kept, skipped };
+    },
+  };
+}
+
 // ── Runtime state ─────────────────────────────────────────────────────────────
 
 let _model = null;
@@ -103,6 +142,8 @@ let _manualTimer = null;
 let _tracker = null;
 let _libsLoader = null;
 let _lineRatio = 0.5; // counting line x as a fraction of frame width
+let _ignoreChildren = true;
+let _heightFilter = null;
 
 function _loadSettings() {
   const s = load(KEYS.assistSettings, null);
@@ -112,7 +153,9 @@ function _loadSettings() {
       const sel = document.getElementById('assistDirection');
       if ([...sel.options].some(o => o.value === s.direction)) sel.value = s.direction;
     }
+    if (typeof s.ignoreChildren === 'boolean') _ignoreChildren = s.ignoreChildren;
   }
+  document.getElementById('assistChildToggle').classList.toggle('active', _ignoreChildren);
 }
 
 function _saveSettings() {
@@ -120,8 +163,18 @@ function _saveSettings() {
     save(KEYS.assistSettings, {
       lineRatio: _lineRatio,
       direction: document.getElementById('assistDirection').value,
+      ignoreChildren: _ignoreChildren,
     });
   } catch { /* best-effort */ }
+}
+
+/** Toggle skipping of small children (shorter-than-adult detections). */
+export function toggleAssistChildren(event) {
+  if (event) event.stopPropagation();
+  _ignoreChildren = !_ignoreChildren;
+  document.getElementById('assistChildToggle').classList.toggle('active', _ignoreChildren);
+  _saveSettings();
+  triggerHaptic('light');
 }
 
 /** Tap on the video moves the counting line to that spot. */
@@ -225,6 +278,7 @@ export async function openAssist() {
   _setStatus('');
 
   _tracker = createLineCounter(document.getElementById('assistDirection').value);
+  _heightFilter = createHeightFilter();
   _running = true;
   triggerHaptic('light');
   _detectLoop();
@@ -286,21 +340,26 @@ async function _detectLoop() {
       .map(p => ({
         x: p.bbox[0] + p.bbox[2] / 2,
         y: p.bbox[1] + p.bbox[3] / 2,
+        h: p.bbox[3],
         bbox: p.bbox,
       }));
 
+    const { kept, skipped } = _heightFilter
+      ? _heightFilter.filter(persons, _ignoreChildren)
+      : { kept: persons, skipped: [] };
+
     if (_tracker) {
-      const count = _tracker.update(persons, video.videoWidth, performance.now(),
+      const count = _tracker.update(kept, video.videoWidth, performance.now(),
         video.videoWidth * _lineRatio);
       document.getElementById('assistCount').textContent = count;
     }
-    _drawOverlay(persons, video);
+    _drawOverlay(kept, skipped, video);
   }
 
   _loopTimer = setTimeout(_detectLoop, DETECT_INTERVAL_MS);
 }
 
-function _drawOverlay(persons, video) {
+function _drawOverlay(persons, skipped, video) {
   const canvas = document.getElementById('assistCanvas');
   const w = video.clientWidth;
   const h = video.clientHeight;
@@ -324,10 +383,16 @@ function _drawOverlay(persons, video) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Person boxes
+  // Person boxes — green counts, faint grey is filtered out (children)
   ctx.strokeStyle = 'rgba(16, 185, 129, 0.9)';
   ctx.lineWidth = 2;
   for (const p of persons) {
+    const [bx, by, bw, bh] = p.bbox;
+    ctx.strokeRect(bx * scaleX, by * scaleY, bw * scaleX, bh * scaleY);
+  }
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+  ctx.lineWidth = 1.5;
+  for (const p of skipped) {
     const [bx, by, bw, bh] = p.bbox;
     ctx.strokeRect(bx * scaleX, by * scaleY, bw * scaleX, bh * scaleY);
   }

@@ -1010,6 +1010,23 @@
       color: #d8b4fe;
     }
     .assist-male-btn:active, .assist-female-btn:active { transform: scale(0.96); }
+    .assist-child-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .assist-child-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+    }
     .assist-controls { display: flex; gap: 10px; }
     .assist-controls select {
       flex: 1;
@@ -1619,6 +1636,12 @@
           <span data-i18n="assistAddFemale">👩 Female +1</span>
         </button>
       </div>
+      <div class="assist-child-row" onclick="toggleAssistChildren(event)">
+        <span class="assist-child-label" data-i18n="assistIgnoreChildren">👶 Ignore small children</span>
+        <div class="toggle-switch active" id="assistChildToggle">
+          <div class="toggle-slider"></div>
+        </div>
+      </div>
       <div class="assist-controls">
         <select id="assistDirection" onchange="changeAssistDirection()" aria-label="Counting direction">
           <option value="lr" data-i18n="assistDirLR">Count left → right</option>
@@ -1682,7 +1705,12 @@
        below fails to load (e.g. stale cache serving wrong path). -->
   <script>
     if ('serviceWorker' in navigator) {
+      // Reload only on a real update takeover. On the very first visit the
+      // new worker claims the page (clients.claim) and controllerchange
+      // fires without any update — reloading then would wipe in-progress UI.
+      let hadController = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController) { hadController = true; return; }
         window.location.reload();
       });
     }

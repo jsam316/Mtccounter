@@ -1,6 +1,6 @@
 // IMPORTANT: Update this version number every time you deploy!
 // Format: YYYY-MM-DD-HH-MM (or increment manually)
-const CACHE_VERSION = 'v2026-08-21-01';
+const CACHE_VERSION = 'v2026-08-21-02';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [
   './',

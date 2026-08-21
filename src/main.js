@@ -24,7 +24,7 @@ import { displayStats }                                         from './stats.js
 import { updateLectionaryHint, applyLectionaryTheme }           from './lectionary.js';
 import { openAssist, closeAssist, resetAssist,
          changeAssistDirection, assistAddMale, assistAddFemale,
-         moveAssistLine }                                       from './assist.js';
+         moveAssistLine, toggleAssistChildren }                 from './assist.js';
 
 // Wire switchTab to also trigger renders.
 setTabSwitchCallback(tab => {
@@ -51,7 +51,7 @@ Object.assign(window, {
   displayStats,
   applyLectionaryTheme,
   openAssist, closeAssist, resetAssist, changeAssistDirection,
-  assistAddMale, assistAddFemale, moveAssistLine,
+  assistAddMale, assistAddFemale, moveAssistLine, toggleAssistChildren,
 });
 
 // ── Initialisation ────────────────────────────────────────────────────────────
