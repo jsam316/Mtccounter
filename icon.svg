@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- MTC Counter app icon: "Sanctuary Arch" — a church arch sheltering the
+       cross, with the congregation as two dots (male blue, female purple).
+       This SVG is the master; the PNG icons are rendered from it. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#312e81"/>
+      <stop offset="0.55" stop-color="#1e1b4b"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.55">
+      <stop offset="0" stop-color="#6366f1" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="crossg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#c7d2fe"/>
+    </linearGradient>
+    <linearGradient id="blueg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="purpleg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c084fc"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
+  <path d="M 144 404 L 144 250 Q 144 124 256 124 Q 368 124 368 250 L 368 404"
+    fill="none" stroke="url(#crossg)" stroke-width="28" stroke-linecap="round"/>
+  <rect x="236" y="190" width="40" height="158" rx="13" fill="url(#crossg)"/>
+  <rect x="201" y="228" width="110" height="38" rx="13" fill="url(#crossg)"/>
+  <circle cx="214" cy="378" r="22" fill="url(#blueg)"/>
+  <circle cx="298" cy="378" r="22" fill="url(#purpleg)"/>
+</svg>
