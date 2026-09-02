@@ -1,6 +1,7 @@
-// IMPORTANT: Update this version number every time you deploy!
-// Format: YYYY-MM-DD-HH-MM (or increment manually)
-const CACHE_VERSION = 'v2026-08-22-01';
+// Stamped automatically on every push to main by
+// .github/workflows/stamp-sw-version.yml (date + commit SHA), so deploys
+// always bust the cache. Bump by hand only when testing locally.
+const CACHE_VERSION = 'v2026-08-22-02';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [
   './',
@@ -36,14 +37,14 @@ const urlsToCache = [
 // Install event - cache resources
 self.addEventListener('install', event => {
   console.log('Service Worker installing...', CACHE_NAME);
+  // If any precache fetch fails, let the install fail: the previous,
+  // fully-working worker stays active rather than shipping a partial cache
+  // that breaks offline use. The browser retries on the next update check.
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Opened cache:', CACHE_NAME);
         return cache.addAll(urlsToCache.map(url => new Request(url, {cache: 'reload'})));
-      })
-      .catch(err => {
-        console.log('Cache addAll error:', err);
       })
   );
   // Note: no skipWaiting() here. The new worker waits until the user accepts

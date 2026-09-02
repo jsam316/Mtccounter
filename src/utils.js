@@ -15,6 +15,20 @@ export function showSuccessMsg(msg, duration = 3000) {
 }
 
 /**
+ * Escape a string for safe insertion into HTML (text or attribute values).
+ * User-entered names/titles and restored backups must never be treated as
+ * markup.
+ */
+export function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * Returns true if a stored field value means "not specified".
  * Handles empty strings and legacy records saved in either language.
  */

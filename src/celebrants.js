@@ -1,7 +1,7 @@
 import { save, load, KEYS } from './state.js';
 import { t } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { showSuccessMsg } from './utils.js';
+import { showSuccessMsg, escapeHtml } from './utils.js';
 
 export function getSavedCelebrants() {
   return load(KEYS.celebrants, []);
@@ -91,14 +91,19 @@ export function displayCelebrantList() {
   }
   let html = '';
   celebrants.forEach(name => {
-    const escaped = name.replace(/'/g, "\\'");
     html += '<div class="celebrant-item">'
-      + '<span class="celebrant-name">' + name + '</span>'
-      + '<button class="delete-celebrant-btn" onclick="deleteCelebrant(\'' + escaped + '\')">'
+      + '<span class="celebrant-name">' + escapeHtml(name) + '</span>'
+      + '<button class="delete-celebrant-btn" data-name="' + escapeHtml(name) + '">'
       + '<span data-i18n="deleteCelebrant">' + t('deleteCelebrant') + '</span>'
       + '</button></div>';
   });
   display.innerHTML = html;
+  // Names live in a data attribute (never inside inline JS), read back via
+  // dataset which decodes the escaping for us.
+  display.onclick = e => {
+    const btn = e.target.closest('.delete-celebrant-btn');
+    if (btn) deleteCelebrant(btn.dataset.name);
+  };
 }
 
 export function toggleCoCelebrants() {
@@ -106,6 +111,7 @@ export function toggleCoCelebrants() {
   const field  = document.getElementById('coCelebrantsField');
   const isActive = toggle.classList.contains('active');
   toggle.classList.toggle('active', !isActive);
+  toggle.setAttribute('aria-checked', String(!isActive));
   field.classList.toggle('active', !isActive);
   localStorage.setItem('coCelebrantsEnabled', String(!isActive));
   triggerHaptic('light');
@@ -113,7 +119,9 @@ export function toggleCoCelebrants() {
 
 export function initCoCelebrantsToggle() {
   if (localStorage.getItem('coCelebrantsEnabled') === 'true') {
-    document.getElementById('coCelebrantsToggle').classList.add('active');
+    const toggle = document.getElementById('coCelebrantsToggle');
+    toggle.classList.add('active');
+    toggle.setAttribute('aria-checked', 'true');
     document.getElementById('coCelebrantsField').classList.add('active');
   }
 }

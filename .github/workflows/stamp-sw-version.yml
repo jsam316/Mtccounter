@@ -1,0 +1,50 @@
+name: Stamp service worker cache version
+
+# GitHub Pages serves this repo straight from main, so any change to main
+# is a deploy. This stamps sw.js with a date + commit SHA version so every
+# deploy busts the service worker cache without anyone remembering to
+# bump the constant by hand.
+#
+# Loop safety: the stamping commit is pushed with GITHUB_TOKEN, and pushes
+# made with GITHUB_TOKEN never trigger workflows. The actor check below is
+# a second guard.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+
+permissions:
+  contents: write
+
+jobs:
+  stamp:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stamp CACHE_VERSION in sw.js
+        id: stamp
+        run: |
+          VERSION="v$(date -u +%F)-${GITHUB_SHA::7}"
+          CURRENT=$(sed -nE "s/^const CACHE_VERSION = '([^']+)';/\1/p" sw.js)
+          echo "current=$CURRENT new=$VERSION"
+          if [ "$CURRENT" = "$VERSION" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          sed -i -E "s/^const CACHE_VERSION = '[^']+';/const CACHE_VERSION = '$VERSION';/" sw.js
+          grep -q "const CACHE_VERSION = '$VERSION';" sw.js
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        if: steps.stamp.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sw.js
+          git commit -m "Stamp service worker cache version ${{ steps.stamp.outputs.version }}"
+          git push

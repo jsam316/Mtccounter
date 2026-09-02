@@ -129,28 +129,11 @@ export function updateOnlineStatus() {
     indicator.innerHTML = '<span>🟢</span><span>' + t('online') + '</span>';
     indicator.classList.add('show');
     setTimeout(() => indicator.classList.remove('show'), 3000);
-    syncData();
   } else {
     indicator.classList.remove('online');
     indicator.innerHTML = '<span>🔴</span><span>' + t('offline') + '</span>';
     indicator.classList.add('show');
   }
-}
-
-export function syncData() {
-  const syncStatus = document.getElementById('syncStatus');
-  const span = syncStatus.querySelector('[data-i18n="syncing"]');
-  if (span) span.textContent = t('syncing');
-  syncStatus.classList.add('show');
-  setTimeout(() => {
-    syncStatus.innerHTML = '<span>✓</span><span>' + t('synced') + '</span>';
-    syncStatus.style.background = 'linear-gradient(135deg, #10b981 0%, #34d399 100%)';
-    setTimeout(() => {
-      syncStatus.classList.remove('show');
-      syncStatus.innerHTML = '<span>🔄</span><span data-i18n="syncing">' + t('syncing') + '</span>';
-      syncStatus.style.background = 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)';
-    }, 2000);
-  }, 1000);
 }
 
 export function registerServiceWorker() {
