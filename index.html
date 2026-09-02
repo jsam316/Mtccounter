@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MTC Counter">
@@ -237,12 +237,14 @@
     }
     .light-mode label { color: rgba(0, 0, 0, 0.45); }
 
+    /* 16px minimum keeps iOS Safari from auto-zooming into focused fields
+       now that pinch-zoom is allowed for accessibility. */
     input, select {
       width: 100%;
       padding: 12px 14px;
       border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: var(--radius-md);
-      font-size: 15px;
+      font-size: 16px;
       font-family: inherit;
       transition: var(--transition);
       background: rgba(255, 255, 255, 0.07);
@@ -774,22 +776,6 @@
     .offline-indicator.show { display: flex; }
     .offline-indicator.online { background: var(--green); }
 
-    .sync-status {
-      position: fixed;
-      top: 16px; left: 50%; transform: translateX(-50%);
-      background: var(--accent);
-      color: white;
-      padding: 8px 18px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 700;
-      display: none;
-      align-items: center;
-      gap: 6px;
-      z-index: 998;
-    }
-    .sync-status.show { display: flex; }
-
     /* Install & Update banners */
     .install-prompt, .update-notification {
       position: fixed;
@@ -1154,7 +1140,7 @@
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: var(--radius-md);
       color: #f1f5f9;
-      font-size: 15px;
+      font-size: 16px;
       font-family: inherit;
     }
     .add-celebrant-section input:focus { outline: none; border-color: var(--accent-light); background: rgba(99,102,241,0.1); }
@@ -1213,7 +1199,7 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: var(--radius-md);
       color: #f8fafc;
-      font-size: 14px;
+      font-size: 16px;
       font-family: inherit;
       transition: var(--transition);
     }
@@ -1303,12 +1289,6 @@
     <span data-i18n="offline">Offline</span>
   </div>
 
-  <!-- Sync Status -->
-  <div id="syncStatus" class="sync-status">
-    <span>🔄</span>
-    <span data-i18n="syncing">Syncing...</span>
-  </div>
-
   <!-- Swipe Indicators -->
   <div id="swipeLeft" class="swipe-indicator left">👈</div>
   <div id="swipeRight" class="swipe-indicator right">👉</div>
@@ -1331,7 +1311,7 @@
           <select id="parishName" style="flex: 1;">
             <option value="">-- Select Parish --</option>
           </select>
-          <button class="manage-celebrants-btn" onclick="openParishManager()" title="Manage Parishes">⚙️</button>
+          <button class="manage-celebrants-btn" onclick="openParishManager()" title="Manage Parishes" aria-label="Manage parishes">⚙️</button>
         </div>
       </div>
 
@@ -1346,7 +1326,7 @@
           <select id="celebrant" style="flex: 1;">
             <option value="">-- Select Celebrant --</option>
           </select>
-          <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants">⚙️</button>
+          <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants">⚙️</button>
         </div>
       </div>
 
@@ -1354,7 +1334,8 @@
         <div class="toggle-label">
           <span data-i18n="coCelebrantsLabel">👥 Co-Celebrants</span>
         </div>
-        <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()">
+        <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()"
+             role="switch" aria-checked="false" tabindex="0" aria-label="Co-Celebrants">
           <div class="toggle-slider"></div>
         </div>
       </div>
@@ -1365,7 +1346,7 @@
           <div style="display: flex; gap: 8px; align-items: flex-start;">
             <select id="coCelebrants" multiple size="3" style="flex: 1;">
             </select>
-            <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants">⚙️</button>
+            <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants">⚙️</button>
           </div>
         </div>
       </div>
@@ -1612,19 +1593,19 @@
     </div>
     <div class="install-buttons">
       <button class="install-btn" onclick="installApp()" data-i18n="installBtn">Install</button>
-      <button class="install-btn install-close" onclick="closeInstallPrompt()">✕</button>
+      <button class="install-btn install-close" onclick="closeInstallPrompt()" aria-label="Dismiss">✕</button>
     </div>
   </div>
 
   <!-- Update Available Notification -->
   <div id="updateNotification" class="update-notification">
     <div class="update-content">
-      <div class="update-title">🎉 Update Available!</div>
-      <div class="update-text">A new version of MTC Counter is ready. Refresh to get the latest features.</div>
+      <div class="update-title" data-i18n="updateTitle">🎉 Update Available!</div>
+      <div class="update-text" data-i18n="updateText">A new version of MTC Counter is ready. Refresh to get the latest features.</div>
     </div>
     <div class="update-buttons">
-      <button class="update-btn" onclick="applyUpdate()">Refresh Now</button>
-      <button class="update-btn update-close" onclick="closeUpdateNotification()">Later</button>
+      <button class="update-btn" onclick="applyUpdate()" data-i18n="updateBtn">Refresh Now</button>
+      <button class="update-btn update-close" onclick="closeUpdateNotification()" data-i18n="updateLater">Later</button>
     </div>
   </div>
 
@@ -1667,7 +1648,8 @@
       </div>
       <div class="assist-child-row" onclick="toggleAssistChildren(event)">
         <span class="assist-child-label" data-i18n="assistIgnoreChildren">👶 Ignore small children</span>
-        <div class="toggle-switch active" id="assistChildToggle">
+        <div class="toggle-switch active" id="assistChildToggle"
+             role="switch" aria-checked="true" tabindex="0" aria-label="Ignore small children">
           <div class="toggle-slider"></div>
         </div>
       </div>
@@ -1691,7 +1673,7 @@
     <div class="celebrant-manager-content">
       <div class="celebrant-manager-header">
         <h2 data-i18n="manageCelebrants">⚙️ Manage Celebrants</h2>
-        <button class="close-manager-btn" onclick="closeCelebrantManager()">✕</button>
+        <button class="close-manager-btn" onclick="closeCelebrantManager()" aria-label="Close">✕</button>
       </div>
       
       <div class="celebrant-manager-body">
@@ -1713,7 +1695,7 @@
     <div class="celebrant-manager-content">
       <div class="celebrant-manager-header">
         <h2 data-i18n="manageParishes">⚙️ Manage Parishes</h2>
-        <button class="close-manager-btn" onclick="closeParishManager()">✕</button>
+        <button class="close-manager-btn" onclick="closeParishManager()" aria-label="Close">✕</button>
       </div>
       
       <div class="celebrant-manager-body">

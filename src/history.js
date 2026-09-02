@@ -1,7 +1,7 @@
 import { save, load, KEYS } from './state.js';
 import { t, getCurrentLang } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { isNotSpecified } from './utils.js';
+import { isNotSpecified, escapeHtml } from './utils.js';
 import { getMale, getFemale, getRounds, resetCounters } from './counter.js';
 import { getCoCelebrantsValue } from './celebrants.js';
 import { updateChapterOptions, updateVerseOptions } from './scripture.js';
@@ -121,19 +121,19 @@ export function renderHistoryItems(history, listEl) {
     );
 
     html += '<div class="history-item">';
-    html += '<div class="history-date">' + formattedDate + '</div>';
+    html += '<div class="history-date">' + escapeHtml(formattedDate) + '</div>';
     html += '<div class="history-details">';
-    html += '<strong>' + t('parish')    + ':</strong> ' + (record.parishName || t('notSpecified')) + '<br>';
-    html += '<strong>' + t('celebrant') + ':</strong> ' + (record.celebrant  || t('notSpecified')) + '<br>';
+    html += '<strong>' + t('parish')    + ':</strong> ' + escapeHtml(record.parishName || t('notSpecified')) + '<br>';
+    html += '<strong>' + t('celebrant') + ':</strong> ' + escapeHtml(record.celebrant  || t('notSpecified')) + '<br>';
     if (record.coCelebrants && !isNotSpecified(record.coCelebrants)) {
-      html += '<strong>' + t('coCelebrantsLabel') + ':</strong> ' + record.coCelebrants + '<br>';
+      html += '<strong>' + t('coCelebrantsLabel') + ':</strong> ' + escapeHtml(record.coCelebrants) + '<br>';
     }
-    html += '<strong>' + t('sermon')    + ':</strong> ' + (record.sermon    || t('notSpecified')) + '<br>';
-    html += '<strong>' + t('scripture') + ':</strong> ' + (record.scripture || t('notSpecified')) + '<br>';
+    html += '<strong>' + t('sermon')    + ':</strong> ' + escapeHtml(record.sermon    || t('notSpecified')) + '<br>';
+    html += '<strong>' + t('scripture') + ':</strong> ' + escapeHtml(record.scripture || t('notSpecified')) + '<br>';
     html += '<strong>' + t('attendance') + ':</strong> '
-      + t('male')   + ': ' + record.male   + ', '
-      + t('female') + ': ' + record.female + ', '
-      + t('total')  + ': ' + record.total;
+      + t('male')   + ': ' + escapeHtml(record.male)   + ', '
+      + t('female') + ': ' + escapeHtml(record.female) + ', '
+      + t('total')  + ': ' + escapeHtml(record.total);
     html += '</div>';
     html += '<div class="history-actions">';
     html += '<button class="history-btn load-btn"   onclick="loadRecord('   + realIndex + ')">' + t('loadBtn')   + '</button>';

@@ -1,7 +1,7 @@
 import { save, load, KEYS } from './state.js';
 import { t } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { showSuccessMsg } from './utils.js';
+import { showSuccessMsg, escapeHtml } from './utils.js';
 
 export function getSavedParishes() {
   return load(KEYS.parishes, []);
@@ -74,12 +74,15 @@ export function displayParishList() {
   }
   let html = '';
   parishes.forEach(name => {
-    const escaped = name.replace(/'/g, "\\'");
     html += '<div class="celebrant-item">'
-      + '<span class="celebrant-name">' + name + '</span>'
-      + '<button class="delete-celebrant-btn" onclick="deleteParish(\'' + escaped + '\')">'
+      + '<span class="celebrant-name">' + escapeHtml(name) + '</span>'
+      + '<button class="delete-celebrant-btn" data-name="' + escapeHtml(name) + '">'
       + '<span data-i18n="deleteParish">' + t('deleteParish') + '</span>'
       + '</button></div>';
   });
   display.innerHTML = html;
+  display.onclick = e => {
+    const btn = e.target.closest('.delete-celebrant-btn');
+    if (btn) deleteParish(btn.dataset.name);
+  };
 }

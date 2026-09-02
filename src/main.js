@@ -10,7 +10,7 @@ import { saveRecord, displayHistory, loadRecord, deleteRecord,
 import { toggleDarkMode, initDarkMode, installApp,
          closeInstallPrompt, initInstallPrompt,
          showUpdateNotification, closeUpdateNotification,
-         applyUpdate, updateOnlineStatus, syncData,
+         applyUpdate, updateOnlineStatus,
          registerServiceWorker, setTabSwitchCallback,
          switchTab, initWakeLock }                              from './ui.js';
 import { openCelebrantManager, closeCelebrantManager,
@@ -40,7 +40,6 @@ Object.assign(window, {
   switchTab,
   toggleDarkMode, installApp, closeInstallPrompt,
   showUpdateNotification, closeUpdateNotification, applyUpdate,
-  syncData,
   toggleLanguage,
   openCelebrantManager, closeCelebrantManager,
   addCelebrant, deleteCelebrant, toggleCoCelebrants,
@@ -115,6 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCelebrantDatalist();
   updateParishDatalist();
   displayHistory();
+
+  // Keyboard support for the toggle switches (role="switch").
+  const keyToggle = (id, fn) => document.getElementById(id)?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); fn(e); }
+  });
+  keyToggle('coCelebrantsToggle', () => toggleCoCelebrants());
+  keyToggle('assistChildToggle', e => toggleAssistChildren(e));
 
   // Keyboard support for the tap-anywhere counter boxes.
   [['maleBox', 'male'], ['femaleBox', 'female']].forEach(([id, which]) => {

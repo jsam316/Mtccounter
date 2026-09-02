@@ -172,7 +172,13 @@ function _loadSettings() {
     }
     if (typeof s.ignoreChildren === 'boolean') _ignoreChildren = s.ignoreChildren;
   }
-  document.getElementById('assistChildToggle').classList.toggle('active', _ignoreChildren);
+  _syncChildToggle();
+}
+
+function _syncChildToggle() {
+  const el = document.getElementById('assistChildToggle');
+  el.classList.toggle('active', _ignoreChildren);
+  el.setAttribute('aria-checked', String(_ignoreChildren));
 }
 
 function _saveSettings() {
@@ -189,7 +195,7 @@ function _saveSettings() {
 export function toggleAssistChildren(event) {
   if (event) event.stopPropagation();
   _ignoreChildren = !_ignoreChildren;
-  document.getElementById('assistChildToggle').classList.toggle('active', _ignoreChildren);
+  _syncChildToggle();
   _saveSettings();
   triggerHaptic('light');
 }
