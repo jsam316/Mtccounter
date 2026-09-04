@@ -171,8 +171,25 @@ function _loadSettings() {
       if ([...sel.options].some(o => o.value === s.direction)) sel.value = s.direction;
     }
     if (typeof s.ignoreChildren === 'boolean') _ignoreChildren = s.ignoreChildren;
+    if (s.guideSeen === true) _guideSeen = true;
   }
   _syncChildToggle();
+}
+
+let _guideSeen = false;
+
+/** Setup tips sheet — shown automatically on first use, and via the ? button. */
+export function openAssistGuide() {
+  document.getElementById('assistGuide').classList.add('show');
+}
+
+export function closeAssistGuide() {
+  document.getElementById('assistGuide').classList.remove('show');
+  if (!_guideSeen) {
+    _guideSeen = true;
+    _saveSettings();
+  }
+  triggerHaptic('light');
 }
 
 function _syncChildToggle() {
@@ -187,6 +204,7 @@ function _saveSettings() {
       lineRatio: _lineRatio,
       direction: document.getElementById('assistDirection').value,
       ignoreChildren: _ignoreChildren,
+      guideSeen: _guideSeen,
     });
   } catch { /* best-effort */ }
 }
@@ -393,6 +411,8 @@ export async function openAssist() {
   document.getElementById('assistCount').textContent = '0';
   _restartReconcileWindow();
   _refreshManual();
+  // First use: show the setup tips while the detector loads underneath.
+  if (!_guideSeen) openAssistGuide();
   _manualTimer = setInterval(() => {
     _refreshManual();
   }, 1000);

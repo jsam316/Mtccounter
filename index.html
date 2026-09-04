@@ -1053,6 +1053,78 @@
     .assist-chooser-male { background: rgba(59, 130, 246, 0.28); border-color: rgba(59, 130, 246, 0.5); }
     .assist-chooser-female { background: rgba(168, 85, 247, 0.28); border-color: rgba(168, 85, 247, 0.5); }
 
+    .assist-header-btns { display: flex; gap: 8px; align-items: center; }
+    .assist-help-btn {
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: var(--accent-light);
+      border-radius: 8px;
+      width: 32px; height: 32px;
+      padding: 0;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* First-run setup guide */
+    .assist-guide {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: rgba(11, 17, 32, 0.82);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      align-items: flex-end;
+      justify-content: center;
+      padding: 12px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+    .assist-guide.show { display: flex; }
+    .assist-guide-card {
+      background: #111a2e;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 22px;
+      padding: 20px 18px 16px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 100%;
+      overflow-y: auto;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+    .assist-guide-card h2 { font-size: 17px; color: #f1f5f9; margin-bottom: 12px; }
+    .assist-guide-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .assist-guide-list li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.85);
+    }
+    .assist-guide-icon {
+      flex-shrink: 0;
+      width: 26px;
+      text-align: center;
+      font-size: 17px;
+      line-height: 1.3;
+      color: var(--accent-light);
+    }
+    .assist-guide-done {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .assist-guide-done:active { transform: scale(0.97); }
+
     .assist-child-row {
       display: flex;
       align-items: center;
@@ -1648,7 +1720,27 @@
         <span class="assist-dot"></span>
         <span data-i18n="assistLive">On-device only — nothing is recorded or uploaded</span>
       </span>
-      <button class="close-manager-btn" onclick="closeAssist()" aria-label="Close count assist">✕</button>
+      <div class="assist-header-btns">
+        <button class="assist-help-btn" onclick="openAssistGuide()" aria-label="Setup tips">?</button>
+        <button class="close-manager-btn" onclick="closeAssist()" aria-label="Close count assist">✕</button>
+      </div>
+    </div>
+
+    <!-- First-run setup guide (also reachable via the ? button) -->
+    <div id="assistGuide" class="assist-guide">
+      <div class="assist-guide-card">
+        <h2 data-i18n="guideTitle">📷 Setting up Count Assist</h2>
+        <ul class="assist-guide-list">
+          <li><span class="assist-guide-icon">📱</span><span data-i18n="guide1">Prop the phone side-on to the walking path so people cross the screen left↔right — not walking toward the camera.</span></li>
+          <li><span class="assist-guide-icon">🚶</span><span data-i18n="guide2">Aim at a single-file stretch — the path where communicants return from the altar works best. Avoid the packed queue.</span></li>
+          <li><span class="assist-guide-icon">┊</span><span data-i18n="guide3">Tap empty video to place the dashed counting line where only communicants cross — away from the choir and bystanders. People standing still are never counted.</span></li>
+          <li><span class="assist-guide-icon">🔁</span><span data-i18n="guide4">Choose the direction to count. People moving the other way (returning) are ignored.</span></li>
+          <li><span class="assist-guide-icon">👶</span><span data-i18n="guide5">Small children are skipped automatically — switch the toggle off if your parish counts them.</span></li>
+          <li><span class="assist-guide-icon">👆</span><span data-i18n="guide6">Tap a person to count them as 👨 or 👩. The camera count is only a cross-check — your taps are the record.</span></li>
+          <li><span class="assist-guide-icon">📶</span><span data-i18n="guide7">First use needs internet to download the detector (~6 MB) — open it once at home on Wi-Fi before the service. It works offline after that.</span></li>
+        </ul>
+        <button class="assist-guide-done" onclick="closeAssistGuide()"><span data-i18n="guideDone">Got it</span></button>
+      </div>
     </div>
     <div class="assist-stage" onclick="assistStageTap(event)">
       <video id="assistVideo" autoplay playsinline muted></video>
