@@ -271,7 +271,7 @@ export function assistTagPerson(event, sex) {
   if (event) event.stopPropagation();
   if (_pendingTagId !== null && _tracker && _tracker.tag(_pendingTagId, sex)) {
     if (sex === 'male') changeMale(1); else changeFemale(1);
-    document.getElementById('assistManualVal').textContent = _manualTotal();
+    _refreshManual();
   }
   _hidePersonChooser();
 }
@@ -325,6 +325,59 @@ function _manualTotal() {
   return male + female;
 }
 
+// Manual total at the moment the cross-check window started (open/reset).
+// The camera only counts from then on, so it is compared against the taps
+// made since then — not the whole day's manual total.
+let _manualBaseline = 0;
+
+function _refreshManual() {
+  document.getElementById('assistManualVal').textContent = _manualTotal();
+  _updateReconcile();
+}
+
+function _restartReconcileWindow() {
+  _manualBaseline = _manualTotal();
+  _updateReconcile();
+}
+
+function _updateReconcile() {
+  const box = document.getElementById('assistReconcile');
+  const text = document.getElementById('assistReconcileText');
+  const actions = document.getElementById('assistReconcileActions');
+  if (!box) return;
+
+  const cam = _tracker ? _tracker.count : 0;
+  const man = Math.max(0, _manualTotal() - _manualBaseline);
+  const diff = cam - man;
+  const fill = s => s.replace('{n}', Math.abs(diff)).replace('{cam}', cam).replace('{man}', man);
+
+  box.classList.remove('is-match', 'is-camera-ahead', 'is-manual-ahead');
+  if (diff === 0) {
+    box.classList.add('is-match');
+    text.textContent = fill(t('assistMatch'));
+    actions.style.display = 'none';
+  } else if (diff > 0) {
+    box.classList.add('is-camera-ahead');
+    text.textContent = fill(t('assistCameraAhead'));
+    actions.style.display = 'flex';
+    actions.querySelector('.assist-delta-male').textContent   = '+' + diff + ' 👨';
+    actions.querySelector('.assist-delta-female').textContent = '+' + diff + ' 👩';
+  } else {
+    box.classList.add('is-manual-ahead');
+    text.textContent = fill(t('assistManualAhead'));
+    actions.style.display = 'none';
+  }
+}
+
+/** Add the camera-minus-manual difference to one group in a single tap. */
+export function assistAddDelta(sex) {
+  const cam = _tracker ? _tracker.count : 0;
+  const diff = cam - Math.max(0, _manualTotal() - _manualBaseline);
+  if (diff <= 0) return;
+  if (sex === 'male') changeMale(diff); else changeFemale(diff);
+  _refreshManual();
+}
+
 function _setStatus(msg) {
   const el = document.getElementById('assistStatus');
   el.textContent = msg;
@@ -338,9 +391,10 @@ export async function openAssist() {
   overlay.classList.add('show');
   _loadSettings();
   document.getElementById('assistCount').textContent = '0';
-  document.getElementById('assistManualVal').textContent = _manualTotal();
+  _restartReconcileWindow();
+  _refreshManual();
   _manualTimer = setInterval(() => {
-    document.getElementById('assistManualVal').textContent = _manualTotal();
+    _refreshManual();
   }, 1000);
 
   try {
@@ -393,6 +447,7 @@ export function closeAssist() {
 export function resetAssist() {
   if (_tracker) _tracker.reset();
   document.getElementById('assistCount').textContent = '0';
+  _restartReconcileWindow();
   triggerHaptic('light');
 }
 
@@ -400,18 +455,19 @@ export function resetAssist() {
  *  Uses the real counters (persistence + haptics included). */
 export function assistAddMale() {
   changeMale(1);
-  document.getElementById('assistManualVal').textContent = _manualTotal();
+  _refreshManual();
 }
 
 export function assistAddFemale() {
   changeFemale(1);
-  document.getElementById('assistManualVal').textContent = _manualTotal();
+  _refreshManual();
 }
 
 export function changeAssistDirection() {
   // New direction starts a fresh count — old crossings used the old rule.
   _tracker = createLineCounter(document.getElementById('assistDirection').value);
   document.getElementById('assistCount').textContent = '0';
+  _restartReconcileWindow();
   _saveSettings();
 }
 
@@ -444,6 +500,7 @@ async function _detectLoop() {
       const count = _tracker.update(kept, video.videoWidth, performance.now(),
         video.videoWidth * _lineRatio);
       document.getElementById('assistCount').textContent = count;
+      _updateReconcile();
     }
     _lastKept = kept;
     _drawOverlay(kept, skipped, video);
