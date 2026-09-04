@@ -1,7 +1,7 @@
 // Stamped automatically on every push to main by
 // .github/workflows/stamp-sw-version.yml (date + commit SHA), so deploys
 // always bust the cache. Bump by hand only when testing locally.
-const CACHE_VERSION = 'v2026-09-04-dev';
+const CACHE_VERSION = 'v2026-09-04-fea4e16';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [
   './',
