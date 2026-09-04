@@ -1760,7 +1760,9 @@
       // fires without any update — reloading then would wipe in-progress UI.
       let hadController = !!navigator.serviceWorker.controller;
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!hadController) { hadController = true; return; }
+        // A first-install claim on an uncontrolled page is not an update —
+        // unless the app explicitly asked the new worker to take over.
+        if (!hadController && !window.__mtcApplyingUpdate) { hadController = true; return; }
         window.location.reload();
       });
     }

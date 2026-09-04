@@ -117,8 +117,30 @@ export function closeUpdateNotification() {
 }
 
 export function applyUpdate() {
-  if (_newWorker) _newWorker.postMessage({ type: 'SKIP_WAITING' });
   closeUpdateNotification();
+  _activateNewWorker();
+}
+
+// Tell the waiting worker to take over. The inline controllerchange
+// listener in index.html reloads the page once it does; the flag lets that
+// listener distinguish a requested update from a first-install claim.
+function _activateNewWorker() {
+  if (!_newWorker) return;
+  window.__mtcApplyingUpdate = true;
+  _newWorker.postMessage({ type: 'SKIP_WAITING' });
+}
+
+// An update discovered this soon after the page loaded means the user just
+// launched or refreshed the app and is not mid-count: apply it immediately so
+// "refresh" behaves as people expect. Later updates wait for consent.
+const AUTO_APPLY_WINDOW_MS = 10000;
+
+function _onNewWorkerReady() {
+  if (performance.now() < AUTO_APPLY_WINDOW_MS) {
+    _activateNewWorker();
+  } else {
+    showUpdateNotification();
+  }
 }
 
 export function updateOnlineStatus() {
@@ -145,13 +167,15 @@ export function registerServiceWorker() {
         // but not yet applied). Offer it again.
         if (registration.waiting && navigator.serviceWorker.controller) {
           _newWorker = registration.waiting;
-          showUpdateNotification();
+          _onNewWorkerReady();
         }
         registration.addEventListener('updatefound', () => {
-          _newWorker = registration.installing;
-          _newWorker.addEventListener('statechange', () => {
-            if (_newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              showUpdateNotification();
+          const worker = registration.installing;
+          if (!worker) return;
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              _newWorker = worker;
+              _onNewWorkerReady();
             }
           });
         });

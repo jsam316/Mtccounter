@@ -71,15 +71,11 @@ self.addEventListener('activate', event => {
     })
     .then(() => self.clients.claim())
     .then(() => self.clients.matchAll({ type: 'window' }))
-    .then(clients => Promise.all(clients.map(client => {
-      client.postMessage({ type: 'CACHE_UPDATED', version: CACHE_VERSION });
-      // Force-reload any client that may be stuck on an old cached version.
-      // This handles clients whose module failed to load (so they have no
-      // controllerchange listener) — e.g. after the /src/main.js path fix.
-      if (hadOldCaches && client.navigate) {
-        return client.navigate(client.url);
-      }
-    })))
+    .then(clients => clients.forEach(client => {
+      client.postMessage({ type: 'CACHE_UPDATED', version: CACHE_VERSION, hadOldCaches });
+      // Reloading is handled by the page's controllerchange listener (inline
+      // in index.html, so it exists even if the module failed to load).
+    }))
   );
 });
 
@@ -87,22 +83,33 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // Network-first strategy for HTML navigation requests (always check for updates)
-  if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
+  const isNavigation = event.request.mode === 'navigate'
+    || event.request.headers.get('accept')?.includes('text/html');
+
+  if (isNavigation) {
+    const path = url.pathname;
+    const isAppShell = path.endsWith('/') || path.endsWith('/index.html');
+
+    if (isAppShell) {
+      // App shell is served from the SAME versioned cache as the JS modules,
+      // so HTML and scripts can never be out of step (a network-fresh
+      // index.html paired with stale cached modules was breaking refreshes).
+      // New versions arrive atomically via the service worker update flow.
+      event.respondWith(
+        caches.match('./index.html').then(cached => cached || fetch(event.request))
+      );
+      return;
+    }
+
+    // Other pages (privacy, support): network first, cache fallback.
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          // Update cache with new version
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
           return response;
         })
-        .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(event.request);
-        })
+        .catch(() => caches.match(event.request))
     );
     return;
   }
