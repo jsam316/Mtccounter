@@ -25,7 +25,7 @@ import { updateLectionaryHint, applyLectionaryTheme }           from './lectiona
 import { openAssist, closeAssist, resetAssist,
          changeAssistDirection, assistAddMale, assistAddFemale,
          assistStageTap, assistTagPerson, toggleAssistChildren,
-         assistAddDelta }                                        from './assist.js';
+         assistAddDelta, openAssistGuide, closeAssistGuide }    from './assist.js';
 
 // Wire switchTab to also trigger renders.
 setTabSwitchCallback(tab => {
@@ -52,7 +52,7 @@ Object.assign(window, {
   applyLectionaryTheme,
   openAssist, closeAssist, resetAssist, changeAssistDirection,
   assistAddMale, assistAddFemale, assistStageTap, assistTagPerson,
-  toggleAssistChildren, assistAddDelta,
+  toggleAssistChildren, assistAddDelta, openAssistGuide, closeAssistGuide,
 });
 
 // ── Initialisation ────────────────────────────────────────────────────────────
