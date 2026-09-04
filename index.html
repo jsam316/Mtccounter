@@ -975,6 +975,38 @@
       line-height: 1;
     }
     .assist-number-dim { color: rgba(255, 255, 255, 0.85); }
+
+    /* Camera vs manual reconciliation readout */
+    .assist-reconcile {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .assist-reconcile-text { font-size: 13px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.8); }
+    .assist-reconcile.is-match { border-color: rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.1); }
+    .assist-reconcile.is-match .assist-reconcile-text { color: #34d399; }
+    .assist-reconcile.is-camera-ahead { border-color: rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.1); }
+    .assist-reconcile.is-camera-ahead .assist-reconcile-text { color: #fcd34d; }
+    .assist-reconcile.is-manual-ahead { border-color: rgba(148, 163, 184, 0.3); }
+    .assist-reconcile-actions { display: flex; gap: 8px; }
+    .assist-delta-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: var(--radius-sm);
+      border: 1px solid;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .assist-delta-male { background: rgba(59, 130, 246, 0.22); border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; }
+    .assist-delta-female { background: rgba(168, 85, 247, 0.22); border-color: rgba(168, 85, 247, 0.4); color: #d8b4fe; }
+    .assist-delta-btn:active { transform: scale(0.96); }
     .assist-manual-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .assist-male-btn, .assist-female-btn {
       padding: 14px;
@@ -1636,6 +1668,13 @@
         <div class="assist-count-item">
           <div class="assist-label" data-i18n="assistManualTotal">Manual total</div>
           <div id="assistManualVal" class="assist-number assist-number-dim">0</div>
+        </div>
+      </div>
+      <div id="assistReconcile" class="assist-reconcile">
+        <span id="assistReconcileText" class="assist-reconcile-text"></span>
+        <div id="assistReconcileActions" class="assist-reconcile-actions" style="display:none">
+          <button class="assist-delta-btn assist-delta-male" onclick="assistAddDelta('male')" aria-label="Add difference as male"></button>
+          <button class="assist-delta-btn assist-delta-female" onclick="assistAddDelta('female')" aria-label="Add difference as female"></button>
         </div>
       </div>
       <div class="assist-manual-btns">
