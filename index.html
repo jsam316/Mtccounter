@@ -1335,6 +1335,42 @@
     .light-mode .restore-btn { background: rgba(8,145,178,0.07); color: #0891b2; border-color: rgba(8,145,178,0.18); }
     .light-mode .csv-btn { background: rgba(5,150,105,0.07); color: #059669; border-color: rgba(5,150,105,0.18); }
 
+    /* Cloud backup card */
+    .cloud-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .light-mode .cloud-card { background: rgba(255,255,255,0.65); border-color: rgba(0,0,0,0.07); }
+    .cloud-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .cloud-title { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.85); }
+    .light-mode .cloud-title { color: rgba(0,0,0,0.7); }
+    .cloud-status { font-size: 13px; color: var(--green); }
+    .cloud-text { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.65); margin: 0 0 10px; }
+    .light-mode .cloud-text { color: rgba(0,0,0,0.55); }
+    .cloud-auto {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8);
+      padding: 8px 0 12px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .light-mode .cloud-auto { color: rgba(0,0,0,0.65); }
+    .cloud-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .cloud-btn {
+      flex: 1; min-width: 96px;
+      padding: 9px 10px; border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 700; font-family: inherit;
+      cursor: pointer; -webkit-tap-highlight-color: transparent; transition: var(--transition);
+    }
+    .cloud-btn:active { transform: scale(0.96); }
+    .cloud-btn-primary { background: var(--accent); border-color: transparent; color: #fff; }
+    .cloud-btn-quiet { background: transparent; color: rgba(255,255,255,0.55); flex: 0 0 auto; }
+    .light-mode .cloud-btn { background: rgba(255,255,255,0.75); border-color: rgba(0,0,0,0.1); color: #1e293b; }
+    .light-mode .cloud-btn-primary { background: var(--accent); color: #fff; }
+    .light-mode .cloud-btn-quiet { background: transparent; color: rgba(0,0,0,0.5); }
+
     /* Stats */
     .stats-container { display: flex; flex-direction: column; gap: 14px; }
     .stats-section-title { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 1px; margin-bottom: -4px; }
@@ -1674,6 +1710,13 @@
         </div>
       </div>
       <input type="file" id="restoreFileInput" accept=".json" style="display:none" onchange="importBackup(event)">
+      <div id="cloudCard" class="cloud-card">
+        <div class="cloud-head">
+          <span class="cloud-title" data-i18n="cloudTitle">☁️ Cloud backup</span>
+          <span id="cloudStatus" class="cloud-status" aria-hidden="true"></span>
+        </div>
+        <div id="cloudBody" class="cloud-body"></div>
+      </div>
       <div id="historyList" class="history-list">
         <div class="empty-state">
           <p>📋</p>

@@ -68,6 +68,7 @@ export function saveRecord() {
   history = history.filter(r => r.date !== date);
   history.unshift(record);
   saveHistory(history);
+  document.dispatchEvent(new CustomEvent('mtc:data-changed'));
 
   const msg = document.getElementById('successMsg');
   msg.style.display = 'block';
@@ -199,6 +200,7 @@ export function deleteRecord(index) {
   const history = getHistory();
   history.splice(index, 1);
   saveHistory(history);
+  document.dispatchEvent(new CustomEvent('mtc:data-changed'));
   displayHistory();
   triggerHaptic('error');
 }

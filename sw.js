@@ -1,7 +1,7 @@
 // Stamped automatically on every push to main by
 // .github/workflows/stamp-sw-version.yml (date + commit SHA), so deploys
 // always bust the cache. Bump by hand only when testing locally.
-const CACHE_VERSION = 'v2026-09-04-fea4e16';
+const CACHE_VERSION = 'v2026-09-04-dev2';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [
   './',
@@ -28,6 +28,8 @@ const urlsToCache = [
   './src/ui.js',
   './src/lectionary.js',
   './src/assist.js',
+  './src/cloud.js',
+  './src/config.js',
   './vendor/jspdf.umd.min.js',
   // Note: vendor/tf.min.js and vendor/coco-ssd.min.js are deliberately NOT
   // precached (~1.5 MB) — the fetch handler runtime-caches them on first
@@ -82,7 +84,12 @@ self.addEventListener('activate', event => {
 // Fetch event - Network first for HTML, cache first for assets
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-  
+
+  // Never intercept cross-origin requests (Google Drive API, sign-in,
+  // model downloads): they must reach the network directly and their
+  // failures must surface as failures — not fall back to index.html.
+  if (url.origin !== self.location.origin) return;
+
   const isNavigation = event.request.mode === 'navigate'
     || event.request.headers.get('accept')?.includes('text/html');
 

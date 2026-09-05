@@ -11,6 +11,7 @@ function _saveParishes(parishes) {
   save(KEYS.parishes, parishes);
   updateParishDatalist();
   displayParishList();
+  document.dispatchEvent(new CustomEvent('mtc:data-changed'));
 }
 
 export function updateParishDatalist() {

@@ -85,3 +85,36 @@ Free to use for any MarThoma Church parish.
 ---
 
 **Made with ❤️ for MarThoma Church communities**
+
+## ☁️ Cloud backup (Google Drive)
+
+The app can back up its records automatically to the user's **own Google Drive**
+(a hidden app-data folder — the app cannot see any other Drive files) after
+every save, and restore/merge them on any device. It is off until a Google
+OAuth Client ID is configured. One-time setup, about 10 minutes:
+
+1. Go to https://console.cloud.google.com and create a project (e.g. "MTC Counter").
+2. **APIs & Services → Library** → enable **Google Drive API**.
+3. **APIs & Services → OAuth consent screen** → External → fill in the app
+   name and support email → add the scope
+   `https://www.googleapis.com/auth/drive.appdata` → save, then **Publish**
+   the app (this scope is non-sensitive, so no Google verification is needed).
+4. **APIs & Services → Credentials → Create credentials → OAuth client ID**
+   → Application type **Web application** → under **Authorized JavaScript
+   origins** add `https://jsam316.github.io` (and `http://localhost:8000` if
+   you test locally) → Create.
+5. Copy the **Client ID** (ends in `.apps.googleusercontent.com`) into
+   `src/config.js`:
+   ```js
+   export const GOOGLE_CLIENT_ID = 'xxxxxxxx.apps.googleusercontent.com';
+   ```
+6. Commit and deploy. The **Cloud backup** card in the History tab now shows
+   **Connect Google Drive**.
+
+Notes
+- The Client ID is a public identifier, not a secret; the origin list is what
+  protects it.
+- Restore **merges**: records are matched by date and the newer one wins;
+  nothing is ever deleted by a restore.
+- If the phone is offline when a save happens, the backup is marked pending
+  and uploads automatically when the connection returns.
