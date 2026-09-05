@@ -11,6 +11,7 @@ export const KEYS = Object.freeze({
   installPromptDismissed: 'installPromptDismissed',
   coCelebrantsEnabled:    'coCelebrantsEnabled',
   assistSettings:         'mtcAssistSettings',
+  cloud:                  'mtcCloud',
 });
 
 function _showStorageWarning() {

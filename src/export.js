@@ -209,8 +209,9 @@ export function exportCSV() {
   triggerHaptic('success');
 }
 
-export function exportBackupJSON() {
-  const backup = {
+/** The backup document — shared by the file export and cloud backup. */
+export function buildBackupPayload() {
+  return {
     version:    '1.0',
     exportedAt: new Date().toISOString(),
     app:        'MTC Counter',
@@ -220,6 +221,10 @@ export function exportBackupJSON() {
       savedParishes:    load(KEYS.parishes, [])
     }
   };
+}
+
+export function exportBackupJSON() {
+  const backup = buildBackupPayload();
   _download(JSON.stringify(backup, null, 2), 'application/json',
     'MTC_Backup_' + new Date().toISOString().slice(0, 10) + '.json');
   showSuccessMsg(t('backupSuccess'));
@@ -245,6 +250,7 @@ export function importBackup(event) {
       displayHistory();
       updateCelebrantDatalist();
       updateParishDatalist();
+      document.dispatchEvent(new CustomEvent('mtc:data-changed'));
       showSuccessMsg(t('restoreSuccess'));
       triggerHaptic('success');
     } catch {

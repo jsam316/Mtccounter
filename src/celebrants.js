@@ -11,6 +11,7 @@ function _saveCelebrants(celebrants) {
   save(KEYS.celebrants, celebrants);
   updateCelebrantDatalist();
   displayCelebrantList();
+  document.dispatchEvent(new CustomEvent('mtc:data-changed'));
 }
 
 export function updateCelebrantDatalist() {

@@ -26,10 +26,12 @@ import { openAssist, closeAssist, resetAssist,
          changeAssistDirection, assistAddMale, assistAddFemale,
          assistStageTap, assistTagPerson, toggleAssistChildren,
          assistAddDelta, openAssistGuide, closeAssistGuide }    from './assist.js';
+import { initCloud, connectCloud, disconnectCloud, backupNow,
+         restoreFromCloud, toggleCloudAuto, renderCloudCard }   from './cloud.js';
 
 // Wire switchTab to also trigger renders.
 setTabSwitchCallback(tab => {
-  if (tab === 'history') displayHistory();
+  if (tab === 'history') { displayHistory(); renderCloudCard(); }
   if (tab === 'stats')   displayStats();
 });
 
@@ -53,6 +55,7 @@ Object.assign(window, {
   openAssist, closeAssist, resetAssist, changeAssistDirection,
   assistAddMale, assistAddFemale, assistStageTap, assistTagPerson,
   toggleAssistChildren, assistAddDelta, openAssistGuide, closeAssistGuide,
+  connectCloud, disconnectCloud, backupNow, restoreFromCloud, toggleCloudAuto,
 });
 
 // ── Initialisation ────────────────────────────────────────────────────────────
@@ -115,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCelebrantDatalist();
   updateParishDatalist();
   displayHistory();
+  initCloud();
 
   // Keyboard support for the toggle switches (role="switch").
   const keyToggle = (id, fn) => document.getElementById(id)?.addEventListener('keydown', e => {
