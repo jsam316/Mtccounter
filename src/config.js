@@ -5,4 +5,4 @@
 // identifier (not a secret); the protection is the "Authorized JavaScript
 // origins" list on the client, which must include the site's origin.
 // Setup steps: see README.md → "Cloud backup (Google Drive)".
-export const GOOGLE_CLIENT_ID = '';
+export const GOOGLE_CLIENT_ID = '164007064324-scvhl3f7pggng9mbuj4jh626glss72lp.apps.googleusercontent.com';
