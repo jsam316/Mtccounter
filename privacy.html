@@ -110,16 +110,16 @@
 
   <div class="hero">
     <h1>Privacy Policy</h1>
-    <p>MTC Counter · iOS App</p>
+    <p>MTC Counter · iOS app and web app</p>
   </div>
 
   <div class="container">
     <div class="card">
-      <span class="updated">Last updated: April 10, 2026</span>
+      <span class="updated">Last updated: September 5, 2026</span>
 
       <h2>Overview</h2>
-      <p>MTC Counter ("the App") is a church attendance tracking app developed by John George. This Privacy Policy explains what information the App collects, how it is used, and your rights regarding that information.</p>
-      <p><strong>The short version: MTC Counter collects no personal data. Everything stays on your device.</strong></p>
+      <p>MTC Counter ("the App") is a church attendance tracking app developed by John George, available as an iOS app and as a web app at jsam316.github.io/Mtccounter. This Privacy Policy explains what information the App collects, how it is used, and your rights regarding that information.</p>
+      <p><strong>The short version: MTC Counter collects no personal data. Everything stays on your device — unless you choose to turn on the optional backup to your own Google Drive, in which case your data goes only to your own Google account, never to the developer.</strong></p>
 
       <hr />
 
@@ -136,12 +136,29 @@
       <hr />
 
       <h2>Data Storage</h2>
-      <p>All data you enter into the App — including attendance counts, session history, and settings — is stored exclusively on your device using iOS local storage. This data never leaves your device and is not accessible to the developer or any third party.</p>
+      <p>All data you enter into the App — including attendance counts, session history, and settings — is stored on your device (iOS local storage in the iOS app; your browser's local storage in the web app). This data is not accessible to the developer or any third party. The developer operates no server and receives none of your data.</p>
+
+      <hr />
+
+      <h2>Optional Backup to Google Drive (web app)</h2>
+      <p>The web app offers an optional cloud backup that you turn on yourself by tapping "Connect Google Drive" and signing in with your Google account. When enabled:</p>
+      <ul>
+        <li>Your attendance records and saved names are saved as a single backup file in the <strong>application data folder of your own Google Drive</strong>. This folder is private to the App and is not visible alongside your other Drive files.</li>
+        <li>The App requests only the <code>drive.appdata</code> permission. It <strong>cannot</strong> see, read, or change any of your other Google Drive files, and it does not access your Google profile, contacts, or email.</li>
+        <li>The backup goes directly from your device to your Google account. The developer has no access to it and never receives a copy.</li>
+        <li>The sign-in token is kept only on your device for the current session. You can disconnect at any time from the History tab, which revokes the App's access; you can also remove the stored backup under Google Drive → Settings → Manage apps.</li>
+      </ul>
+      <p>MTC Counter's use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" style="color: var(--sky-dark);">Google API Services User Data Policy</a>, including the Limited Use requirements. Google's own handling of your account is governed by <a href="https://policies.google.com/privacy" style="color: var(--sky-dark);">Google's Privacy Policy</a>.</p>
+
+      <hr />
+
+      <h2>Camera (Count Assist, web app)</h2>
+      <p>The optional Count Assist feature uses the camera to help count people passing a line. All video is processed on your device in real time; <strong>no images or video are ever stored, recorded, or transmitted</strong>. The camera is used only while the Count Assist screen is open and stops the moment it is closed. On first use the App downloads a small person-detection model from Google's model hosting; this download contains no information about you.</p>
 
       <hr />
 
       <h2>Third-Party Services</h2>
-      <p>MTC Counter does not integrate with any third-party analytics, advertising, or data collection services. The App makes no network requests and does not communicate with any external servers.</p>
+      <p>MTC Counter does not integrate with any analytics, advertising, or data collection services. The web app makes network requests only to load itself, to perform the optional Google Drive backup described above when you have enabled it, and to download the optional Count Assist detection model. The iOS app makes no network requests.</p>
 
       <hr />
 
@@ -151,7 +168,7 @@
       <hr />
 
       <h2>Data Security</h2>
-      <p>Since all data remains on your device, its security is governed by your device's own security settings (passcode, Face ID, Touch ID). We recommend keeping your device updated and secured with a passcode.</p>
+      <p>Data on your device is protected by your device's own security settings (passcode, Face ID, Touch ID). If you enable the optional Google Drive backup, that copy is protected by your Google account's security. We recommend keeping your device updated, secured with a passcode, and using two-step verification on your Google account.</p>
 
       <hr />
 
