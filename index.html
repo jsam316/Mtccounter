@@ -49,8 +49,8 @@
       min-height: 100vh;
       padding: 16px 16px 20px;
       display: flex;
-      align-items: flex-start;
-      justify-content: center;
+      flex-direction: column;
+      align-items: center;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -757,6 +757,39 @@
     .empty-state { text-align: center; padding: 50px 20px; color: rgba(255,255,255,0.5); }
     .light-mode .empty-state { color: rgba(0,0,0,0.35); }
     .empty-state p:first-child { font-size: 44px; margin-bottom: 12px; }
+
+    /* Version line — normal flow below the container, never overlapping it */
+    .app-footer {
+      width: 100%;
+      max-width: 480px;
+      margin-top: 14px;
+      padding: 6px 16px max(6px, env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.35);
+      letter-spacing: 0.2px;
+    }
+    .light-mode .app-footer { color: rgba(0, 0, 0, 0.35); }
+    .app-version { font-variant-numeric: tabular-nums; }
+    .app-footer-sep { opacity: 0.6; }
+    .app-reload-btn {
+      background: none;
+      border: none;
+      padding: 4px 6px;
+      font: inherit;
+      font-weight: 700;
+      color: var(--accent-light);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .light-mode .app-reload-btn { color: var(--accent); }
+    .app-reload-btn:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
 
     /* Overlays */
     .offline-indicator {
@@ -1730,6 +1763,15 @@
     <div id="statsTab" class="tab-content">
       <div id="statsContent" class="stats-container"></div>
     </div>
+  </div>
+
+  <!-- Version line: running build (from the service worker) + manual reload -->
+  <div class="app-footer">
+    <span>MTC Counter</span>
+    <span class="app-footer-sep">·</span>
+    <span id="appVersion" class="app-version">…</span>
+    <span class="app-footer-sep">·</span>
+    <button class="app-reload-btn" onclick="checkForUpdates()" data-i18n="reloadBtn">Reload</button>
   </div>
 
   <!-- Install Prompt -->
