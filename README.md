@@ -118,3 +118,15 @@ Notes
   nothing is ever deleted by a restore.
 - If the phone is offline when a save happens, the backup is marked pending
   and uploads automatically when the connection returns.
+
+## 🚀 Deploying (GitHub Actions → GitHub Pages)
+
+Every push to `main` runs `.github/workflows/deploy-pages.yml`, which
+stamps the service worker cache version (`v<date>-<sha>`, shown in the app's
+footer), packages only the web app files, and publishes them to GitHub Pages.
+
+- Requires **Settings → Pages → Build and deployment → Source = GitHub
+  Actions**. With any other source the site will not update.
+- Deploy status is visible under the **Actions** tab ("Deploy to GitHub
+  Pages"); it can also be run manually from there.
+- Nothing is committed back to `main` by the deploy.
