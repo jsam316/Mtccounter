@@ -1,6 +1,7 @@
-// Stamped automatically on every push to main by
-// .github/workflows/stamp-sw-version.yml (date + commit SHA), so deploys
-// always bust the cache. Bump by hand only when testing locally.
+// The deploy workflow (.github/workflows/deploy-pages.yml) stamps this
+// with date + commit SHA in the BUILD OUTPUT on every deploy, so the
+// cache is always busted. The committed value here is only what you get
+// when serving the repo directly (local testing).
 const CACHE_VERSION = 'v2026-09-11-43d4322';
 const CACHE_NAME = 'mtc-counter-' + CACHE_VERSION;
 const urlsToCache = [

@@ -1,0 +1,64 @@
+name: Deploy to GitHub Pages
+
+# Builds and publishes the web app on every push to main (and on demand).
+# Requires Settings → Pages → Source = "GitHub Actions".
+#
+# The service worker cache version is stamped into sw.js in the BUILD
+# OUTPUT only (date + commit SHA), so every deploy busts the cache without
+# any commit back to main. The footer of the app shows this version.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; queue rather than cancel so no deploy is half-done.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stamp service worker cache version
+        run: |
+          VERSION="v$(date -u +%F)-${GITHUB_SHA::7}"
+          sed -i -E "s/^const CACHE_VERSION = '[^']+';/const CACHE_VERSION = '$VERSION';/" sw.js
+          grep -q "const CACHE_VERSION = '$VERSION';" sw.js
+          echo "Stamped sw.js with $VERSION"
+
+      - name: Assemble site
+        # Only the web app is published — not the Xcode project, docs, or CI files.
+        run: |
+          mkdir -p _site
+          tar --exclude='./.git' --exclude='./.github' --exclude='./_site' \
+              --exclude='./MtcCounter' --exclude='./MtcCounter.xcodeproj' \
+              --exclude='./MtcCounterWatch Watch App' --exclude='./ci' \
+              --exclude='*.md' --exclude='./deploy.sh' --exclude='./deploy.bat' \
+              --exclude='./generate_icons.py' \
+              -cf - . | tar -xf - -C _site
+          echo "Site contents:" && ls -A _site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
