@@ -154,7 +154,15 @@ self.addEventListener('fetch', event => {
 
 // Handle messages from the client
 self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (!event.data) return;
+  if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  // The page shows the running build in its footer; the worker's stamped
+  // version is the single source of truth for what is actually running.
+  if (event.data.type === 'GET_VERSION') {
+    const reply = { type: 'VERSION', version: CACHE_VERSION };
+    if (event.ports && event.ports[0]) event.ports[0].postMessage(reply);
+    else if (event.source) event.source.postMessage(reply);
   }
 });

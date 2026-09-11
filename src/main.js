@@ -12,7 +12,8 @@ import { toggleDarkMode, initDarkMode, installApp,
          showUpdateNotification, closeUpdateNotification,
          applyUpdate, updateOnlineStatus,
          registerServiceWorker, setTabSwitchCallback,
-         switchTab, initWakeLock }                              from './ui.js';
+         switchTab, initWakeLock, initVersionLine,
+         checkForUpdates }                                      from './ui.js';
 import { openCelebrantManager, closeCelebrantManager,
          addCelebrant, deleteCelebrant, toggleCoCelebrants,
          initCoCelebrantsToggle, updateCelebrantDatalist }      from './celebrants.js';
@@ -43,6 +44,7 @@ Object.assign(window, {
   switchTab,
   toggleDarkMode, installApp, closeInstallPrompt,
   showUpdateNotification, closeUpdateNotification, applyUpdate,
+  checkForUpdates,
   toggleLanguage,
   openCelebrantManager, closeCelebrantManager,
   addCelebrant, deleteCelebrant, toggleCoCelebrants,
@@ -160,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 registerServiceWorker();
+initVersionLine();
 
 // Ask the browser not to evict our data (attendance history lives in
 // localStorage). Best-effort: ignored where unsupported or denied.

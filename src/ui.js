@@ -1,6 +1,7 @@
 import { KEYS, getString, setString, remove } from './state.js';
 import { t } from './translations.js';
 import { triggerHaptic } from './haptic.js';
+import { showSuccessMsg } from './utils.js';
 
 // Callback wired by main.js to avoid circular deps.
 let _onTabSwitch = null;
@@ -106,6 +107,7 @@ export function closeInstallPrompt() {
 }
 
 let _newWorker = null;
+let _registration = null;
 
 export function showUpdateNotification() {
   document.getElementById('updateNotification').classList.add('show');
@@ -143,6 +145,66 @@ function _onNewWorkerReady() {
   }
 }
 
+// ── Version line & manual reload ──────────────────────────────────────────────
+
+/** Show the running build in the footer, asked from the controlling worker. */
+export function initVersionLine() {
+  const el = document.getElementById('appVersion');
+  if (!el) return;
+  if (!('serviceWorker' in navigator) || window.location.protocol === 'file:') {
+    el.textContent = 'dev';
+    return;
+  }
+  const query = () => {
+    const ctrl = navigator.serviceWorker.controller;
+    if (!ctrl) return;
+    const channel = new MessageChannel();
+    channel.port1.onmessage = e => { if (e.data && e.data.version) el.textContent = e.data.version; };
+    ctrl.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
+  };
+  query();
+  navigator.serviceWorker.addEventListener('controllerchange', query);
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'CACHE_UPDATED' && e.data.version) el.textContent = e.data.version;
+  });
+  // No worker took control (registration failed / blocked): say so honestly.
+  setTimeout(() => { if (el.textContent === '…') el.textContent = '—'; }, 5000);
+}
+
+/**
+ * Footer "Reload": check for a new version right now. If one is found it is
+ * applied (the page reloads into it); otherwise confirm we're current and
+ * reload anyway so the button always visibly does something.
+ */
+export async function checkForUpdates() {
+  const btn = document.querySelector('.app-reload-btn');
+  if (btn) btn.disabled = true;
+  triggerHaptic('light');
+  try {
+    if (_registration && navigator.onLine) {
+      showSuccessMsg(t('checkingUpdates'), 6000);
+      await _registration.update();
+      const worker = _registration.installing || _registration.waiting;
+      if (worker) {
+        // Let a freshly discovered worker finish installing (or fail).
+        await new Promise(resolve => {
+          const done = () => { worker.removeEventListener('statechange', done); resolve(); };
+          if (worker.state !== 'installing') return resolve();
+          worker.addEventListener('statechange', done);
+          setTimeout(done, 8000);
+        });
+        if (worker.state === 'installed' || worker.state === 'activating' || worker.state === 'activated') {
+          _newWorker = worker;
+          _activateNewWorker(); // controllerchange → reload into the new version
+          return;
+        }
+      }
+      showSuccessMsg(t('upToDate'), 1200);
+    }
+  } catch { /* fall through to a plain reload */ }
+  setTimeout(() => window.location.reload(), 700);
+}
+
 export function updateOnlineStatus() {
   const isOnline = navigator.onLine;
   const indicator = document.getElementById('offlineIndicator');
@@ -163,6 +225,7 @@ export function registerServiceWorker() {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then(registration => {
+        _registration = registration;
         // An update may already be waiting (downloaded on a previous visit
         // but not yet applied). Offer it again.
         if (registration.waiting && navigator.serviceWorker.controller) {
