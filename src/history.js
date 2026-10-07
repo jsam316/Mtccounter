@@ -1,7 +1,7 @@
 import { save, load, KEYS } from './state.js';
 import { t, getCurrentLang } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { isNotSpecified, escapeHtml } from './utils.js';
+import { isNotSpecified, escapeHtml, recordKey } from './utils.js';
 import { getMale, getFemale, getRounds, resetCounters } from './counter.js';
 import { getCoCelebrantsValue } from './celebrants.js';
 import { updateChapterOptions, updateVerseOptions } from './scripture.js';
@@ -19,6 +19,7 @@ export function saveHistory(records) {
 export function saveRecord() {
   const date = document.getElementById('date').value;
   if (!date) { alert(t('selectDateFirst')); return; }
+  const service = (document.getElementById('service')?.value || '').trim();
 
   const parishName = document.getElementById('parishName').value.trim() || '';
   const celebrant  = document.getElementById('celebrant').value.trim() || '';
@@ -51,6 +52,7 @@ export function saveRecord() {
 
   const record = {
     date,
+    service,
     parishName,
     celebrant,
     coCelebrants,
@@ -64,8 +66,9 @@ export function saveRecord() {
   };
 
   let history = getHistory();
-  if (history.some(r => r.date === date) && !confirm(t('overwriteConfirm'))) return;
-  history = history.filter(r => r.date !== date);
+  const key = recordKey(record);
+  if (history.some(r => recordKey(r) === key) && !confirm(t('overwriteConfirm'))) return;
+  history = history.filter(r => recordKey(r) !== key);
   history.unshift(record);
   saveHistory(history);
   document.dispatchEvent(new CustomEvent('mtc:data-changed'));
@@ -91,6 +94,7 @@ export function filterHistory(query) {
   const filtered = q
     ? history.filter(r =>
         (r.parishName || '').toLowerCase().includes(q)
+        || (r.service    || '').toLowerCase().includes(q)
         || (r.celebrant  || '').toLowerCase().includes(q)
         || (r.sermon     || '').toLowerCase().includes(q)
         || (r.scripture  || '').toLowerCase().includes(q)
@@ -114,7 +118,7 @@ export function renderHistoryItems(history, listEl) {
   let html = '';
   history.forEach(record => {
     let realIndex = allHistory.findIndex(r => r.date === record.date && r.timestamp === record.timestamp);
-    if (realIndex === -1) realIndex = allHistory.findIndex(r => r.date === record.date);
+    if (realIndex === -1) realIndex = allHistory.findIndex(r => recordKey(r) === recordKey(record));
 
     const formattedDate = new Date(record.date + 'T00:00:00').toLocaleDateString(
       lang === 'ml' ? 'ml-IN' : 'en-US',
@@ -122,7 +126,9 @@ export function renderHistoryItems(history, listEl) {
     );
 
     html += '<div class="history-item">';
-    html += '<div class="history-date">' + escapeHtml(formattedDate) + '</div>';
+    html += '<div class="history-date">' + escapeHtml(formattedDate)
+      + (record.service ? ' <span class="history-service">· ' + escapeHtml(record.service) + '</span>' : '')
+      + '</div>';
     html += '<div class="history-details">';
     html += '<strong>' + t('parish')    + ':</strong> ' + escapeHtml(record.parishName || t('notSpecified')) + '<br>';
     html += '<strong>' + t('celebrant') + ':</strong> ' + escapeHtml(record.celebrant  || t('notSpecified')) + '<br>';
@@ -149,6 +155,8 @@ export function loadRecord(index) {
   if (!record) return;
 
   document.getElementById('date').value       = record.date;
+  const serviceEl = document.getElementById('service');
+  if (serviceEl) serviceEl.value = record.service || '';
   document.getElementById('parishName').value = isNotSpecified(record.parishName) ? '' : record.parishName;
   document.getElementById('celebrant').value  = isNotSpecified(record.celebrant)  ? '' : record.celebrant;
 

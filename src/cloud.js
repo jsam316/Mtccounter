@@ -11,7 +11,7 @@
 
 import { save, load, KEYS } from './state.js';
 import { t } from './translations.js';
-import { showSuccessMsg, escapeHtml } from './utils.js';
+import { showSuccessMsg, escapeHtml, recordKey } from './utils.js';
 import { triggerHaptic } from './haptic.js';
 import { getHistory, saveHistory, displayHistory } from './history.js';
 import { updateCelebrantDatalist } from './celebrants.js';
@@ -22,27 +22,28 @@ import { GOOGLE_CLIENT_ID } from './config.js';
 // ── Merge (pure, unit-tested) ─────────────────────────────────────────────────
 
 /**
- * Merge a remote backup into local data. Records are keyed by date; when
- * both sides have the same date the newer `timestamp` wins. Name lists are
- * unioned. Nothing is ever deleted by a merge.
+ * Merge a remote backup into local data. Records are keyed by date +
+ * service label; when both sides have the same key the newer `timestamp`
+ * wins. Name lists are unioned. Nothing is ever deleted by a merge.
  * Returns { history, celebrants, parishes, changed } where `changed` is the
  * number of records added or replaced from the remote side.
  */
 export function mergeBackups(local, remote) {
-  const byDate = new Map();
-  for (const r of local.history || []) if (r && r.date) byDate.set(r.date, r);
+  const byKey = new Map();
+  for (const r of local.history || []) if (r && r.date) byKey.set(recordKey(r), r);
 
   let changed = 0;
   for (const r of remote.history || []) {
     if (!r || !r.date) continue;
-    const cur = byDate.get(r.date);
-    if (!cur) { byDate.set(r.date, r); changed++; continue; }
+    const key = recordKey(r);
+    const cur = byKey.get(key);
+    if (!cur) { byKey.set(key, r); changed++; continue; }
     const curTs = Date.parse(cur.timestamp || 0) || 0;
     const remTs = Date.parse(r.timestamp || 0) || 0;
-    if (remTs > curTs) { byDate.set(r.date, r); changed++; }
+    if (remTs > curTs) { byKey.set(key, r); changed++; }
   }
 
-  const history = [...byDate.values()].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const history = [...byKey.values()].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   const union = (a, b) => [...new Set([...(a || []), ...(b || [])].filter(Boolean))].sort();
   return {
     history,

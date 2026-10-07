@@ -57,10 +57,10 @@ export function shiftStatsPeriod(delta) {
 export function exportStatsCSV() {
   const records = _recordsInPeriod(getHistory());
   if (records.length === 0) { alert(t('statsNoRecordsPeriod')); return; }
-  const headers = ['Date', 'Parish', 'Celebrant', 'Co-Celebrants', 'Sermon', 'Scripture', 'Male', 'Female', 'Total'];
+  const headers = ['Date', 'Service', 'Parish', 'Celebrant', 'Co-Celebrants', 'Sermon', 'Scripture', 'Male', 'Female', 'Total'];
   const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
   const rows = records.map(r => [
-    r.date, q(r.parishName), q(r.celebrant), q(r.coCelebrants), q(r.sermon), q(r.scripture),
+    r.date, q(r.service), q(r.parishName), q(r.celebrant), q(r.coCelebrants), q(r.sermon), q(r.scripture),
     Number(r.male) || 0, Number(r.female) || 0, Number(r.total) || 0,
   ].join(','));
   downloadFile([headers.join(','), ...rows].join('\n'), 'text/csv;charset=utf-8;',
@@ -99,7 +99,8 @@ function _controlsHtml() {
 function _chartGroups(records) {
   if (_period === 'month') {
     return records.map(r => ({
-      label: new Date(r.date + 'T00:00:00').toLocaleDateString(_locale(), { day: 'numeric', month: 'short' }),
+      label: new Date(r.date + 'T00:00:00').toLocaleDateString(_locale(), { day: 'numeric', month: 'short' })
+        + (r.service ? ' ' + r.service : ''),
       value: Number(r.total) || 0,
     }));
   }

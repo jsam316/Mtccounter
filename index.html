@@ -744,6 +744,8 @@
     .light-mode .history-item:hover { background: #ffffff; border-color: var(--accent); box-shadow: var(--shadow); }
 
     .history-date { font-weight: 700; color: var(--accent-light); margin-bottom: 8px; font-size: 15px; }
+    .history-service { font-weight: 600; color: rgba(255,255,255,0.65); font-size: 13px; }
+    .light-mode .history-service { color: rgba(0,0,0,0.5); }
     .light-mode .history-date { color: var(--accent); }
     .history-details { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.7; }
     .light-mode .history-details { color: rgba(0,0,0,0.65); }
@@ -1526,6 +1528,17 @@
       <div class="input-group">
         <label data-i18n="dateLabel">📅 Date</label>
         <input type="date" id="date">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="serviceLabel">🕐 Service (optional)</label>
+        <input type="text" id="service" list="serviceSuggestions" data-i18n-placeholder="servicePlaceholder" placeholder="e.g. Morning, Evening — leave blank for the main service">
+        <datalist id="serviceSuggestions">
+          <option value="Morning"></option>
+          <option value="Evening"></option>
+          <option value="Second Qurbana"></option>
+          <option value="Feast Day"></option>
+        </datalist>
       </div>
 
       <div class="input-group">
