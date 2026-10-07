@@ -261,6 +261,11 @@ export function importBackup(event) {
   reader.readAsText(file);
 }
 
+/** Trigger a browser download of text content (shared with stats export). */
+export function downloadFile(content, mimeType, filename) {
+  return _download(content, mimeType, filename);
+}
+
 function _download(content, mimeType, filename) {
   const blob = new Blob([content], { type: mimeType });
   const url  = URL.createObjectURL(blob);
