@@ -26,5 +26,7 @@ export function toggleLanguage() {
   const next = getCurrentLang() === 'en' ? 'ml' : 'en';
   setCurrentLang(next);
   updateLanguage();
+  // Dynamically rendered views (stats, history) re-render on this event.
+  document.dispatchEvent(new CustomEvent('mtc:language-changed'));
   triggerHaptic('light');
 }

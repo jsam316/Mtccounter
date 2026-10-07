@@ -29,6 +29,15 @@ export function escapeHtml(value) {
 }
 
 /**
+ * Identity key for a record: date + service label. Several services can be
+ * recorded on one date (e.g. Morning and Evening); the service label is
+ * optional, case-insensitive, and blank means the main service.
+ */
+export function recordKey(r) {
+  return (r.date || '') + '|' + String(r.service || '').trim().toLowerCase();
+}
+
+/**
  * Returns true if a stored field value means "not specified".
  * Handles empty strings and legacy records saved in either language.
  */

@@ -54,8 +54,9 @@ function buildReportText() {
     { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
   );
   const { totalMale, totalFemale } = getFormTotals();
+  const service     = (document.getElementById('service')?.value || '').trim();
 
-  let text = t('serviceDetails') + ' - ' + formattedDate + '\n\n'
+  let text = t('serviceDetails') + ' - ' + formattedDate + (service ? ' (' + service + ')' : '') + '\n\n'
     + t('parish')    + ': ' + parishName + '\n'
     + t('celebrant') + ': ' + celebrant  + '\n';
   if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
@@ -155,6 +156,8 @@ export async function exportPDF() {
 
   let y = 55;
   doc.text(t('dateLabel')   + ': ' + formattedDate, 20, y); y += 8;
+  const service = (document.getElementById('service')?.value || '').trim();
+  if (service) { doc.text(t('service') + ': ' + service, 20, y); y += 8; }
   doc.text(t('parish')      + ': ' + parishName,    20, y); y += 8;
   doc.text(t('celebrant')   + ': ' + celebrant,     20, y);
   if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
@@ -189,9 +192,10 @@ export function exportCSV() {
   const history = getHistory();
   if (history.length === 0) { alert(t('noDataForStats')); return; }
 
-  const headers = ['Date','Parish','Celebrant','Co-Celebrants','Sermon','Scripture','Male','Female','Total'];
+  const headers = ['Date','Service','Parish','Celebrant','Co-Celebrants','Sermon','Scripture','Male','Female','Total'];
   const rows = history.map(r => [
     r.date,
+    '"' + (r.service      || '').replace(/"/g, '""') + '"',
     '"' + (r.parishName   || '').replace(/"/g, '""') + '"',
     '"' + (r.celebrant    || '').replace(/"/g, '""') + '"',
     '"' + (r.coCelebrants || '').replace(/"/g, '""') + '"',
@@ -259,6 +263,11 @@ export function importBackup(event) {
     event.target.value = '';
   };
   reader.readAsText(file);
+}
+
+/** Trigger a browser download of text content (shared with stats export). */
+export function downloadFile(content, mimeType, filename) {
+  return _download(content, mimeType, filename);
 }
 
 function _download(content, mimeType, filename) {

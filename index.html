@@ -744,6 +744,8 @@
     .light-mode .history-item:hover { background: #ffffff; border-color: var(--accent); box-shadow: var(--shadow); }
 
     .history-date { font-weight: 700; color: var(--accent-light); margin-bottom: 8px; font-size: 15px; }
+    .history-service { font-weight: 600; color: rgba(255,255,255,0.65); font-size: 13px; }
+    .light-mode .history-service { color: rgba(0,0,0,0.5); }
     .light-mode .history-date { color: var(--accent); }
     .history-details { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.7; }
     .light-mode .history-details { color: rgba(0,0,0,0.65); }
@@ -1448,6 +1450,41 @@
 
     .stats-empty { text-align: center; padding: 36px 20px; color: rgba(255,255,255,0.4); font-size: 14px; line-height: 1.6; }
     .light-mode .stats-empty { color: rgba(0,0,0,0.35); }
+
+    /* Stats period controls */
+    .stats-controls { display: flex; flex-direction: column; gap: 10px; }
+    .stats-segments {
+      display: flex; gap: 4px; padding: 4px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px;
+    }
+    .light-mode .stats-segments { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.07); }
+    .stats-seg {
+      flex: 1; padding: 8px; border: none; border-radius: 10px; background: transparent;
+      color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: var(--transition); -webkit-tap-highlight-color: transparent;
+    }
+    .stats-seg.active { background: rgba(255,255,255,0.15); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .light-mode .stats-seg { color: rgba(0,0,0,0.4); }
+    .light-mode .stats-seg.active { background: #fff; color: var(--accent); box-shadow: 0 2px 8px rgba(79,70,229,0.12); }
+    .stats-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .stats-nav-btn {
+      width: 40px; height: 36px; padding: 0; border-radius: 10px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.85); font-size: 20px; font-family: inherit; line-height: 1;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .light-mode .stats-nav-btn { background: rgba(255,255,255,0.75); border-color: rgba(0,0,0,0.1); color: #1e293b; }
+    .stats-period-label { flex: 1; text-align: center; font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.9); }
+    .light-mode .stats-period-label { color: #1e293b; }
+    .trend-bars { overflow-x: auto; }
+    .stats-export-btn {
+      width: 100%; padding: 11px; border-radius: var(--radius-md);
+      background: rgba(5,150,105,0.15); border: 1px solid rgba(5,150,105,0.25); color: #34d399;
+      font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; transition: var(--transition);
+    }
+    .stats-export-btn:active { transform: scale(0.97); }
+    .light-mode .stats-export-btn { background: rgba(5,150,105,0.07); border-color: rgba(5,150,105,0.18); color: #059669; }
   </style>
 </head>
 <body>
@@ -1491,6 +1528,17 @@
       <div class="input-group">
         <label data-i18n="dateLabel">📅 Date</label>
         <input type="date" id="date">
+      </div>
+
+      <div class="input-group">
+        <label data-i18n="serviceLabel">🕐 Service (optional)</label>
+        <input type="text" id="service" list="serviceSuggestions" data-i18n-placeholder="servicePlaceholder" placeholder="e.g. Morning, Evening — leave blank for the main service">
+        <datalist id="serviceSuggestions">
+          <option value="Morning"></option>
+          <option value="Evening"></option>
+          <option value="Second Qurbana"></option>
+          <option value="Feast Day"></option>
+        </datalist>
       </div>
 
       <div class="input-group">

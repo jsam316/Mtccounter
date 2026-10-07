@@ -21,7 +21,8 @@ import { openParishManager, closeParishManager,
          addParish, deleteParish, updateParishDatalist }        from './parishes.js';
 import { exportData, shareToWhatsApp, exportPDF,
          exportCSV, exportBackupJSON, importBackup }            from './export.js';
-import { displayStats }                                         from './stats.js';
+import { displayStats, setStatsPeriod, shiftStatsPeriod,
+         exportStatsCSV }                                       from './stats.js';
 import { updateLectionaryHint, applyLectionaryTheme }           from './lectionary.js';
 import { openAssist, closeAssist, resetAssist,
          changeAssistDirection, assistAddMale, assistAddFemale,
@@ -34,6 +35,12 @@ import { initCloud, connectCloud, disconnectCloud, backupNow,
 setTabSwitchCallback(tab => {
   if (tab === 'history') { displayHistory(); renderCloudCard(); }
   if (tab === 'stats')   displayStats();
+});
+
+// Re-render dynamic views in the new language.
+document.addEventListener('mtc:language-changed', () => {
+  if (document.getElementById('statsTab').classList.contains('active')) displayStats();
+  if (document.getElementById('historyTab').classList.contains('active')) { displayHistory(); renderCloudCard(); }
 });
 
 // Expose everything called from inline HTML onclick handlers.
@@ -52,7 +59,7 @@ Object.assign(window, {
   addParish, deleteParish,
   exportData, shareToWhatsApp, exportPDF,
   exportCSV, exportBackupJSON, importBackup,
-  displayStats,
+  displayStats, setStatsPeriod, shiftStatsPeriod, exportStatsCSV,
   applyLectionaryTheme,
   openAssist, closeAssist, resetAssist, changeAssistDirection,
   assistAddMale, assistAddFemale, assistStageTap, assistTagPerson,
