@@ -121,12 +121,43 @@ Notes
 
 ## 🚀 Deploying (GitHub Actions → GitHub Pages)
 
-Every push to `main` runs `.github/workflows/deploy-pages.yml`, which
-stamps the service worker cache version (`v<date>-<sha>`, shown in the app's
-footer), packages only the web app files, and publishes them to GitHub Pages.
+Every push to `main` runs `.github/workflows/deploy-pages.yml`, which runs
+the tests, stamps the service worker cache version (`v<date>-<sha>`, shown in
+the app's footer), packages only the web app files, and publishes them to
+GitHub Pages. **If any test fails, nothing is deployed.** Pull requests run
+the tests without deploying.
 
 - Requires **Settings → Pages → Build and deployment → Source = GitHub
   Actions**. With any other source the site will not update.
 - Deploy status is visible under the **Actions** tab ("Deploy to GitHub
   Pages"); it can also be run manually from there.
 - Nothing is committed back to `main` by the deploy.
+
+## 🧪 Tests
+
+Run them locally with Node 20.6 or later (no install step; no dependencies):
+
+```
+npm test
+```
+
+They live in `tests/` and use Node's built-in test runner:
+
+- `assist.test.js` — Count Assist line counting, the choir/bystander rule,
+  opposing streams, child height filter, tap-to-tag.
+- `data.test.js` — record identity (date + service), cloud backup merging,
+  HTML escaping.
+- `lectionary.test.js` — lectionary dates are valid, every Sunday has a theme,
+  the Friday → Sunday → Tuesday rule, and the "lectionary not added yet" check.
+- `integrity.test.js` — every file the service worker precaches exists and
+  every module is precached (a mistake here blocks all app updates), every
+  button handler is wired up, English/Malayalam strings match, and the
+  manifest icons exist.
+
+## 🎨 Project layout
+
+- `index.html` — page markup only.
+- `styles.css` — all styling (precached by `sw.js`).
+- `src/` — app modules; `src/main.js` wires them up.
+- `sw.js` — service worker (offline cache, updates).
+- `vendor/` — bundled third-party libraries (jsPDF, TensorFlow.js, COCO-SSD).

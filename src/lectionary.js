@@ -173,14 +173,34 @@ let _lastAutoFill = null;
  * automatically; the hint stays visible either way so the user can tap it
  * to (re)apply the theme.
  */
+/** Years (as 'YYYY' strings) that have lectionary data loaded. */
+export const LECTIONARY_YEARS = [...new Set(Object.keys(LECTIONARY).map(k => k.slice(0, 4)))].sort();
+
+/** True when the lectionary for this date's year has been added. */
+export function isLectionaryYearLoaded(dateStr) {
+  return LECTIONARY_YEARS.includes(String(dateStr || '').slice(0, 4));
+}
+
 export function updateLectionaryHint() {
   const hint   = document.getElementById('lectionaryHint');
   const sermon = document.getElementById('sermon');
   if (!hint || !sermon) return;
 
-  const entry = getLectionaryEntry(document.getElementById('date').value);
+  const dateStr = document.getElementById('date').value;
+  const entry = getLectionaryEntry(dateStr);
+  hint.classList.remove('lectionary-missing');
   if (!entry) {
-    hint.style.display = 'none';
+    // A date in a year with no lectionary data: say so, rather than
+    // silently not suggesting a theme (e.g. January before the next
+    // year's lectionary has been added).
+    if (dateStr && !isLectionaryYearLoaded(dateStr)) {
+      hint.textContent   = '📖 ' + t('lectionaryMissing').replace('{year}', dateStr.slice(0, 4));
+      hint.title         = '';
+      hint.classList.add('lectionary-missing');
+      hint.style.display = 'block';
+    } else {
+      hint.style.display = 'none';
+    }
     // Clear a stale auto-filled theme; leave user-typed text alone.
     if (_lastAutoFill && sermon.value === _lastAutoFill) {
       sermon.value = '';

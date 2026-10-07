@@ -1,6 +1,8 @@
 name: Deploy to GitHub Pages
 
-# Builds and publishes the web app on every push to main (and on demand).
+# Tests, builds and publishes the web app on every push to main (and on
+# demand). Pull requests run the tests only. A failing test stops the
+# deploy, so a broken change never reaches users' phones.
 # Requires Settings → Pages → Source = "GitHub Actions".
 #
 # The service worker cache version is stamped into sw.js in the BUILD
@@ -10,21 +12,34 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-# One deploy at a time; queue rather than cancel so no deploy is half-done.
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run tests
+        run: npm test
+
+  build:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -36,12 +51,14 @@ jobs:
           echo "Stamped sw.js with $VERSION"
 
       - name: Assemble site
-        # Only the web app is published — not the Xcode project, docs, or CI files.
+        # Only the web app is published — not the Xcode project, docs,
+        # tests, or CI files.
         run: |
           mkdir -p _site
           tar --exclude='./.git' --exclude='./.github' --exclude='./_site' \
               --exclude='./MtcCounter' --exclude='./MtcCounter.xcodeproj' \
               --exclude='./MtcCounterWatch Watch App' --exclude='./ci' \
+              --exclude='./tests' --exclude='./package.json' \
               --exclude='*.md' --exclude='./deploy.sh' --exclude='./deploy.bat' \
               --exclude='./generate_icons.py' \
               -cf - . | tar -xf - -C _site
@@ -55,7 +72,15 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    # One deploy at a time; queue rather than cancel so no deploy is half-done.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
