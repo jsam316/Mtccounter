@@ -1,0 +1,12 @@
+{
+  "name": "mtc-counter",
+  "private": true,
+  "description": "MTC Counter web app. No build step; this file only enables ES modules for Node and the test script.",
+  "type": "module",
+  "scripts": {
+    "test": "node --import ./tests/setup.js --test"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}
