@@ -28,6 +28,7 @@ import { openAssist, closeAssist, resetAssist,
          changeAssistDirection, assistAddMale, assistAddFemale,
          assistStageTap, assistTagPerson, toggleAssistChildren,
          assistAddDelta, openAssistGuide, closeAssistGuide }    from './assist.js';
+import { initServiceDetails }                                   from './details.js';
 import { initCloud, connectCloud, disconnectCloud, backupNow,
          restoreFromCloud, toggleCloudAuto, renderCloudCard }   from './cloud.js';
 
@@ -128,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateParishDatalist();
   displayHistory();
   initCloud();
+  initServiceDetails();
 
   // Keyboard support for the toggle switches (role="switch").
   const keyToggle = (id, fn) => document.getElementById(id)?.addEventListener('keydown', e => {

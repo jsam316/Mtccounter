@@ -68,10 +68,12 @@ body {
     0 0 0 0.5px rgba(0, 0, 0, 0.05);
 }
 
+/* Left-aligned so the theme/language buttons (top right) never cover it */
 h1 {
-  text-align: center;
+  text-align: left;
+  padding-right: 96px;
   margin-bottom: 4px;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 100%);
@@ -81,10 +83,10 @@ h1 {
 }
 
 .subtitle {
-  text-align: center;
+  text-align: left;
   color: rgba(255, 255, 255, 0.55);
   font-size: 13px;
-  margin-bottom: 22px;
+  margin-bottom: 14px;
   font-weight: 500;
   letter-spacing: 0.1px;
 }
@@ -152,7 +154,7 @@ h1 {
 .tabs {
   display: flex;
   gap: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   background: rgba(255, 255, 255, 0.07);
   padding: 4px;
   border-radius: 16px;
@@ -285,6 +287,60 @@ input:focus, select:focus {
   border-color: rgba(99, 102, 241, 0.2);
   color: var(--accent);
 }
+/* Collapsible service details (Counter tab) */
+.service-details {
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+}
+.light-mode .service-details { background: rgba(255, 255, 255, 0.65); border-color: rgba(0, 0, 0, 0.08); }
+.service-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.service-summary::-webkit-details-marker { display: none; }
+.service-summary:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; border-radius: var(--radius-md); }
+.service-summary-icon { font-size: 18px; flex-shrink: 0; }
+.service-summary-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.service-summary-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.light-mode .service-summary-title { color: rgba(0, 0, 0, 0.45); }
+.service-summary-recap {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.light-mode .service-summary-recap { color: #1e293b; }
+.service-summary-chevron {
+  font-size: 22px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.5);
+  transition: transform 0.2s ease;
+}
+.light-mode .service-summary-chevron { color: rgba(0, 0, 0, 0.4); }
+.service-details[open] .service-summary-chevron { transform: rotate(90deg); }
+.service-details-body {
+  padding: 12px 14px 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.light-mode .service-details-body { border-top-color: rgba(0, 0, 0, 0.07); }
+.service-details-body .input-group { margin-bottom: 12px; }
+@media (prefers-reduced-motion: reduce) { .service-summary-chevron { transition: none; } }
+
 /* Year without lectionary data: informational, not tappable */
 .lectionary-hint.lectionary-missing {
   background: rgba(251, 191, 36, 0.1);
@@ -370,8 +426,8 @@ input:focus, select:focus {
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
   text-align: center;
 }
 .light-mode .total-box {
@@ -381,7 +437,7 @@ input:focus, select:focus {
 .total-title {
   font-weight: 700;
   font-size: 11px;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
   letter-spacing: 1.2px;
@@ -410,8 +466,8 @@ input:focus, select:focus {
 /* Counter boxes — the whole box is the +1 tap target */
 .counter-box {
   border-radius: var(--radius-lg);
-  padding: 20px 20px 16px;
-  margin-bottom: 12px;
+  padding: 12px 16px 12px;
+  margin-bottom: 10px;
   border: 1px solid;
   transition: var(--transition);
   cursor: pointer;
@@ -443,7 +499,7 @@ input:focus, select:focus {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 .counter-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
 .male-title { color: #60a5fa; }
@@ -494,8 +550,8 @@ input:focus, select:focus {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
-  padding: 18px;
-  margin-bottom: 16px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
 }
 .light-mode .round-total-section {
   background: rgba(255,255,255,0.6);
@@ -505,7 +561,7 @@ input:focus, select:focus {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   gap: 10px;
 }
 .round-title {
@@ -530,12 +586,12 @@ input:focus, select:focus {
 .add-round-btn:hover { background: var(--accent-dark); }
 .add-round-btn:active { transform: scale(0.96); }
 
-.round-total-display { min-height: 50px; margin-bottom: 10px; }
+.round-total-display { margin-bottom: 4px; }
 .round-total-empty {
   text-align: center;
   color: rgba(255, 255, 255, 0.4);
   font-size: 13px;
-  padding: 16px;
+  padding: 6px 8px;
   font-style: italic;
 }
 .light-mode .round-total-empty { color: rgba(0,0,0,0.35); }
@@ -838,8 +894,8 @@ button:active { transform: scale(0.96); }
 .install-close:hover, .update-close:hover { background: rgba(255,255,255,0.3); }
 
 @media (max-width: 768px) {
-  body { padding: 12px 12px 16px; }
-  .container { padding: 22px 18px 20px; }
+  body { padding: 10px 10px 14px; }
+  .container { padding: 18px 14px 16px; }
   .counter-value { font-size: 36px; }
   .total-number { font-size: 30px; }
 }
@@ -878,7 +934,7 @@ button:active { transform: scale(0.96); }
 /* Count Assist (Beta) */
 .assist-launch-btn {
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   padding: 11px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px dashed rgba(255, 255, 255, 0.22);
