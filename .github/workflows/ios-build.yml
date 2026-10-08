@@ -1,0 +1,57 @@
+name: Build iOS and Watch apps
+
+# Compiles both Xcode targets for the simulator (no signing) and runs the
+# Swift logic tests, so a Swift change can't merge if it doesn't build.
+# Runs only when the native apps (or this file) change.
+
+on:
+  push:
+    paths:
+      - 'MtcCounter/**'
+      - 'MtcCounterWatch Watch App/**'
+      - 'MtcCounter.xcodeproj/**'
+      - 'tools/swift-tests/**'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    paths:
+      - 'MtcCounter/**'
+      - 'MtcCounterWatch Watch App/**'
+      - 'MtcCounter.xcodeproj/**'
+      - 'tools/swift-tests/**'
+      - '.github/workflows/ios-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcodebuild -list -project MtcCounter.xcodeproj
+
+      - name: Build iOS app
+        run: |
+          set -o pipefail
+          xcodebuild build -quiet \
+            -project MtcCounter.xcodeproj -scheme MtcCounter \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build Watch app
+        run: |
+          set -o pipefail
+          xcodebuild build -quiet \
+            -project MtcCounter.xcodeproj -scheme "MtcCounterWatch Watch App" \
+            -destination 'generic/platform=watchOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Swift logic tests
+        if: hashFiles('tools/swift-tests/run.sh') != ''
+        run: bash tools/swift-tests/run.sh
