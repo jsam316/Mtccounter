@@ -4,6 +4,8 @@ export const translations = {
   en: {
     appTitle: "⛪ MTC Counter",
     appSubtitle: "MarThoma Church Qurbana (Communion) Tracker",
+    detailsTitle: "Service details",
+    detailsEmpty: "Tap to add parish, celebrant & sermon",
     counterTab: "📊 Counter",
     historyTab: "📅 History",
     parishLabel: "⛪ Parish Name",
@@ -189,6 +191,8 @@ export const translations = {
   ml: {
     appTitle: "⛪ എം.ടി.സി കൗണ്ടർ",
     appSubtitle: "മാർത്തോമ്മാ പള്ളി കുർബ്ബാന (കൂദാശ) ട്രാക്കർ",
+    detailsTitle: "ശുശ്രൂഷ വിവരങ്ങൾ",
+    detailsEmpty: "ഇടവക, കാര്യസ്ഥൻ, പ്രഭാഷണം ചേർക്കാൻ ടാപ്പ് ചെയ്യുക",
     counterTab: "📊 കൗണ്ടർ",
     historyTab: "📅 ചരിത്രം",
     parishLabel: "⛪ ഇടവക പേര്",

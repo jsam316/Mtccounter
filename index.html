@@ -54,152 +54,165 @@
 
     <!-- Counter Tab -->
     <div id="counterTab" class="tab-content active">
-      <div class="input-group">
-        <label data-i18n="parishLabel">⛪ Parish Name</label>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <select id="parishName" style="flex: 1;">
-            <option value="">-- Select Parish --</option>
-          </select>
-          <button class="manage-celebrants-btn" onclick="openParishManager()" title="Manage Parishes" aria-label="Manage parishes">⚙️</button>
-        </div>
-      </div>
-
-      <div class="input-group">
-        <label data-i18n="dateLabel">📅 Date</label>
-        <input type="date" id="date">
-      </div>
-
-      <div class="input-group">
-        <label data-i18n="serviceLabel">🕐 Service (optional)</label>
-        <input type="text" id="service" list="serviceSuggestions" data-i18n-placeholder="servicePlaceholder" placeholder="e.g. Morning, Evening — leave blank for the main service">
-        <datalist id="serviceSuggestions">
-          <option value="Morning"></option>
-          <option value="Evening"></option>
-          <option value="Second Qurbana"></option>
-          <option value="Feast Day"></option>
-        </datalist>
-      </div>
-
-      <div class="input-group">
-        <label data-i18n="celebrantLabel">👤 Celebrant Name</label>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <select id="celebrant" style="flex: 1;">
-            <option value="">-- Select Celebrant --</option>
-          </select>
-          <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants">⚙️</button>
-        </div>
-      </div>
-
-      <div class="toggle-section">
-        <div class="toggle-label">
-          <span data-i18n="coCelebrantsLabel">👥 Co-Celebrants</span>
-        </div>
-        <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()"
-             role="switch" aria-checked="false" tabindex="0" aria-label="Co-Celebrants">
-          <div class="toggle-slider"></div>
-        </div>
-      </div>
-
-      <div class="co-celebrants-field" id="coCelebrantsField">
+      <!-- Service details: collapsible so the counters fit on one screen -->
+      <details id="serviceDetails" class="service-details">
+        <summary class="service-summary">
+          <span class="service-summary-icon" aria-hidden="true">📋</span>
+          <span class="service-summary-text">
+            <span class="service-summary-title" data-i18n="detailsTitle">Service details</span>
+            <span id="serviceSummary" class="service-summary-recap"></span>
+          </span>
+          <span class="service-summary-chevron" aria-hidden="true">›</span>
+        </summary>
+        <div class="service-details-body">
         <div class="input-group">
-          <label data-i18n="coCelebrantsInputLabel">👥 Co-Celebrants Names</label>
-          <div style="display: flex; gap: 8px; align-items: flex-start;">
-            <select id="coCelebrants" multiple size="3" style="flex: 1;">
+          <label data-i18n="parishLabel">⛪ Parish Name</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <select id="parishName" style="flex: 1;">
+              <option value="">-- Select Parish --</option>
+            </select>
+            <button class="manage-celebrants-btn" onclick="openParishManager()" title="Manage Parishes" aria-label="Manage parishes">⚙️</button>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label data-i18n="dateLabel">📅 Date</label>
+          <input type="date" id="date">
+        </div>
+
+        <div class="input-group">
+          <label data-i18n="serviceLabel">🕐 Service (optional)</label>
+          <input type="text" id="service" list="serviceSuggestions" data-i18n-placeholder="servicePlaceholder" placeholder="e.g. Morning, Evening — leave blank for the main service">
+          <datalist id="serviceSuggestions">
+            <option value="Morning"></option>
+            <option value="Evening"></option>
+            <option value="Second Qurbana"></option>
+            <option value="Feast Day"></option>
+          </datalist>
+        </div>
+
+        <div class="input-group">
+          <label data-i18n="celebrantLabel">👤 Celebrant Name</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <select id="celebrant" style="flex: 1;">
+              <option value="">-- Select Celebrant --</option>
             </select>
             <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants">⚙️</button>
           </div>
         </div>
-      </div>
 
-      <div class="input-group">
-        <label data-i18n="sermonLabel">📖 Sermon Title</label>
-        <input type="text" id="sermon" data-i18n-placeholder="sermonPlaceholder" placeholder="Enter sermon title">
-        <div id="lectionaryHint" class="lectionary-hint" style="display:none" onclick="applyLectionaryTheme()"></div>
-      </div>
-
-      <div class="input-group">
-        <label data-i18n="scriptureLabel">📜 Scripture Reference</label>
-        <div class="verse-group">
-          <select id="book">
-            <option value="" data-i18n="selectBook">Select Book</option>
-            <option value="Genesis">Genesis</option>
-            <option value="Exodus">Exodus</option>
-            <option value="Leviticus">Leviticus</option>
-            <option value="Numbers">Numbers</option>
-            <option value="Deuteronomy">Deuteronomy</option>
-            <option value="Joshua">Joshua</option>
-            <option value="Judges">Judges</option>
-            <option value="Ruth">Ruth</option>
-            <option value="1 Samuel">1 Samuel</option>
-            <option value="2 Samuel">2 Samuel</option>
-            <option value="1 Kings">1 Kings</option>
-            <option value="2 Kings">2 Kings</option>
-            <option value="1 Chronicles">1 Chronicles</option>
-            <option value="2 Chronicles">2 Chronicles</option>
-            <option value="Ezra">Ezra</option>
-            <option value="Nehemiah">Nehemiah</option>
-            <option value="Esther">Esther</option>
-            <option value="Job">Job</option>
-            <option value="Psalms">Psalms</option>
-            <option value="Proverbs">Proverbs</option>
-            <option value="Ecclesiastes">Ecclesiastes</option>
-            <option value="Song of Solomon">Song of Solomon</option>
-            <option value="Isaiah">Isaiah</option>
-            <option value="Jeremiah">Jeremiah</option>
-            <option value="Lamentations">Lamentations</option>
-            <option value="Ezekiel">Ezekiel</option>
-            <option value="Daniel">Daniel</option>
-            <option value="Hosea">Hosea</option>
-            <option value="Joel">Joel</option>
-            <option value="Amos">Amos</option>
-            <option value="Obadiah">Obadiah</option>
-            <option value="Jonah">Jonah</option>
-            <option value="Micah">Micah</option>
-            <option value="Nahum">Nahum</option>
-            <option value="Habakkuk">Habakkuk</option>
-            <option value="Zephaniah">Zephaniah</option>
-            <option value="Haggai">Haggai</option>
-            <option value="Zechariah">Zechariah</option>
-            <option value="Malachi">Malachi</option>
-            <option value="Matthew">Matthew</option>
-            <option value="Mark">Mark</option>
-            <option value="Luke">Luke</option>
-            <option value="John">John</option>
-            <option value="Acts">Acts</option>
-            <option value="Romans">Romans</option>
-            <option value="1 Corinthians">1 Corinthians</option>
-            <option value="2 Corinthians">2 Corinthians</option>
-            <option value="Galatians">Galatians</option>
-            <option value="Ephesians">Ephesians</option>
-            <option value="Philippians">Philippians</option>
-            <option value="Colossians">Colossians</option>
-            <option value="1 Thessalonians">1 Thessalonians</option>
-            <option value="2 Thessalonians">2 Thessalonians</option>
-            <option value="1 Timothy">1 Timothy</option>
-            <option value="2 Timothy">2 Timothy</option>
-            <option value="Titus">Titus</option>
-            <option value="Philemon">Philemon</option>
-            <option value="Hebrews">Hebrews</option>
-            <option value="James">James</option>
-            <option value="1 Peter">1 Peter</option>
-            <option value="2 Peter">2 Peter</option>
-            <option value="1 John">1 John</option>
-            <option value="2 John">2 John</option>
-            <option value="3 John">3 John</option>
-            <option value="Jude">Jude</option>
-            <option value="Revelation">Revelation</option>
-          </select>
-          <select id="chapter">
-            <option value="" data-i18n="selectChapter">Ch</option>
-          </select>
-          <select id="verseStart">
-            <option value="" data-i18n="verseFrom">From</option>
-          </select>
-          <select id="verseEnd">
-            <option value="" data-i18n="verseTo">To</option>
-          </select>
+        <div class="toggle-section">
+          <div class="toggle-label">
+            <span data-i18n="coCelebrantsLabel">👥 Co-Celebrants</span>
+          </div>
+          <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()"
+               role="switch" aria-checked="false" tabindex="0" aria-label="Co-Celebrants">
+            <div class="toggle-slider"></div>
+          </div>
         </div>
-      </div>
+
+        <div class="co-celebrants-field" id="coCelebrantsField">
+          <div class="input-group">
+            <label data-i18n="coCelebrantsInputLabel">👥 Co-Celebrants Names</label>
+            <div style="display: flex; gap: 8px; align-items: flex-start;">
+              <select id="coCelebrants" multiple size="3" style="flex: 1;">
+              </select>
+              <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants">⚙️</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label data-i18n="sermonLabel">📖 Sermon Title</label>
+          <input type="text" id="sermon" data-i18n-placeholder="sermonPlaceholder" placeholder="Enter sermon title">
+          <div id="lectionaryHint" class="lectionary-hint" style="display:none" onclick="applyLectionaryTheme()"></div>
+        </div>
+
+        <div class="input-group">
+          <label data-i18n="scriptureLabel">📜 Scripture Reference</label>
+          <div class="verse-group">
+            <select id="book">
+              <option value="" data-i18n="selectBook">Select Book</option>
+              <option value="Genesis">Genesis</option>
+              <option value="Exodus">Exodus</option>
+              <option value="Leviticus">Leviticus</option>
+              <option value="Numbers">Numbers</option>
+              <option value="Deuteronomy">Deuteronomy</option>
+              <option value="Joshua">Joshua</option>
+              <option value="Judges">Judges</option>
+              <option value="Ruth">Ruth</option>
+              <option value="1 Samuel">1 Samuel</option>
+              <option value="2 Samuel">2 Samuel</option>
+              <option value="1 Kings">1 Kings</option>
+              <option value="2 Kings">2 Kings</option>
+              <option value="1 Chronicles">1 Chronicles</option>
+              <option value="2 Chronicles">2 Chronicles</option>
+              <option value="Ezra">Ezra</option>
+              <option value="Nehemiah">Nehemiah</option>
+              <option value="Esther">Esther</option>
+              <option value="Job">Job</option>
+              <option value="Psalms">Psalms</option>
+              <option value="Proverbs">Proverbs</option>
+              <option value="Ecclesiastes">Ecclesiastes</option>
+              <option value="Song of Solomon">Song of Solomon</option>
+              <option value="Isaiah">Isaiah</option>
+              <option value="Jeremiah">Jeremiah</option>
+              <option value="Lamentations">Lamentations</option>
+              <option value="Ezekiel">Ezekiel</option>
+              <option value="Daniel">Daniel</option>
+              <option value="Hosea">Hosea</option>
+              <option value="Joel">Joel</option>
+              <option value="Amos">Amos</option>
+              <option value="Obadiah">Obadiah</option>
+              <option value="Jonah">Jonah</option>
+              <option value="Micah">Micah</option>
+              <option value="Nahum">Nahum</option>
+              <option value="Habakkuk">Habakkuk</option>
+              <option value="Zephaniah">Zephaniah</option>
+              <option value="Haggai">Haggai</option>
+              <option value="Zechariah">Zechariah</option>
+              <option value="Malachi">Malachi</option>
+              <option value="Matthew">Matthew</option>
+              <option value="Mark">Mark</option>
+              <option value="Luke">Luke</option>
+              <option value="John">John</option>
+              <option value="Acts">Acts</option>
+              <option value="Romans">Romans</option>
+              <option value="1 Corinthians">1 Corinthians</option>
+              <option value="2 Corinthians">2 Corinthians</option>
+              <option value="Galatians">Galatians</option>
+              <option value="Ephesians">Ephesians</option>
+              <option value="Philippians">Philippians</option>
+              <option value="Colossians">Colossians</option>
+              <option value="1 Thessalonians">1 Thessalonians</option>
+              <option value="2 Thessalonians">2 Thessalonians</option>
+              <option value="1 Timothy">1 Timothy</option>
+              <option value="2 Timothy">2 Timothy</option>
+              <option value="Titus">Titus</option>
+              <option value="Philemon">Philemon</option>
+              <option value="Hebrews">Hebrews</option>
+              <option value="James">James</option>
+              <option value="1 Peter">1 Peter</option>
+              <option value="2 Peter">2 Peter</option>
+              <option value="1 John">1 John</option>
+              <option value="2 John">2 John</option>
+              <option value="3 John">3 John</option>
+              <option value="Jude">Jude</option>
+              <option value="Revelation">Revelation</option>
+            </select>
+            <select id="chapter">
+              <option value="" data-i18n="selectChapter">Ch</option>
+            </select>
+            <select id="verseStart">
+              <option value="" data-i18n="verseFrom">From</option>
+            </select>
+            <select id="verseEnd">
+              <option value="" data-i18n="verseTo">To</option>
+            </select>
+          </div>
+        </div>
+        </div>
+      </details>
 
       <div class="total-box">
         <div class="total-title" data-i18n="totalAttendance">Total Qurbana (Communion)</div>

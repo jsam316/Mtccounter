@@ -7,6 +7,7 @@ import { getCoCelebrantsValue } from './celebrants.js';
 import { updateChapterOptions, updateVerseOptions } from './scripture.js';
 import { switchTab } from './ui.js';
 import { updateLectionaryHint } from './lectionary.js';
+import { refreshServiceSummary } from './details.js';
 
 export function getHistory() {
   return load(KEYS.history, []);
@@ -199,6 +200,7 @@ export function loadRecord(index) {
   }
 
   updateLectionaryHint();
+  refreshServiceSummary(); // fields were set in code, so no input event fired
   switchTab('counter');
   triggerHaptic('success');
 }
