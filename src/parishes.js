@@ -1,7 +1,8 @@
 import { save, load, KEYS } from './state.js';
 import { t } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { showSuccessMsg, escapeHtml } from './utils.js';
+import { showSuccessMsg, showErrorMsg, escapeHtml } from './utils.js';
+import { withUndo } from './undo.js';
 
 export function getSavedParishes() {
   return load(KEYS.parishes, []);
@@ -43,10 +44,10 @@ export function closeParishManager() {
 export function addParish() {
   const nameInput = document.getElementById('newParishName');
   const name = nameInput.value.trim();
-  if (!name) { alert(t('enterParishName')); return; }
+  if (!name) { showErrorMsg(t('enterParishName')); return; }
   const parishes = getSavedParishes();
   if (parishes.includes(name)) {
-    alert(t('parishExists'));
+    showErrorMsg(t('parishExists'));
     triggerHaptic('error');
     return;
   }
@@ -59,10 +60,10 @@ export function addParish() {
 }
 
 export function deleteParish(name) {
-  if (!confirm('Delete "' + name + '"?')) return;
-  const parishes = getSavedParishes().filter(p => p !== name);
-  _saveParishes(parishes);
-  showSuccessMsg(t('parishDeleted'), 2000);
+  withUndo(t('parishDeleted'), () => {
+    const parishes = getSavedParishes().filter(p => p !== name);
+    _saveParishes(parishes);
+  });
   triggerHaptic('double');
 }
 

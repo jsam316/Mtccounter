@@ -16,19 +16,24 @@ import { toggleDarkMode, initDarkMode, installApp,
          checkForUpdates }                                      from './ui.js';
 import { openCelebrantManager, closeCelebrantManager,
          addCelebrant, deleteCelebrant, toggleCoCelebrants,
-         initCoCelebrantsToggle, updateCelebrantDatalist }      from './celebrants.js';
+         initCoCelebrantsToggle, updateCelebrantDatalist,
+         displayCelebrantList }      from './celebrants.js';
 import { openParishManager, closeParishManager,
-         addParish, deleteParish, updateParishDatalist }        from './parishes.js';
+         addParish, deleteParish, updateParishDatalist,
+         displayParishList }                                    from './parishes.js';
 import { exportData, shareToWhatsApp, exportPDF,
          exportCSV, exportBackupJSON, importBackup }            from './export.js';
 import { displayStats, setStatsPeriod, shiftStatsPeriod,
-         exportStatsCSV }                                       from './stats.js';
+         exportStatsCSV, setStatsParish, shareStatsReport,
+         exportStatsPDF }                                       from './stats.js';
 import { updateLectionaryHint, applyLectionaryTheme }           from './lectionary.js';
 import { openAssist, closeAssist, resetAssist,
          changeAssistDirection, assistAddMale, assistAddFemale,
          assistStageTap, assistTagPerson, toggleAssistChildren,
          assistAddDelta, openAssistGuide, closeAssistGuide }    from './assist.js';
-import { initServiceDetails }                                   from './details.js';
+import { initServiceDetails, refreshServiceSummary }           from './details.js';
+import { toggleCountingLock, isCountingLocked,
+         refreshCountingLock }                                  from './lock.js';
 import { initCloud, connectCloud, disconnectCloud, backupNow,
          restoreFromCloud, toggleCloudAuto, renderCloudCard }   from './cloud.js';
 
@@ -39,13 +44,29 @@ setTabSwitchCallback(tab => {
 });
 
 // Re-render dynamic views in the new language.
+// Undo put back an earlier snapshot of the stored data: reload everything
+// that shows it.
+document.addEventListener('mtc:data-restored', () => {
+  loadLiveCounts();
+  loadRounds();
+  updateCelebrantDatalist();
+  updateParishDatalist();
+  displayHistory();
+  if (document.getElementById('celebrantManager').classList.contains('show')) displayCelebrantList();
+  if (document.getElementById('parishManager').classList.contains('show')) displayParishList();
+  if (document.getElementById('statsTab').classList.contains('active')) displayStats();
+  refreshServiceSummary();
+});
+
 document.addEventListener('mtc:language-changed', () => {
+  refreshCountingLock();
   if (document.getElementById('statsTab').classList.contains('active')) displayStats();
   if (document.getElementById('historyTab').classList.contains('active')) { displayHistory(); renderCloudCard(); }
 });
 
 // Expose everything called from inline HTML onclick handlers.
 Object.assign(window, {
+  toggleCountingLock,
   changeMale, changeFemale, newRecord, addToRoundTotal,
   removeRound, clearRounds, tapCounterBox,
   saveRecord, loadRecord, deleteRecord, filterHistory,
@@ -61,6 +82,7 @@ Object.assign(window, {
   exportData, shareToWhatsApp, exportPDF,
   exportCSV, exportBackupJSON, importBackup,
   displayStats, setStatsPeriod, shiftStatsPeriod, exportStatsCSV,
+  setStatsParish, shareStatsReport, exportStatsPDF,
   applyLectionaryTheme,
   openAssist, closeAssist, resetAssist, changeAssistDirection,
   assistAddMale, assistAddFemale, assistStageTap, assistTagPerson,
@@ -88,6 +110,7 @@ document.addEventListener('touchend', e => {
 }, { passive: true });
 
 function _handleSwipe() {
+  if (isCountingLocked()) return; // no tab switching while counting is locked
   const swipeDist = touchEndX - touchStartX;
   const vertDist  = Math.abs(touchEndY - touchStartY);
   if (vertDist >= 100 || Math.abs(swipeDist) <= 100) return;

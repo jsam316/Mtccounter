@@ -16,6 +16,11 @@ export function updateLanguage() {
     if (translations[lang][key]) el.placeholder = translations[lang][key];
   });
 
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (translations[lang][key]) el.title = translations[lang][key];
+  });
+
   document.querySelectorAll('option[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (translations[lang][key]) el.textContent = translations[lang][key];

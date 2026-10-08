@@ -1,13 +1,14 @@
 import { save, load, KEYS } from './state.js';
 import { t, getCurrentLang } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { isNotSpecified, escapeHtml, recordKey } from './utils.js';
+import { isNotSpecified, escapeHtml, recordKey, showSuccessMsg, showErrorMsg } from './utils.js';
+import { withUndo } from './undo.js';
 import { getMale, getFemale, getRounds, resetCounters } from './counter.js';
 import { getCoCelebrantsValue } from './celebrants.js';
 import { updateChapterOptions, updateVerseOptions } from './scripture.js';
 import { switchTab } from './ui.js';
 import { updateLectionaryHint } from './lectionary.js';
-import { refreshServiceSummary } from './details.js';
+import { refreshServiceSummary, rememberLastDetails } from './details.js';
 
 export function getHistory() {
   return load(KEYS.history, []);
@@ -19,7 +20,7 @@ export function saveHistory(records) {
 
 export function saveRecord() {
   const date = document.getElementById('date').value;
-  if (!date) { alert(t('selectDateFirst')); return; }
+  if (!date) { showErrorMsg(t('selectDateFirst')); return; }
   const service = (document.getElementById('service')?.value || '').trim();
 
   const parishName = document.getElementById('parishName').value.trim() || '';
@@ -66,20 +67,25 @@ export function saveRecord() {
     timestamp: new Date().toISOString()
   };
 
-  let history = getHistory();
   const key = recordKey(record);
-  if (history.some(r => recordKey(r) === key) && !confirm(t('overwriteConfirm'))) return;
-  history = history.filter(r => recordKey(r) !== key);
-  history.unshift(record);
-  saveHistory(history);
-  document.dispatchEvent(new CustomEvent('mtc:data-changed'));
+  const commit = () => {
+    const history = getHistory().filter(r => recordKey(r) !== key);
+    history.unshift(record);
+    saveHistory(history);
+    document.dispatchEvent(new CustomEvent('mtc:data-changed'));
+    displayHistory();
+  };
+  rememberLastDetails(parishName, celebrant);
 
-  const msg = document.getElementById('successMsg');
-  msg.style.display = 'block';
+  if (getHistory().some(r => recordKey(r) === key)) {
+    // Replacing an earlier record for the same date and service: do it, and
+    // offer Undo instead of asking first.
+    withUndo(t('savedReplaced'), commit);
+  } else {
+    commit();
+    showSuccessMsg(t('successMsg'));
+  }
   triggerHaptic('success');
-  setTimeout(() => { msg.style.display = 'none'; }, 3000);
-
-  displayHistory();
 }
 
 export function displayHistory() {
@@ -206,11 +212,13 @@ export function loadRecord(index) {
 }
 
 export function deleteRecord(index) {
-  if (!confirm(t('deleteConfirm'))) return;
   const history = getHistory();
-  history.splice(index, 1);
-  saveHistory(history);
-  document.dispatchEvent(new CustomEvent('mtc:data-changed'));
-  displayHistory();
+  if (!history[index]) return;
+  withUndo(t('recordDeleted'), () => {
+    history.splice(index, 1);
+    saveHistory(history);
+    document.dispatchEvent(new CustomEvent('mtc:data-changed'));
+    displayHistory();
+  });
   triggerHaptic('error');
 }

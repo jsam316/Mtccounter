@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {
   LECTIONARY, LECTIONARY_YEARS, getLectionaryEntry, isLectionaryYearLoaded,
 } from '../src/lectionary.js';
+import { parseScriptureRef } from '../src/scripture.js';
+import bibleData from '../src/bibleData.js';
 
 const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
@@ -53,6 +55,37 @@ test("a day's own theme wins over the weekly theme", () => {
 test('ordinary weekdays and empty input have no entry', () => {
   assert.equal(getLectionaryEntry('2026-01-07'), null); // Wednesday
   assert.equal(getLectionaryEntry(''), null);
+});
+
+test('every entry with readings has a Gospel that exists in the Bible data', () => {
+  const NO_READINGS = ['2026-03-06']; // World Women's Day of Prayer
+  const GOSPELS = ['Matthew', 'Mark', 'Luke', 'John'];
+  for (const [date, e] of Object.entries(LECTIONARY)) {
+    if (NO_READINGS.includes(date)) { assert.equal(e.gospel, undefined, date); continue; }
+    assert.ok(e.gospel, date + ' has no Gospel reading');
+    const p = parseScriptureRef(e.gospel);
+    assert.ok(p, date + ': unrecognised reference ' + e.gospel);
+    assert.ok(GOSPELS.includes(p.book), date + ': ' + p.book + ' is not a Gospel');
+    const chapters = bibleData[p.book];
+    assert.ok(p.chapter >= 1 && p.chapter <= chapters.length, date + ': no chapter ' + p.chapter);
+    const verses = chapters[p.chapter - 1];
+    assert.ok(p.verseStart >= 1 && p.verseEnd <= verses && p.verseStart <= p.verseEnd,
+      date + ': ' + e.gospel + ' outside 1-' + verses);
+  }
+});
+
+test('weekly Friday/Tuesday themes do not carry the Sunday readings', () => {
+  assert.equal(getLectionaryEntry('2026-01-16').gospel, undefined);
+  assert.equal(getLectionaryEntry('2026-01-18').gospel, 'Matthew 6:19-34');
+});
+
+test('scripture references parse in every form the picker produces', () => {
+  assert.deepEqual(parseScriptureRef('Luke 9:1-6'), { book: 'Luke', chapter: 9, verseStart: 1, verseEnd: 6 });
+  assert.deepEqual(parseScriptureRef('1 John 3:1'), { book: '1 John', chapter: 3, verseStart: 1, verseEnd: 1 });
+  assert.deepEqual(parseScriptureRef('Psalms 23'), { book: 'Psalms', chapter: 23, verseStart: null, verseEnd: null });
+  assert.deepEqual(parseScriptureRef('Song of Solomon'), { book: 'Song of Solomon', chapter: null, verseStart: null, verseEnd: null });
+  assert.equal(parseScriptureRef('St. Luke 9:1-6'), null, 'names must match the picker');
+  assert.equal(parseScriptureRef(''), null);
 });
 
 test('loaded-year check drives the "lectionary not added yet" notice', () => {

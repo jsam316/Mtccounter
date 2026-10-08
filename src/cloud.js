@@ -11,7 +11,7 @@
 
 import { save, load, KEYS } from './state.js';
 import { t } from './translations.js';
-import { showSuccessMsg, escapeHtml, recordKey } from './utils.js';
+import { showSuccessMsg, showErrorMsg, escapeHtml, recordKey } from './utils.js';
 import { triggerHaptic } from './haptic.js';
 import { getHistory, saveHistory, displayHistory } from './history.js';
 import { updateCelebrantDatalist } from './celebrants.js';
@@ -225,7 +225,7 @@ export async function backupNow(interactive = false) {
   } catch (err) {
     _setState({ pending: true });
     if (interactive) {
-      alert(err.message === 'auth-failed' || err.message === 'unauthorized' ? t('cloudAuthFailed') : t('cloudBackupFailed'));
+      showErrorMsg(err.message === 'auth-failed' || err.message === 'unauthorized' ? t('cloudAuthFailed') : t('cloudBackupFailed'));
       triggerHaptic('error');
     }
     return false;
@@ -243,7 +243,7 @@ export async function connectCloud() {
   try {
     await provider.connect();
   } catch {
-    alert(t('cloudAuthFailed')); triggerHaptic('error'); return;
+    showErrorMsg(t('cloudAuthFailed')); triggerHaptic('error'); return;
   }
   _setState({ connected: true });
   triggerHaptic('success');
@@ -263,6 +263,7 @@ export async function connectCloud() {
 }
 
 export function disconnectCloud() {
+  // Kept as a confirmation (not Undo): a deliberate settings change.
   if (!confirm(t('cloudDisconnectConfirm'))) return;
   provider.disconnect();
   _setState({ connected: false, pending: false, fileId: null, lastBackupAt: null });
@@ -271,16 +272,19 @@ export function disconnectCloud() {
 
 export async function restoreFromCloud() {
   if (!_getState().connected) return;
+  // Kept as a confirmation (not Undo): undoing a merge would let the next
+  // automatic backup overwrite Drive with the pre-merge data, losing records
+  // that only existed in Drive.
   if (!confirm(t('cloudRestoreConfirm'))) return;
   _busyLabel = t('cloudRestoring');
   renderCloudCard();
   try {
     const { fileId, payload } = await provider.download(_getState().fileId);
-    if (!payload || !payload.data) { alert(t('cloudNoBackup')); return; }
+    if (!payload || !payload.data) { showErrorMsg(t('cloudNoBackup')); return; }
     _setState({ fileId });
     _applyRemote(payload);
   } catch (err) {
-    alert(err.message === 'auth-failed' || err.message === 'unauthorized' ? t('cloudAuthFailed') : t('cloudBackupFailed'));
+    showErrorMsg(err.message === 'auth-failed' || err.message === 'unauthorized' ? t('cloudAuthFailed') : t('cloudBackupFailed'));
     triggerHaptic('error');
   } finally {
     _busyLabel = null;

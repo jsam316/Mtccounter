@@ -1,7 +1,8 @@
 import { save, load, KEYS } from './state.js';
 import { t, getCurrentLang } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { showSuccessMsg } from './utils.js';
+import { showSuccessMsg, showErrorMsg } from './utils.js';
+import { withUndo } from './undo.js';
 import { getMale, getFemale, getRounds } from './counter.js';
 import { getCoCelebrantsValue } from './celebrants.js';
 import { getHistory, saveHistory, displayHistory } from './history.js';
@@ -81,6 +82,8 @@ export function exportData() {
       triggerHaptic('success');
     })
     .catch(() => {
+      // Clipboard unavailable: a dialog is the only way to show the text
+      // so it can be copied by hand.
       alert('Copy this text:\n\n' + text);
       triggerHaptic('error');
     });
@@ -96,7 +99,7 @@ export function shareToWhatsApp() {
 // offline (the service worker precaches it) without slowing page load.
 let _jspdfLoader = null;
 
-function loadJsPDF() {
+export function loadJsPDF() {
   if (window.jspdf) return Promise.resolve();
   if (!_jspdfLoader) {
     _jspdfLoader = new Promise((resolve, reject) => {
@@ -118,7 +121,7 @@ export async function exportPDF() {
   try {
     await loadJsPDF();
   } catch {
-    alert('PDF library failed to load. Please refresh the page and try again.');
+    showErrorMsg(t('pdfLoadFailed'));
     triggerHaptic('error');
     return;
   }
@@ -190,7 +193,7 @@ export async function exportPDF() {
 
 export function exportCSV() {
   const history = getHistory();
-  if (history.length === 0) { alert(t('noDataForStats')); return; }
+  if (history.length === 0) { showErrorMsg(t('noDataForStats')); return; }
 
   const headers = ['Date','Service','Parish','Celebrant','Co-Celebrants','Sermon','Scripture','Male','Female','Total'];
   const rows = history.map(r => [
@@ -243,22 +246,21 @@ export function importBackup(event) {
     try {
       const backup = JSON.parse(e.target.result);
       if (!backup?.data || backup.app !== 'MTC Counter') {
-        alert(t('restoreError')); triggerHaptic('error'); return;
+        showErrorMsg(t('restoreError')); triggerHaptic('error'); event.target.value = ''; return;
       }
-      if (!confirm(t('confirmRestore'))) { event.target.value = ''; return; }
-
-      if (backup.data.mtcHistory)      save(KEYS.history,    backup.data.mtcHistory);
-      if (backup.data.savedCelebrants) save(KEYS.celebrants, backup.data.savedCelebrants);
-      if (backup.data.savedParishes)   save(KEYS.parishes,   backup.data.savedParishes);
-
-      displayHistory();
-      updateCelebrantDatalist();
-      updateParishDatalist();
-      document.dispatchEvent(new CustomEvent('mtc:data-changed'));
-      showSuccessMsg(t('restoreSuccess'));
+      // Replaces all records; Undo puts the previous data back.
+      withUndo(t('restoreSuccess'), () => {
+        if (backup.data.mtcHistory)      save(KEYS.history,    backup.data.mtcHistory);
+        if (backup.data.savedCelebrants) save(KEYS.celebrants, backup.data.savedCelebrants);
+        if (backup.data.savedParishes)   save(KEYS.parishes,   backup.data.savedParishes);
+        displayHistory();
+        updateCelebrantDatalist();
+        updateParishDatalist();
+        document.dispatchEvent(new CustomEvent('mtc:data-changed'));
+      });
       triggerHaptic('success');
     } catch {
-      alert(t('restoreError')); triggerHaptic('error');
+      showErrorMsg(t('restoreError')); triggerHaptic('error');
     }
     event.target.value = '';
   };
