@@ -16,6 +16,9 @@
 		B00000000000000000000007 /* AttendanceRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000007 /* AttendanceRecord.swift */; };
 		B00000000000000000000008 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000008 /* AppState.swift */; };
 		B00000000000000000000011 /* ScriptureData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000013 /* ScriptureData.swift */; };
+		B00000000000000000000012 /* Lectionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000014 /* Lectionary.swift */; };
+		B00000000000000000000013 /* LectionaryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000015 /* LectionaryData.swift */; };
+		B00000000000000000000014 /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000016 /* Backup.swift */; };
 		B00000000000000000000009 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000009 /* Assets.xcassets */; };
 		B0000000000000000000000A /* MtcCounterWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000000B /* MtcCounterWatchApp.swift */; };
 		B0000000000000000000000B /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000000C /* WatchContentView.swift */; };
@@ -36,6 +39,9 @@
 		A00000000000000000000007 /* AttendanceRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttendanceRecord.swift; sourceTree = "<group>"; };
 		A00000000000000000000008 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		A00000000000000000000013 /* ScriptureData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptureData.swift; sourceTree = "<group>"; };
+		A00000000000000000000014 /* Lectionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lectionary.swift; sourceTree = "<group>"; };
+		A00000000000000000000015 /* LectionaryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectionaryData.swift; sourceTree = "<group>"; };
+		A00000000000000000000016 /* Backup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
 		A00000000000000000000009 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A0000000000000000000000A /* MtcCounter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MtcCounter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0000000000000000000000B /* MtcCounterWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MtcCounterWatchApp.swift; sourceTree = "<group>"; };
@@ -105,6 +111,9 @@
 				A00000000000000000000007 /* AttendanceRecord.swift */,
 				A00000000000000000000008 /* AppState.swift */,
 				A00000000000000000000013 /* ScriptureData.swift */,
+				A00000000000000000000014 /* Lectionary.swift */,
+				A00000000000000000000015 /* LectionaryData.swift */,
+				A00000000000000000000016 /* Backup.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -230,6 +239,9 @@
 				B00000000000000000000007 /* AttendanceRecord.swift in Sources */,
 				B00000000000000000000008 /* AppState.swift in Sources */,
 				B00000000000000000000011 /* ScriptureData.swift in Sources */,
+				B00000000000000000000012 /* Lectionary.swift in Sources */,
+				B00000000000000000000013 /* LectionaryData.swift in Sources */,
+				B00000000000000000000014 /* Backup.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -10,6 +10,7 @@ struct HistoryView: View {
         guard !searchText.isEmpty else { return appState.records }
         return appState.records.filter {
             $0.celebrant.localizedCaseInsensitiveContains(searchText) ||
+            $0.service.localizedCaseInsensitiveContains(searchText) ||
             $0.parish.localizedCaseInsensitiveContains(searchText) ||
             $0.date.localizedCaseInsensitiveContains(searchText) ||
             $0.scriptureReference.localizedCaseInsensitiveContains(searchText) ||
@@ -123,7 +124,7 @@ struct RecordRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(record.date)
+                Text(record.service.isEmpty ? record.date : "\(record.date) · \(record.service)")
                     .font(.headline)
                 Spacer()
                 Text("\(record.total)")
@@ -162,6 +163,9 @@ struct RecordDetailView: View {
         List {
             Section("Attendance") {
                 LabeledContent("Date", value: record.date)
+                if !record.service.isEmpty {
+                    LabeledContent("Service", value: record.service)
+                }
                 LabeledContent("Male", value: "\(record.totalMale)")
                 LabeledContent("Female", value: "\(record.totalFemale)")
                 LabeledContent("Total", value: "\(record.total)")
@@ -245,7 +249,7 @@ struct RecordDetailView: View {
 
 extension AttendanceRecord {
     var shareText: String {
-        var lines: [String] = ["MTC Attendance — \(date)"]
+        var lines: [String] = ["MTC Attendance — \(date)" + (service.isEmpty ? "" : " (\(service))")]
         if !parish.isEmpty { lines.append("Parish: \(parish)") }
         if !celebrant.isEmpty { lines.append("Celebrant: \(celebrant)") }
         if !coCelebrants.isEmpty { lines.append("Co-Celebrants: \(coCelebrants)") }

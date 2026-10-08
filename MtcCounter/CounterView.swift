@@ -119,17 +119,29 @@ struct CounterView: View {
 
 // MARK: - Counter Row
 
+/// The whole row is the +1 target (easier to hit while counting a moving
+/// line without looking down). The − button stays for corrections, and its
+/// tap never also adds one.
 struct CounterRow: View {
     let label: String
     @Binding var count: Int
     let color: Color
 
+    private func increment() {
+        count += 1
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+
     var body: some View {
         HStack {
-            Text(label)
-                .font(.headline)
-                .foregroundColor(color)
-                .frame(width: 72, alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                    .font(.headline)
+                    .foregroundColor(color)
+                Text("Tap anywhere to add +1")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
 
             Spacer()
 
@@ -144,6 +156,7 @@ struct CounterRow: View {
                     .foregroundColor(count > 0 ? color : Color(.systemGray4))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Subtract one \(label.lowercased())")
 
             Text("\(count)")
                 .font(.system(size: 44, weight: .bold, design: .rounded))
@@ -151,20 +164,24 @@ struct CounterRow: View {
                 .frame(width: 80, alignment: .center)
                 .contentTransition(.numericText())
                 .animation(.spring(response: 0.3), value: count)
+                .accessibilityHidden(true)
 
-            Button(action: {
-                count += 1
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            }) {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 38))
-                    .foregroundColor(color)
-            }
-            .buttonStyle(.plain)
+            Image(systemName: "plus.circle.fill")
+                .font(.system(size: 38))
+                .foregroundColor(color)
+                .accessibilityHidden(true)
         }
         .padding()
+        .background(color.opacity(0.08))
         .background(Color(.systemGray6))
         .cornerRadius(16)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: increment)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(label): \(count)")
+        .accessibilityHint("Tap to add one")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(.default, increment)
     }
 }
 

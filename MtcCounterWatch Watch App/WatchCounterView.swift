@@ -47,10 +47,16 @@ struct WatchCounterView: View {
 
 // MARK: - Watch Counter Row
 
+/// Tap anywhere on the row to add one; the − button corrects.
 struct CounterRowWatch: View {
     let label: String
     @Binding var count: Int
     let color: Color
+
+    private func increment() {
+        count += 1
+        WKInterfaceDevice.current().play(.click)
+    }
 
     var body: some View {
         HStack(spacing: 6) {
@@ -70,6 +76,7 @@ struct CounterRowWatch: View {
                     .font(.title3)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Subtract one")
 
             Text("\(count)")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
@@ -78,15 +85,21 @@ struct CounterRowWatch: View {
                 .contentTransition(.numericText())
                 .animation(.spring(response: 0.3), value: count)
 
-            Button(action: {
-                count += 1
-                WKInterfaceDevice.current().play(.click)
-            }) {
-                Image(systemName: "plus.circle.fill")
-                    .foregroundColor(color)
-                    .font(.title3)
-            }
-            .buttonStyle(.plain)
+            Spacer(minLength: 0)
+
+            Image(systemName: "plus.circle.fill")
+                .foregroundColor(color)
+                .font(.title3)
+                .accessibilityHidden(true)
         }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
+        .background(color.opacity(0.15))
+        .cornerRadius(10)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: increment)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint("Tap to add one")
+        .accessibilityAction(.default, increment)
     }
 }
