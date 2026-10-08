@@ -1,7 +1,8 @@
 import { save, load, KEYS } from './state.js';
 import { t } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { showSuccessMsg, escapeHtml } from './utils.js';
+import { showSuccessMsg, showErrorMsg, escapeHtml } from './utils.js';
+import { withUndo } from './undo.js';
 
 export function getSavedCelebrants() {
   return load(KEYS.celebrants, []);
@@ -60,10 +61,10 @@ export function closeCelebrantManager() {
 export function addCelebrant() {
   const nameInput = document.getElementById('newCelebrantName');
   const name = nameInput.value.trim();
-  if (!name) { alert(t('enterCelebrantName')); return; }
+  if (!name) { showErrorMsg(t('enterCelebrantName')); return; }
   const celebrants = getSavedCelebrants();
   if (celebrants.includes(name)) {
-    alert(t('celebrantExists'));
+    showErrorMsg(t('celebrantExists'));
     triggerHaptic('error');
     return;
   }
@@ -76,10 +77,10 @@ export function addCelebrant() {
 }
 
 export function deleteCelebrant(name) {
-  if (!confirm('Delete "' + name + '"?')) return;
-  const celebrants = getSavedCelebrants().filter(c => c !== name);
-  _saveCelebrants(celebrants);
-  showSuccessMsg(t('celebrantDeleted'), 2000);
+  withUndo(t('celebrantDeleted'), () => {
+    const celebrants = getSavedCelebrants().filter(c => c !== name);
+    _saveCelebrants(celebrants);
+  });
   triggerHaptic('double');
 }
 

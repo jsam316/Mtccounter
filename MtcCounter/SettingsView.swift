@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
@@ -7,6 +8,8 @@ struct SettingsView: View {
     @State private var exportItems: [Any] = []
     @State private var showingManageCelebrants = false
     @State private var showingManageParishes = false
+    @State private var showingImporter = false
+    @State private var backupMessage: String?
 
     private var totalAttendees: Int {
         appState.records.reduce(0) { $0 + $1.total }
@@ -65,6 +68,22 @@ struct SettingsView: View {
                     .disabled(appState.records.isEmpty)
                 }
 
+                // MARK: Backup (same file format as the web app)
+                Section {
+                    Button(action: exportBackup) {
+                        Label("Export Backup", systemImage: "square.and.arrow.up.on.square")
+                    }
+                    .disabled(appState.records.isEmpty)
+
+                    Button(action: { showingImporter = true }) {
+                        Label("Import Backup", systemImage: "square.and.arrow.down.on.square")
+                    }
+                } header: {
+                    Text("Backup")
+                } footer: {
+                    Text("Backups use the same file as the web app, so you can move records between the iPhone and the web app (which also backs up to Google Drive). Importing merges: records are matched by date and service, the newer one wins, and nothing is deleted.")
+                }
+
                 // MARK: Data Management
                 Section("Data Management") {
                     Button(role: .destructive, action: { showingClearConfirm = true }) {
@@ -90,7 +109,7 @@ struct SettingsView: View {
                 titleVisibility: .visible
             ) {
                 Button("Clear All Records", role: .destructive) {
-                    appState.records.removeAll()
+                    appState.clearAllRecords()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
@@ -98,6 +117,14 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showingExportSheet) {
                 ActivityView(activityItems: exportItems)
+            }
+            .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.json]) { result in
+                importBackup(result)
+            }
+            .alert("Backup", isPresented: Binding(get: { backupMessage != nil }, set: { if !$0 { backupMessage = nil } })) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(backupMessage ?? "")
             }
             .sheet(isPresented: $showingManageCelebrants) {
                 ManageListView(title: "Manage Celebrants",
@@ -111,6 +138,40 @@ struct SettingsView: View {
                                onAdd: { appState.addParish($0) },
                                onDelete: { appState.deleteParish($0) })
             }
+        }
+    }
+
+    // MARK: - Backup
+
+    private func exportBackup() {
+        do {
+            let data = try appState.exportBackup()
+            let f = DateFormatter()
+            f.dateFormat = "yyyy-MM-dd"
+            f.locale = Locale(identifier: "en_US_POSIX")
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent("MTC_Backup_\(f.string(from: Date())).json")
+            try data.write(to: url, options: .atomic)
+            exportItems = [url]
+            showingExportSheet = true
+        } catch {
+            backupMessage = "The backup couldn't be created: \(error.localizedDescription)"
+        }
+    }
+
+    private func importBackup(_ result: Result<URL, Error>) {
+        do {
+            let url = try result.get()
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            let changed = try appState.importBackup(try Data(contentsOf: url))
+            backupMessage = changed == 0
+                ? "Nothing new: everything in this backup is already here."
+                : "Merged \(changed) record\(changed == 1 ? "" : "s") from the backup."
+        } catch BackupError.notAnMtcBackup {
+            backupMessage = "That file isn't an MTC Counter backup."
+        } catch {
+            backupMessage = "The backup couldn't be read: \(error.localizedDescription)"
         }
     }
 

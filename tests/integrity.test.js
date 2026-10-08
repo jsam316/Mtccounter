@@ -72,7 +72,7 @@ test('English and Malayalam have the same translation keys', () => {
 
 test('every data-i18n key in index.html has a translation', () => {
   const html = read('index.html');
-  const keys = [...html.matchAll(/data-i18n(?:-placeholder)?="([^"]+)"/g)].map(m => m[1]);
+  const keys = [...html.matchAll(/data-i18n(?:-placeholder|-title)?="([^"]+)"/g)].map(m => m[1]);
   const missing = [...new Set(keys)].filter(k => !(k in translations.en));
   assert.deepEqual(missing, []);
 });

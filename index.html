@@ -215,7 +215,12 @@
       </details>
 
       <div class="total-box">
-        <div class="total-title" data-i18n="totalAttendance">Total Qurbana (Communion)</div>
+        <div class="total-head">
+          <div class="total-title" data-i18n="totalAttendance">Total Qurbana (Communion)</div>
+          <button id="lockBtn" class="lock-btn" onclick="toggleCountingLock()" aria-pressed="false" data-i18n-title="lockHint" title="Lock everything except the counters">
+            <span class="lock-icon" aria-hidden="true">🔓</span><span class="lock-label" data-i18n="lockOff">Lock</span>
+          </button>
+        </div>
         <div class="total-grid">
           <div class="total-item">
             <div class="total-label" data-i18n="male">Male</div>
@@ -319,9 +324,6 @@
         </button>
       </div>
       
-      <div id="successMsg" class="success-msg">
-        <span data-i18n="successMsg">✓ Saved successfully!</span>
-      </div>
     </div>
 
     <!-- History Tab -->

@@ -1,7 +1,8 @@
 import { save, load, KEYS } from './state.js';
 import { t } from './translations.js';
 import { triggerHaptic, addHapticAnimation } from './haptic.js';
-import { showSuccessMsg } from './utils.js';
+import { showSuccessMsg, showErrorMsg } from './utils.js';
+import { withUndo } from './undo.js';
 
 let male = 0;
 let female = 0;
@@ -77,20 +78,22 @@ export function updateDisplay() {
 }
 
 export function newRecord() {
-  if (!confirm(t('newRecordConfirm'))) return;
-  male = 0;
-  female = 0;
-  rounds = [];
-  saveLiveCounts();
-  saveRounds();
-  updateDisplay();
-  displayRounds();
+  if (male === 0 && female === 0 && rounds.length === 0) return; // nothing to clear
+  withUndo(t('newRecordDone'), () => {
+    male = 0;
+    female = 0;
+    rounds = [];
+    saveLiveCounts();
+    saveRounds();
+    updateDisplay();
+    displayRounds();
+  });
   triggerHaptic('double');
 }
 
 export function addToRoundTotal() {
   if (male === 0 && female === 0) {
-    alert(t('selectDateFirst'));
+    showErrorMsg(t('roundNothingToAdd'));
     return;
   }
   rounds.push({ male, female, total: male + female, timestamp: new Date().toISOString() });
@@ -105,18 +108,20 @@ export function addToRoundTotal() {
 }
 
 export function removeRound(index) {
-  rounds.splice(index, 1);
-  saveRounds();
-  displayRounds();
+  withUndo(t('roundRemoved'), () => {
+    rounds.splice(index, 1);
+    saveRounds();
+    displayRounds();
+  });
   triggerHaptic('light');
 }
 
 export function clearRounds() {
-  if (!confirm(t('clearRoundsConfirm'))) return;
-  rounds = [];
-  saveRounds();
-  displayRounds();
-  showSuccessMsg(t('roundsCleared'), 2000);
+  withUndo(t('roundsCleared'), () => {
+    rounds = [];
+    saveRounds();
+    displayRounds();
+  });
   triggerHaptic('double');
 }
 

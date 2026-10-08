@@ -1,3 +1,4 @@
+import { showToast } from './toast.js';
 // Centralized localStorage wrapper with quota-exceeded protection.
 
 export const KEYS = Object.freeze({
@@ -15,12 +16,7 @@ export const KEYS = Object.freeze({
 });
 
 function _showStorageWarning() {
-  const el = document.getElementById('successMsg');
-  if (!el) return;
-  const span = el.querySelector('[data-i18n="successMsg"]');
-  if (span) span.textContent = '⚠️ Storage full! Export and delete old records to free space.';
-  el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 6000);
+  showToast('⚠️ Storage full! Export and delete old records to free space.', { type: 'error', duration: 6000 });
 }
 
 /** Load a JSON-serialised value; returns fallback if key absent or parse fails. */

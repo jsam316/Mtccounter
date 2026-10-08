@@ -4,7 +4,8 @@ struct SaveRecordView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
-    @State private var date = ""
+    @State private var serviceDate = Date()
+    @State private var service = ""
     @State private var parish = ""
     @State private var celebrant = ""
     @State private var coCelebrantsEnabled = false
@@ -21,6 +22,11 @@ struct SaveRecordView: View {
     @State private var showingManageParishes = false
     @State private var showingCoCelebrantPicker = false
 
+    // What the lectionary last filled in, so a date change can replace its
+    // own suggestion but never something typed or picked by hand.
+    @State private var lastThemeFill: String?
+    @State private var lastScriptureFill: String?
+
     var scriptureString: String {
         guard !scriptureBook.isEmpty else { return "" }
         var ref = "\(scriptureBook) \(scriptureChapter)"
@@ -33,12 +39,95 @@ struct SaveRecordView: View {
         return ref
     }
 
+    private var displayDate: String {
+        let f = DateFormatter()
+        f.dateStyle = .long
+        return f.string(from: serviceDate)
+    }
+
+    private var lectionaryEntry: LectionaryEntry? { Lectionary.entry(for: serviceDate) }
+
+    /// One-line lectionary suggestion for the chosen date, or a notice when
+    /// that year's lectionary hasn't been added yet.
+    private var lectionaryHint: (text: String, missing: Bool)? {
+        if let e = lectionaryEntry {
+            var parts: [String] = []
+            if let o = e.occasion { parts.append(o) }
+            if let t = e.theme { parts.append(e.weekly ? "Weekly theme: \(t)" : t) }
+            var text = parts.joined(separator: " — ")
+            if let g = e.gospel { text += (text.isEmpty ? "" : " · ") + "Gospel: \(g)" }
+            return text.isEmpty ? nil : (text, false)
+        }
+        if !Lectionary.isYearLoaded(serviceDate) {
+            let year = Calendar(identifier: .gregorian).component(.year, from: serviceDate)
+            return ("The \(year) lectionary hasn't been added yet — sermon themes won't fill in automatically.", true)
+        }
+        return nil
+    }
+
+    // Picker/Stepper bindings that reset the dependent fields only when the
+    // user changes them (not when the lectionary sets a whole reference).
+    private var bookBinding: Binding<String> {
+        Binding(get: { scriptureBook }, set: { newBook in
+            scriptureBook = newBook
+            scriptureChapter = 1
+            verseFrom = ""
+            verseTo = ""
+        })
+    }
+    private var chapterBinding: Binding<Int> {
+        Binding(get: { scriptureChapter }, set: { newChapter in
+            scriptureChapter = newChapter
+            verseFrom = ""
+            verseTo = ""
+        })
+    }
+
+    private func setScripture(_ ref: ScriptureRef?) {
+        scriptureBook = ref?.book ?? ""
+        scriptureChapter = ref?.chapter ?? 1
+        verseFrom = ref?.verseFrom.map(String.init) ?? ""
+        verseTo = ref?.verseTo.map(String.init) ?? ""
+    }
+
+    /// Fill the sermon title and reading from the lectionary when they are
+    /// empty or still hold our earlier suggestion; `force` (tapping the hint)
+    /// applies them regardless.
+    private func applyLectionary(force: Bool = false) {
+        let e = lectionaryEntry
+        let themeIsOurs = lastThemeFill != nil && sermon == lastThemeFill
+        if let theme = e?.theme {
+            if force || sermon.trimmingCharacters(in: .whitespaces).isEmpty || themeIsOurs {
+                sermon = theme
+                lastThemeFill = theme
+            }
+        } else if themeIsOurs {
+            sermon = ""
+            lastThemeFill = nil
+        }
+
+        // Readings only from the day's own entry (not weekly Friday/Tuesday).
+        let scriptureIsOurs = lastScriptureFill != nil && scriptureString == lastScriptureFill
+        if let gospel = e?.gospel, let ref = ScriptureRef.parse(gospel) {
+            if force || scriptureBook.isEmpty || scriptureIsOurs {
+                setScripture(ref)
+                lastScriptureFill = scriptureString
+            }
+        } else if scriptureIsOurs {
+            setScripture(nil)
+            lastScriptureFill = nil
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
                 // Service Details
                 Section("Service Details") {
-                    TextField("Date", text: $date)
+                    DatePicker("Date", selection: $serviceDate, displayedComponents: .date)
+                        .onChange(of: serviceDate) { _ in applyLectionary() }
+
+                    TextField("Service (optional) — e.g. Morning, Evening", text: $service)
 
                     // Parish Picker
                     if appState.parishes.isEmpty {
@@ -131,26 +220,33 @@ struct SaveRecordView: View {
                 Section("Sermon & Scripture") {
                     TextField("Sermon Title", text: $sermon)
 
-                    Picker("Book", selection: $scriptureBook) {
+                    if let hint = lectionaryHint {
+                        if hint.missing {
+                            Label(hint.text, systemImage: "exclamationmark.circle")
+                                .font(.footnote)
+                                .foregroundColor(.orange)
+                        } else {
+                            Button { applyLectionary(force: true) } label: {
+                                Label(hint.text, systemImage: "book")
+                                    .font(.footnote)
+                                    .foregroundColor(.indigo)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            .accessibilityHint("Use as the sermon title and reading")
+                        }
+                    }
+
+                    Picker("Book", selection: bookBinding) {
                         Text("Select Book").tag("")
                         ForEach(ScriptureData.bookNames, id: \.self) { book in
                             Text(book).tag(book)
                         }
                     }
-                    .onChange(of: scriptureBook) { _ in
-                        scriptureChapter = 1
-                        verseFrom = ""
-                        verseTo = ""
-                    }
 
                     if !scriptureBook.isEmpty {
                         Stepper("Chapter: \(scriptureChapter)",
-                                value: $scriptureChapter,
+                                value: chapterBinding,
                                 in: 1...ScriptureData.chapters(for: scriptureBook))
-                            .onChange(of: scriptureChapter) { _ in
-                                verseFrom = ""
-                                verseTo = ""
-                            }
 
                         HStack {
                             TextField("From verse", text: $verseFrom)
@@ -216,7 +312,9 @@ struct SaveRecordView: View {
                             return selectedCoCelebrants.sorted().joined(separator: ", ")
                         }()
                         appState.saveRecord(
-                            date: date,
+                            date: displayDate,
+                            isoDate: Lectionary.isoString(serviceDate),
+                            service: service,
                             parish: parish,
                             celebrant: celebrant,
                             coCelebrants: coValue,
@@ -248,9 +346,10 @@ struct SaveRecordView: View {
             }
         }
         .onAppear {
-            let f = DateFormatter()
-            f.dateStyle = .long
-            date = f.string(from: Date())
+            // Start with the parish and celebrant used last time, if still listed.
+            if parish.isEmpty, appState.parishes.contains(appState.lastParish) { parish = appState.lastParish }
+            if celebrant.isEmpty, appState.celebrants.contains(appState.lastCelebrant) { celebrant = appState.lastCelebrant }
+            applyLectionary()
         }
     }
 }

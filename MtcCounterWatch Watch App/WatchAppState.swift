@@ -4,8 +4,9 @@ import Combine
 class WatchAppState: ObservableObject {
     static let appGroupSuite = "group.com.mtc.counter"
 
-    @Published var male: Int = 0
-    @Published var female: Int = 0
+    // Saved on every change, so a count survives the app being closed.
+    @Published var male: Int = 0 { didSet { saveLiveCounts() } }
+    @Published var female: Int = 0 { didSet { saveLiveCounts() } }
     @Published var rounds: [Round] = []
 
     var total: Int { male + female }
@@ -36,6 +37,11 @@ class WatchAppState: ObservableObject {
         saveRounds()
     }
 
+    private func saveLiveCounts() {
+        defaults.set(male, forKey: "mtc_watch_live_male")
+        defaults.set(female, forKey: "mtc_watch_live_female")
+    }
+
     private func saveRounds() {
         if let data = try? JSONEncoder().encode(rounds) {
             defaults.set(data, forKey: "mtc_rounds")
@@ -47,5 +53,7 @@ class WatchAppState: ObservableObject {
            let decoded = try? JSONDecoder().decode([Round].self, from: data) {
             rounds = decoded
         }
+        male = max(0, defaults.integer(forKey: "mtc_watch_live_male"))
+        female = max(0, defaults.integer(forKey: "mtc_watch_live_female"))
     }
 }

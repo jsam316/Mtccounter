@@ -1,17 +1,14 @@
 import { translations } from './translations.js';
+import { showToast } from './toast.js';
 
-/** Show the toast success message with custom text. */
+/** Show a success message in the bottom message bar. */
 export function showSuccessMsg(msg, duration = 3000) {
-  const el = document.getElementById('successMsg');
-  if (!el) return;
-  const span = el.querySelector('[data-i18n="successMsg"]');
-  const original = span ? span.textContent : '';
-  if (span) span.textContent = msg;
-  el.style.display = 'block';
-  setTimeout(() => {
-    el.style.display = 'none';
-    if (span) span.textContent = original;
-  }, duration);
+  showToast(msg, { type: 'success', duration });
+}
+
+/** Show a problem (validation, failed action) without blocking the screen. */
+export function showErrorMsg(msg, duration = 4500) {
+  showToast(msg, { type: 'error', duration });
 }
 
 /**

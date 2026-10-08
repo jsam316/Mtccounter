@@ -9,6 +9,33 @@ import { t, getCurrentLang } from './translations.js';
 import { getString, setString } from './state.js';
 
 const OPEN_KEY = 'mtcDetailsOpen';
+const LAST_KEY = 'mtcLastDetails';
+
+/**
+ * Remember the parish and celebrant last used, so the next service starts
+ * with them instead of blank pickers (most parishes are the same every
+ * week). Blank values don't overwrite what was remembered.
+ */
+export function rememberLastDetails(parishName, celebrant) {
+  try {
+    const prev = JSON.parse(getString(LAST_KEY) || '{}');
+    setString(LAST_KEY, JSON.stringify({
+      parishName: parishName || prev.parishName || '',
+      celebrant:  celebrant  || prev.celebrant  || '',
+    }));
+  } catch { /* best-effort */ }
+}
+
+/** Fill empty parish/celebrant pickers with the remembered values, if still in the lists. */
+function _restoreLastDetails() {
+  let last = {};
+  try { last = JSON.parse(getString(LAST_KEY) || '{}'); } catch { return; }
+  for (const [id, value] of [['parishName', last.parishName], ['celebrant', last.celebrant]]) {
+    const select = document.getElementById(id);
+    if (!select || select.value || !value) continue;
+    if ([...select.options].some(o => o.value === value)) select.value = value;
+  }
+}
 
 /** Rebuild the one-line recap shown in the collapsed summary row. */
 export function refreshServiceSummary() {
@@ -46,10 +73,18 @@ export function initServiceDetails() {
     try { setString(OPEN_KEY, String(details.open)); } catch { /* best-effort */ }
   });
 
+  _restoreLastDetails();
+
   // Typing or picking in any field updates the recap.
   details.addEventListener('input', refreshServiceSummary);
   details.addEventListener('change', refreshServiceSummary);
   document.addEventListener('mtc:language-changed', refreshServiceSummary);
+
+  // Picking a parish or celebrant remembers it for next time.
+  for (const id of ['parishName', 'celebrant']) {
+    document.getElementById(id)?.addEventListener('change', () =>
+      rememberLastDetails(document.getElementById('parishName').value, document.getElementById('celebrant').value));
+  }
 
   refreshServiceSummary();
 }
