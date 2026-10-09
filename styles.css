@@ -705,37 +705,41 @@ button:active { transform: scale(0.96); }
 .light-mode .male-minus { background: rgba(59, 130, 246, 0.08); color: var(--blue); border-color: rgba(59, 130, 246, 0.28); }
 .light-mode .female-minus { background: rgba(168, 85, 247, 0.08); color: #a855f7; border-color: rgba(168, 85, 247, 0.28); }
 
-/* Action Buttons Grid */
+/* Action buttons: two slim rows. Save (wide) + New, then the three
+   share buttons. Icons sit beside their labels to keep each row short. */
 .action-buttons {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 8px;
   margin-bottom: 14px;
 }
 .action-btn {
+  grid-column: span 2;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 12px 8px;
+  gap: 6px;
+  padding: 10px 6px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: var(--transition);
   font-weight: 600;
-  min-height: 66px;
+  min-height: 46px;
+  min-width: 0;
   -webkit-tap-highlight-color: transparent;
 }
-.action-btn .btn-icon { font-size: 22px; line-height: 1; }
-.action-btn .btn-text { font-size: 12px; line-height: 1; }
+.action-btn .btn-icon { font-size: 17px; line-height: 1; }
+.action-btn .btn-text { font-size: 13.5px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .action-btn:active { transform: scale(0.96); }
 .save-btn {
   background: var(--accent);
   color: white;
-  grid-column: span 2;
+  grid-column: span 4;
   border-color: transparent;
 }
+.save-btn .btn-text { font-size: 15.5px; font-weight: 700; }
 .save-btn:hover { background: var(--accent-dark); }
 .reset-btn { background: rgba(255, 255, 255, 0.08); color: rgba(255,255,255,0.85); }
 .export-btn { background: rgba(16, 185, 129, 0.2); color: var(--green); border-color: rgba(16,185,129,0.25); }
@@ -748,9 +752,13 @@ button:active { transform: scale(0.96); }
 .light-mode .action-btn { border-color: rgba(0,0,0,0.08); }
 
 @media (max-width: 380px) {
-  .action-btn { min-height: 58px; padding: 9px 6px; }
-  .action-btn .btn-text { font-size: 11px; }
-  .action-btn .btn-icon { font-size: 19px; }
+  .action-btn { gap: 4px; padding: 9px 4px; }
+  .action-btn .btn-text { font-size: 12.5px; }
+  .action-btn .btn-icon { font-size: 15px; }
+}
+/* Smallest phones: the share labels need the room more than the icons. */
+@media (max-width: 350px) {
+  .export-btn .btn-icon, .pdf-btn .btn-icon, .whatsapp-btn .btn-icon { display: none; }
 }
 
 @keyframes slideDown {
