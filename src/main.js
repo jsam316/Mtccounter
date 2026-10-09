@@ -4,7 +4,7 @@ import { updateLanguage, toggleLanguage }                       from './language
 import { updateChapterOptions, updateVerseOptions }             from './scripture.js';
 import { changeMale, changeFemale, newRecord, addToRoundTotal,
          removeRound, clearRounds, loadRounds, loadLiveCounts,
-         tapCounterBox }                                        from './counter.js';
+         tapCounterBox, displayRounds, toggleRoundsExpanded }   from './counter.js';
 import { saveRecord, displayHistory, loadRecord, deleteRecord,
          filterHistory }                                        from './history.js';
 import { toggleDarkMode, initDarkMode, installApp,
@@ -60,6 +60,7 @@ document.addEventListener('mtc:data-restored', () => {
 
 document.addEventListener('mtc:language-changed', () => {
   refreshCountingLock();
+  displayRounds();
   if (document.getElementById('statsTab').classList.contains('active')) displayStats();
   if (document.getElementById('historyTab').classList.contains('active')) { displayHistory(); renderCloudCard(); }
 });
@@ -68,7 +69,7 @@ document.addEventListener('mtc:language-changed', () => {
 Object.assign(window, {
   toggleCountingLock,
   changeMale, changeFemale, newRecord, addToRoundTotal,
-  removeRound, clearRounds, tapCounterBox,
+  removeRound, clearRounds, tapCounterBox, toggleRoundsExpanded,
   saveRecord, loadRecord, deleteRecord, filterHistory,
   switchTab,
   toggleDarkMode, installApp, closeInstallPrompt,

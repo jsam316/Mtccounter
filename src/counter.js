@@ -3,6 +3,7 @@ import { t } from './translations.js';
 import { triggerHaptic, addHapticAnimation } from './haptic.js';
 import { showSuccessMsg, showErrorMsg } from './utils.js';
 import { withUndo } from './undo.js';
+import { isCountingLocked } from './lock.js';
 
 let male = 0;
 let female = 0;
@@ -134,40 +135,80 @@ export function loadRounds() {
   displayRounds();
 }
 
+// With many rounds, only the latest few are listed until expanded, so the
+// Save button stays close to the counters.
+const ROUNDS_COLLAPSE_AT = 5;
+const ROUNDS_SHOWN_COLLAPSED = 3;
+let _roundsExpanded = false;
+
+export function toggleRoundsExpanded() {
+  _roundsExpanded = !_roundsExpanded;
+  displayRounds();
+}
+
+function _roundTime(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? '' : d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
 export function displayRounds() {
   const displayEl = document.getElementById('roundTotalDisplay');
-  const summaryEl = document.getElementById('roundTotalSummary');
+  const badgeEl = document.getElementById('roundBadge');
+  if (badgeEl) {
+    badgeEl.textContent = rounds.length;
+    badgeEl.hidden = rounds.length === 0;
+  }
   if (rounds.length === 0) {
+    _roundsExpanded = false;
     displayEl.innerHTML = '<div class="round-total-empty" data-i18n="roundEmptyState">'
       + t('roundEmptyState') + '</div>';
-    summaryEl.style.display = 'none';
     updateDisplay();
     return;
   }
 
   let totalMale = 0;
   let totalFemale = 0;
-  let html = '';
-  rounds.forEach((round, index) => {
-    totalMale   += round.male;
-    totalFemale += round.female;
-    html += '<div class="round-item">';
-    html += '<span class="round-item-label">Round ' + (index + 1) + ':</span>';
-    html += '<div class="round-item-values">';
-    html += '<span class="male-total">♂ '   + round.male   + '</span>';
-    html += '<span class="female-total">♀ ' + round.female + '</span>';
-    html += '<span>= ' + round.total + '</span>';
-    html += '</div>';
-    html += '<button class="round-item-remove" onclick="removeRound(' + index + ')">✕</button>';
-    html += '</div>';
-  });
+  rounds.forEach(r => { totalMale += r.male; totalFemale += r.female; });
+
+  const collapsible = rounds.length >= ROUNDS_COLLAPSE_AT;
+  const first = collapsible && !_roundsExpanded ? rounds.length - ROUNDS_SHOWN_COLLAPSED : 0;
+
+  let html = '<table class="round-table"><thead><tr>'
+    + '<th scope="col"><span class="sr-only">' + t('roundTitle') + '</span></th>'
+    + '<th scope="col" class="male-total" title="' + t('male') + '">♂</th>'
+    + '<th scope="col" class="female-total" title="' + t('female') + '">♀</th>'
+    + '<th scope="col">' + t('total') + '</th>'
+    + '<th scope="col"><span class="sr-only">✕</span></th>'
+    + '</tr></thead><tbody>';
+  if (collapsible) {
+    const label = _roundsExpanded ? t('roundShowLess') : t('roundShowAll').replace('{n}', rounds.length);
+    html += '<tr class="round-more"><td colspan="5"><button class="round-more-btn" onclick="toggleRoundsExpanded()"'
+      + ' aria-expanded="' + _roundsExpanded + '">' + label + '</button></td></tr>';
+  }
+  for (let i = first; i < rounds.length; i++) {
+    const round = rounds[i];
+    const name = t('roundN').replace('{n}', i + 1);
+    html += '<tr class="round-item">'
+      + '<th scope="row">' + name + ' <span class="round-time">' + _roundTime(round.timestamp) + '</span></th>'
+      + '<td class="male-total">' + round.male + '</td>'
+      + '<td class="female-total">' + round.female + '</td>'
+      + '<td>' + (round.male + round.female) + '</td>'
+      + '<td><button class="round-item-remove" onclick="removeRound(' + i + ')" aria-label="'
+      + t('roundRemoveLabel').replace('{n}', i + 1) + '">✕</button></td>'
+      + '</tr>';
+  }
+  html += '</tbody><tfoot><tr>'
+    + '<th scope="row">' + t('roundsAll') + '</th>'
+    + '<td class="male-total">' + totalMale + '</td>'
+    + '<td class="female-total">' + totalFemale + '</td>'
+    + '<td>' + (totalMale + totalFemale) + '</td>'
+    + '<td><button class="clear-rounds-btn" onclick="clearRounds()" aria-label="' + t('clearRoundsBtn')
+    + '" title="' + t('clearRoundsBtn') + '">🗑</button></td>'
+    + '</tr></tfoot></table>';
 
   displayEl.innerHTML = html;
-  document.getElementById('roundCount').textContent       = rounds.length;
-  document.getElementById('roundMaleTotal').textContent   = totalMale;
-  document.getElementById('roundFemaleTotal').textContent = totalFemale;
-  document.getElementById('roundGrandTotal').textContent  = totalMale + totalFemale;
-  summaryEl.style.display = 'block';
+  // The table is redrawn on every change, so re-apply the counting lock.
+  displayEl.querySelector('.clear-rounds-btn').inert = isCountingLocked();
   updateDisplay();
 }
 
