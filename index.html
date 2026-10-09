@@ -263,41 +263,16 @@
         <span data-i18n="assistBtn">📷 Count Assist (Beta)</span>
       </button>
 
-      <!-- Round Total Section -->
+      <!-- Rounds: each "Add round" banks the current count and starts the next. -->
       <div class="round-total-section">
         <div class="round-header">
-          <span class="round-title" data-i18n="roundTitle">📊 Round Totals</span>
+          <span class="round-title"><span data-i18n="roundTitle">📊 Rounds</span> <span id="roundBadge" class="round-badge" hidden></span></span>
           <button class="add-round-btn" onclick="addToRoundTotal()">
-            <span data-i18n="addRoundBtn">➕ Add to Round</span>
+            <span data-i18n="addRoundBtn">➕ Add round</span>
           </button>
         </div>
-        
         <div id="roundTotalDisplay" class="round-total-display">
-          <div class="round-total-empty" data-i18n="roundEmptyState">
-            Click "Add to Round" to track multiple counting rounds
-          </div>
-        </div>
-        
-        <div id="roundTotalSummary" class="round-total-summary" style="display: none;">
-          <div class="round-summary-item">
-            <span data-i18n="roundsLabel">Rounds:</span>
-            <span id="roundCount" class="round-number">0</span>
-          </div>
-          <div class="round-summary-item">
-            <span data-i18n="roundMaleTotal">Total Male:</span>
-            <span id="roundMaleTotal" class="round-number male-total">0</span>
-          </div>
-          <div class="round-summary-item">
-            <span data-i18n="roundFemaleTotal">Total Female:</span>
-            <span id="roundFemaleTotal" class="round-number female-total">0</span>
-          </div>
-          <div class="round-summary-item grand-total-item">
-            <span data-i18n="roundGrandTotal">Grand Total:</span>
-            <span id="roundGrandTotal" class="round-number grand-total">0</span>
-          </div>
-          <button class="clear-rounds-btn" onclick="clearRounds()">
-            <span data-i18n="clearRoundsBtn">🗑️ Clear Rounds</span>
-          </button>
+          <div class="round-total-empty" data-i18n="roundEmptyState">"Add round" saves this count and starts the next.</div>
         </div>
       </div>
 
