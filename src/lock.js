@@ -1,6 +1,8 @@
 // Counting lock: while counting, only the male/female counter boxes (and
-// their − buttons) respond, so a phone held in the hand or pocket can't
-// accidentally hit Save, New, Delete, the tabs or the service details.
+// their − buttons) and the rounds respond, so a phone held in the hand or
+// pocket can't accidentally hit Save, New, Delete, the tabs or the service
+// details. Rounds stay usable because adding a round is part of counting;
+// only "Clear all rounds" is locked.
 //
 // Locked parts are made `inert` (no taps, no keyboard focus) and dimmed.
 // The lock button itself stays active to unlock.
@@ -11,7 +13,7 @@ import { showToast } from './toast.js';
 
 const LOCKED_SELECTORS = [
   '.top-controls', '.tabs', '#serviceDetails', '.assist-launch-btn',
-  '.round-total-section', '.action-buttons', '.app-footer',
+  '.clear-rounds-btn', '.action-buttons', '.app-footer',
 ];
 
 let _locked = false;
