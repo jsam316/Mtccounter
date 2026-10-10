@@ -9,6 +9,7 @@ import { updateChapterOptions, updateVerseOptions } from './scripture.js';
 import { switchTab } from './ui.js';
 import { updateLectionaryHint } from './lectionary.js';
 import { refreshServiceSummary, rememberLastDetails } from './details.js';
+import { icon } from './icons.js';
 
 export function getHistory() {
   return load(KEYS.history, []);
@@ -115,13 +116,14 @@ export function renderHistoryItems(history, listEl) {
   const lang = getCurrentLang();
 
   if (history.length === 0) {
-    listEl.innerHTML = '<div class="empty-state"><p>📋</p>'
+    listEl.innerHTML = '<div class="empty-state"><p class="empty-icon">' + icon('clipboard') + '</p>'
       + '<p style="font-size:16px;font-weight:600;">' + t('noRecords') + '</p>'
       + '<p style="font-size:14px;margin-top:8px;opacity:0.7;">' + t('noRecordsDesc') + '</p></div>';
     return;
   }
 
   const allHistory = getHistory();
+  const has = v => v && !isNotSpecified(v);
   let html = '';
   history.forEach(record => {
     let realIndex = allHistory.findIndex(r => r.date === record.date && r.timestamp === record.timestamp);
@@ -129,30 +131,39 @@ export function renderHistoryItems(history, listEl) {
 
     const formattedDate = new Date(record.date + 'T00:00:00').toLocaleDateString(
       lang === 'ml' ? 'ml-IN' : 'en-US',
-      { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+      { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }
     );
+    const male = Number(record.male) || 0;
+    const female = Number(record.female) || 0;
+    const total = Number(record.total) || male + female;
+    const malePct = total > 0 ? Math.round((male / total) * 100) : 50;
+    const who = [record.parishName, record.celebrant].filter(has).map(escapeHtml).join(' · ');
+    const reading = [record.sermon, record.scripture].filter(has).map(escapeHtml).join(' · ');
 
-    html += '<div class="history-item">';
-    html += '<div class="history-date">' + escapeHtml(formattedDate)
-      + (record.service ? ' <span class="history-service">· ' + escapeHtml(record.service) + '</span>' : '')
-      + '</div>';
-    html += '<div class="history-details">';
-    html += '<strong>' + t('parish')    + ':</strong> ' + escapeHtml(record.parishName || t('notSpecified')) + '<br>';
-    html += '<strong>' + t('celebrant') + ':</strong> ' + escapeHtml(record.celebrant  || t('notSpecified')) + '<br>';
-    if (record.coCelebrants && !isNotSpecified(record.coCelebrants)) {
-      html += '<strong>' + t('coCelebrantsLabel') + ':</strong> ' + escapeHtml(record.coCelebrants) + '<br>';
-    }
-    html += '<strong>' + t('sermon')    + ':</strong> ' + escapeHtml(record.sermon    || t('notSpecified')) + '<br>';
-    html += '<strong>' + t('scripture') + ':</strong> ' + escapeHtml(record.scripture || t('notSpecified')) + '<br>';
-    html += '<strong>' + t('attendance') + ':</strong> '
-      + t('male')   + ': ' + escapeHtml(record.male)   + ', '
-      + t('female') + ': ' + escapeHtml(record.female) + ', '
-      + t('total')  + ': ' + escapeHtml(record.total);
-    html += '</div>';
-    html += '<div class="history-actions">';
-    html += '<button class="history-btn load-btn"   onclick="loadRecord('   + realIndex + ')">' + t('loadBtn')   + '</button>';
-    html += '<button class="history-btn delete-btn" onclick="deleteRecord(' + realIndex + ')">' + t('deleteBtn') + '</button>';
-    html += '</div></div>';
+    // Date and total up top; then who, the male/female split and the
+    // sermon, each on one line; blank fields are simply left out.
+    html += '<div class="history-item">'
+      + '<div class="history-head">'
+      +   '<div class="history-when">'
+      +     '<div class="history-date">' + escapeHtml(formattedDate)
+      +       (record.service ? ' <span class="history-service">' + escapeHtml(record.service) + '</span>' : '')
+      +     '</div>'
+      +     (who ? '<div class="history-meta">' + who + '</div>' : '')
+      +   '</div>'
+      +   '<div class="history-total"><span class="history-total-num">' + total + '</span>'
+      +     '<span class="history-total-label">' + t('total') + '</span></div>'
+      + '</div>'
+      + '<div class="history-split" aria-label="' + escapeHtml(t('male') + ' ' + male + ', ' + t('female') + ' ' + female) + '">'
+      +   '<span class="male-total">' + t('male') + ' <b>' + male + '</b></span>'
+      +   '<span class="history-bar"><span style="width:' + malePct + '%"></span></span>'
+      +   '<span class="female-total">' + t('female') + ' <b>' + female + '</b></span>'
+      + '</div>'
+      + (reading ? '<div class="history-reading">' + reading + '</div>' : '')
+      + (has(record.coCelebrants) ? '<div class="history-reading">' + escapeHtml(t('coCelebrantsLabel')) + ': ' + escapeHtml(record.coCelebrants) + '</div>' : '')
+      + '<div class="history-actions">'
+      +   '<button class="history-btn load-btn" onclick="loadRecord(' + realIndex + ')">' + icon('pencil') + '<span>' + t('loadBtn') + '</span></button>'
+      +   '<button class="history-btn delete-btn" onclick="deleteRecord(' + realIndex + ')" aria-label="' + escapeHtml(t('deleteBtn')) + '" title="' + escapeHtml(t('deleteBtn')) + '">' + icon('trash') + '</button>'
+      + '</div></div>';
   });
   listEl.innerHTML = html;
 }

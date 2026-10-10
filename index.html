@@ -27,29 +27,28 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="top-controls">
-    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Light/Dark Mode">☀️</button>
-    <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle Language">EN</button>
-  </div>
-
   <!-- Offline Indicator -->
   <div id="offlineIndicator" class="offline-indicator">
-    <span>🔴</span>
+    <span class="status-dot"></span>
     <span data-i18n="offline">Offline</span>
   </div>
 
   <!-- Swipe Indicators -->
-  <div id="swipeLeft" class="swipe-indicator left">👈</div>
-  <div id="swipeRight" class="swipe-indicator right">👉</div>
+  <div id="swipeLeft" class="swipe-indicator left"><svg class="icon" aria-hidden="true"><use href="#i-chevronL"></use></svg></div>
+  <div id="swipeRight" class="swipe-indicator right"><svg class="icon" aria-hidden="true"><use href="#i-chevronR"></use></svg></div>
 
   <div class="container">
-    <h1><span data-i18n="appTitle">⛪ MTC Counter</span></h1>
+    <div class="top-controls">
+      <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="Toggle Light/Dark Mode" aria-label="Toggle light/dark mode"><svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg><svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg></button>
+      <button class="lang-toggle" onclick="toggleLanguage()" title="Toggle Language">EN</button>
+    </div>
+    <h1><img class="app-logo" src="icon.svg" alt="" width="34" height="34"><span class="app-title" data-i18n="appTitle">MTC Counter</span></h1>
     <div class="subtitle" data-i18n="appSubtitle">MarThoma Church Qurbana (Communion) Tracker</div>
 
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('counter')"><span data-i18n="counterTab">📊 Counter</span></button>
-      <button class="tab" onclick="switchTab('history')"><span data-i18n="historyTab">📅 History</span></button>
-      <button class="tab" onclick="switchTab('stats')"><span data-i18n="statsTab">📈 Stats</span></button>
+      <button class="tab active" onclick="switchTab('counter')"><svg class="icon" aria-hidden="true"><use href="#i-tally"></use></svg><span data-i18n="counterTab">Counter</span></button>
+      <button class="tab" onclick="switchTab('history')"><svg class="icon" aria-hidden="true"><use href="#i-calendar"></use></svg><span data-i18n="historyTab">History</span></button>
+      <button class="tab" onclick="switchTab('stats')"><svg class="icon" aria-hidden="true"><use href="#i-chart"></use></svg><span data-i18n="statsTab">Stats</span></button>
     </div>
 
     <!-- Counter Tab -->
@@ -57,31 +56,31 @@
       <!-- Service details: collapsible so the counters fit on one screen -->
       <details id="serviceDetails" class="service-details">
         <summary class="service-summary">
-          <span class="service-summary-icon" aria-hidden="true">📋</span>
+          <span class="service-summary-icon"><svg class="icon" aria-hidden="true"><use href="#i-clipboard"></use></svg></span>
           <span class="service-summary-text">
             <span class="service-summary-title" data-i18n="detailsTitle">Service details</span>
             <span id="serviceSummary" class="service-summary-recap"></span>
           </span>
-          <span class="service-summary-chevron" aria-hidden="true">›</span>
+          <span class="service-summary-chevron"><svg class="icon" aria-hidden="true"><use href="#i-chevronR"></use></svg></span>
         </summary>
         <div class="service-details-body">
         <div class="input-group">
-          <label data-i18n="parishLabel">⛪ Parish Name</label>
+          <label data-i18n="parishLabel">Parish Name</label>
           <div style="display: flex; gap: 8px; align-items: center;">
             <select id="parishName" style="flex: 1;">
               <option value="">-- Select Parish --</option>
             </select>
-            <button class="manage-celebrants-btn" onclick="openParishManager()" title="Manage Parishes" aria-label="Manage parishes">⚙️</button>
+            <button class="manage-celebrants-btn" onclick="openParishManager()" title="Manage Parishes" aria-label="Manage parishes"><svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg></button>
           </div>
         </div>
 
         <div class="input-group">
-          <label data-i18n="dateLabel">📅 Date</label>
+          <label data-i18n="dateLabel">Date</label>
           <input type="date" id="date">
         </div>
 
         <div class="input-group">
-          <label data-i18n="serviceLabel">🕐 Service (optional)</label>
+          <label data-i18n="serviceLabel">Service (optional)</label>
           <input type="text" id="service" list="serviceSuggestions" data-i18n-placeholder="servicePlaceholder" placeholder="e.g. Morning, Evening — leave blank for the main service">
           <datalist id="serviceSuggestions">
             <option value="Morning"></option>
@@ -92,18 +91,18 @@
         </div>
 
         <div class="input-group">
-          <label data-i18n="celebrantLabel">👤 Celebrant Name</label>
+          <label data-i18n="celebrantLabel">Celebrant Name</label>
           <div style="display: flex; gap: 8px; align-items: center;">
             <select id="celebrant" style="flex: 1;">
               <option value="">-- Select Celebrant --</option>
             </select>
-            <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants">⚙️</button>
+            <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants"><svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg></button>
           </div>
         </div>
 
         <div class="toggle-section">
           <div class="toggle-label">
-            <span data-i18n="coCelebrantsLabel">👥 Co-Celebrants</span>
+            <span data-i18n="coCelebrantsLabel">Co-Celebrants</span>
           </div>
           <div class="toggle-switch" id="coCelebrantsToggle" onclick="toggleCoCelebrants()"
                role="switch" aria-checked="false" tabindex="0" aria-label="Co-Celebrants">
@@ -113,23 +112,23 @@
 
         <div class="co-celebrants-field" id="coCelebrantsField">
           <div class="input-group">
-            <label data-i18n="coCelebrantsInputLabel">👥 Co-Celebrants Names</label>
+            <label data-i18n="coCelebrantsInputLabel">Co-Celebrants Names</label>
             <div style="display: flex; gap: 8px; align-items: flex-start;">
               <select id="coCelebrants" multiple size="3" style="flex: 1;">
               </select>
-              <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants">⚙️</button>
+              <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants"><svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg></button>
             </div>
           </div>
         </div>
 
         <div class="input-group">
-          <label data-i18n="sermonLabel">📖 Sermon Title</label>
+          <label data-i18n="sermonLabel">Sermon Title</label>
           <input type="text" id="sermon" data-i18n-placeholder="sermonPlaceholder" placeholder="Enter sermon title">
           <div id="lectionaryHint" class="lectionary-hint" style="display:none" onclick="applyLectionaryTheme()"></div>
         </div>
 
         <div class="input-group">
-          <label data-i18n="scriptureLabel">📜 Scripture Reference</label>
+          <label data-i18n="scriptureLabel">Scripture Reference</label>
           <div class="verse-group">
             <select id="book">
               <option value="" data-i18n="selectBook">Select Book</option>
@@ -218,7 +217,7 @@
         <div class="total-head">
           <div class="total-title" data-i18n="totalAttendance">Total Qurbana (Communion)</div>
           <button id="lockBtn" class="lock-btn" onclick="toggleCountingLock()" aria-pressed="false" data-i18n-title="lockHint" title="Lock everything except the counters and rounds">
-            <span class="lock-icon" aria-hidden="true">🔓</span><span class="lock-label" data-i18n="lockOff">Lock</span>
+            <span class="lock-icon"><svg class="icon icon-unlocked" aria-hidden="true"><use href="#i-unlock"></use></svg><svg class="icon icon-locked" aria-hidden="true"><use href="#i-lock"></use></svg></span><span class="lock-label" data-i18n="lockOff">Lock</span>
           </button>
         </div>
         <div class="total-grid">
@@ -239,36 +238,36 @@
 
       <div class="counter-box male-box" id="maleBox" role="button" tabindex="0" aria-label="Add one male" onclick="tapCounterBox(event, 'male')">
         <div class="counter-header">
-          <span class="counter-title male-title"><span data-i18n="maleCounter">👨 Male</span></span>
+          <span class="counter-title male-title"><svg class="icon" aria-hidden="true"><use href="#i-user"></use></svg><span data-i18n="maleCounter">Male</span></span>
           <span class="counter-value male-total" id="maleCount">0</span>
         </div>
         <div class="counter-footer">
-          <button class="male-minus" aria-label="Subtract one male" onclick="event.stopPropagation(); changeMale(-1)">−</button>
+          <button class="male-minus" aria-label="Subtract one male" onclick="event.stopPropagation(); changeMale(-1)"><svg class="icon" aria-hidden="true"><use href="#i-minus"></use></svg></button>
           <span class="tap-hint" data-i18n="tapHint">Tap anywhere to add +1</span>
         </div>
       </div>
 
       <div class="counter-box female-box" id="femaleBox" role="button" tabindex="0" aria-label="Add one female" onclick="tapCounterBox(event, 'female')">
         <div class="counter-header">
-          <span class="counter-title female-title"><span data-i18n="femaleCounter">👩 Female</span></span>
+          <span class="counter-title female-title"><svg class="icon" aria-hidden="true"><use href="#i-user"></use></svg><span data-i18n="femaleCounter">Female</span></span>
           <span class="counter-value female-total" id="femaleCount">0</span>
         </div>
         <div class="counter-footer">
-          <button class="female-minus" aria-label="Subtract one female" onclick="event.stopPropagation(); changeFemale(-1)">−</button>
+          <button class="female-minus" aria-label="Subtract one female" onclick="event.stopPropagation(); changeFemale(-1)"><svg class="icon" aria-hidden="true"><use href="#i-minus"></use></svg></button>
           <span class="tap-hint" data-i18n="tapHint">Tap anywhere to add +1</span>
         </div>
       </div>
 
       <button class="assist-launch-btn" onclick="openAssist()">
-        <span data-i18n="assistBtn">📷 Count Assist (Beta)</span>
+        <svg class="icon" aria-hidden="true"><use href="#i-camera"></use></svg><span data-i18n="assistBtn">Count Assist (Beta)</span>
       </button>
 
       <!-- Rounds: each "Add round" banks the current count and starts the next. -->
       <div class="round-total-section">
         <div class="round-header">
-          <span class="round-title"><span data-i18n="roundTitle">📊 Rounds</span> <span id="roundBadge" class="round-badge" hidden></span></span>
+          <span class="round-title"><svg class="icon" aria-hidden="true"><use href="#i-layers"></use></svg><span data-i18n="roundTitle">Rounds</span> <span id="roundBadge" class="round-badge" hidden></span></span>
           <button class="add-round-btn" onclick="addToRoundTotal()">
-            <span data-i18n="addRoundBtn">➕ Add round</span>
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg><span data-i18n="addRoundBtn">Add round</span>
           </button>
         </div>
         <div id="roundTotalDisplay" class="round-total-display">
@@ -278,23 +277,23 @@
 
       <div class="action-buttons">
         <button class="action-btn save-btn" onclick="saveRecord()" title="Save Record">
-          <span class="btn-icon">💾</span>
+          <svg class="icon btn-icon" aria-hidden="true"><use href="#i-save"></use></svg>
           <span class="btn-text" data-i18n="saveBtn">Save</span>
         </button>
         <button class="action-btn reset-btn" onclick="newRecord()" title="New Record">
-          <span class="btn-icon">📝</span>
+          <svg class="icon btn-icon" aria-hidden="true"><use href="#i-filePlus"></use></svg>
           <span class="btn-text" data-i18n="newRecordBtn">New</span>
         </button>
         <button class="action-btn export-btn" onclick="exportData()" title="Export as Text">
-          <span class="btn-icon">📤</span>
+          <svg class="icon btn-icon" aria-hidden="true"><use href="#i-fileText"></use></svg>
           <span class="btn-text" data-i18n="exportBtn">Text</span>
         </button>
         <button class="action-btn pdf-btn" onclick="exportPDF()" title="Export as PDF">
-          <span class="btn-icon">📄</span>
+          <svg class="icon btn-icon" aria-hidden="true"><use href="#i-fileDown"></use></svg>
           <span class="btn-text" data-i18n="pdfBtn">PDF</span>
         </button>
         <button class="action-btn whatsapp-btn" onclick="shareToWhatsApp()" title="Share to WhatsApp">
-          <span class="btn-icon">📱</span>
+          <svg class="icon btn-icon" aria-hidden="true"><use href="#i-message"></use></svg>
           <span class="btn-text" data-i18n="whatsappBtn">WhatsApp</span>
         </button>
       </div>
@@ -304,32 +303,35 @@
     <!-- History Tab -->
     <div id="historyTab" class="tab-content">
       <div class="history-toolbar">
-        <input type="text" id="historySearch" class="history-search"
-          data-i18n-placeholder="searchPlaceholder" placeholder="Search records..."
-          oninput="filterHistory(this.value)">
+        <div class="history-search-wrap">
+          <svg class="icon history-search-icon" aria-hidden="true"><use href="#i-search"></use></svg>
+          <input type="text" id="historySearch" class="history-search"
+            data-i18n-placeholder="searchPlaceholder" placeholder="Search records..."
+            oninput="filterHistory(this.value)">
+        </div>
         <div class="history-actions-bar">
           <button class="history-action-btn backup-btn" onclick="exportBackupJSON()">
-            <span data-i18n="backupBtn">Backup</span>
+            <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg><span data-i18n="backupBtn">Backup</span>
           </button>
           <button class="history-action-btn restore-btn" onclick="document.getElementById('restoreFileInput').click()">
-            <span data-i18n="restoreBtn">Restore</span>
+            <svg class="icon" aria-hidden="true"><use href="#i-upload"></use></svg><span data-i18n="restoreBtn">Restore</span>
           </button>
           <button class="history-action-btn csv-btn" onclick="exportCSV()">
-            <span data-i18n="exportCsvBtn">CSV</span>
+            <svg class="icon" aria-hidden="true"><use href="#i-table"></use></svg><span data-i18n="exportCsvBtn">CSV</span>
           </button>
         </div>
       </div>
       <input type="file" id="restoreFileInput" accept=".json" style="display:none" onchange="importBackup(event)">
       <div id="cloudCard" class="cloud-card">
         <div class="cloud-head">
-          <span class="cloud-title" data-i18n="cloudTitle">☁️ Cloud backup</span>
+          <span class="cloud-title"><svg class="icon" aria-hidden="true"><use href="#i-cloud"></use></svg><span data-i18n="cloudTitle">Cloud backup</span></span>
           <span id="cloudStatus" class="cloud-status" aria-hidden="true"></span>
         </div>
         <div id="cloudBody" class="cloud-body"></div>
       </div>
       <div id="historyList" class="history-list">
         <div class="empty-state">
-          <p>📋</p>
+          <p class="empty-icon"><svg class="icon" aria-hidden="true"><use href="#i-clipboard"></use></svg></p>
           <p style="font-size: 16px; font-weight: 600;" data-i18n="noRecords">No records yet</p>
           <p style="font-size: 14px; margin-top: 8px; opacity: 0.7;" data-i18n="noRecordsDesc">Save your first service record to see it here!</p>
         </div>
@@ -384,7 +386,7 @@
       </span>
       <div class="assist-header-btns">
         <button class="assist-help-btn" onclick="openAssistGuide()" aria-label="Setup tips">?</button>
-        <button class="close-manager-btn" onclick="closeAssist()" aria-label="Close count assist">✕</button>
+        <button class="close-manager-btn" onclick="closeAssist()" aria-label="Close count assist"><svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg></button>
       </div>
     </div>
 
@@ -465,14 +467,14 @@
   <div id="celebrantManager" class="celebrant-manager-modal">
     <div class="celebrant-manager-content">
       <div class="celebrant-manager-header">
-        <h2 data-i18n="manageCelebrants">⚙️ Manage Celebrants</h2>
-        <button class="close-manager-btn" onclick="closeCelebrantManager()" aria-label="Close">✕</button>
+        <h2 data-i18n="manageCelebrants">Manage Celebrants</h2>
+        <button class="close-manager-btn" onclick="closeCelebrantManager()" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg></button>
       </div>
       
       <div class="celebrant-manager-body">
         <div class="add-celebrant-section">
           <input type="text" id="newCelebrantName" data-i18n-placeholder="enterCelebrantName" placeholder="Enter celebrant name">
-          <button class="add-celebrant-btn" onclick="addCelebrant()"><span data-i18n="addCelebrant">➕ Add</span></button>
+          <button class="add-celebrant-btn" onclick="addCelebrant()"><svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg><span data-i18n="addCelebrant">Add</span></button>
         </div>
         
         <div class="celebrant-list-section">
@@ -487,14 +489,14 @@
   <div id="parishManager" class="celebrant-manager-modal">
     <div class="celebrant-manager-content">
       <div class="celebrant-manager-header">
-        <h2 data-i18n="manageParishes">⚙️ Manage Parishes</h2>
-        <button class="close-manager-btn" onclick="closeParishManager()" aria-label="Close">✕</button>
+        <h2 data-i18n="manageParishes">Manage Parishes</h2>
+        <button class="close-manager-btn" onclick="closeParishManager()" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-x"></use></svg></button>
       </div>
       
       <div class="celebrant-manager-body">
         <div class="add-celebrant-section">
           <input type="text" id="newParishName" data-i18n-placeholder="enterParishName" placeholder="Enter parish name">
-          <button class="add-celebrant-btn" onclick="addParish()"><span data-i18n="addParish">➕ Add</span></button>
+          <button class="add-celebrant-btn" onclick="addParish()"><svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg><span data-i18n="addParish">Add</span></button>
         </div>
         
         <div class="celebrant-list-section">

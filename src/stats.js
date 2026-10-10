@@ -4,6 +4,7 @@ import { downloadFile, loadJsPDF } from './export.js';
 import { showSuccessMsg, showErrorMsg, escapeHtml, isNotSpecified } from './utils.js';
 import { triggerHaptic } from './haptic.js';
 import { getString, setString } from './state.js';
+import { icon } from './icons.js';
 
 // ── Pure helpers (exported for tests) ─────────────────────────────────────────
 
@@ -313,9 +314,9 @@ export async function exportStatsPDF() {
 
 // ── Rendering ─────────────────────────────────────────────────────────────────
 
-function statCard(icon, value, label, sub, extraClass = '', extraHtml = '') {
+function statCard(iconName, value, label, sub, extraClass = '', extraHtml = '') {
   return '<div class="stat-card' + (extraClass ? ' ' + extraClass : '') + '">'
-    + '<div class="stat-icon">'   + icon  + '</div>'
+    + '<div class="stat-icon">'   + icon(iconName) + '</div>'
     + '<div class="stat-value">'  + value + '</div>'
     + '<div class="stat-label">'  + label + '</div>'
     + (sub ? '<div class="stat-sub">' + sub + '</div>' : '')
@@ -347,9 +348,9 @@ function _controlsHtml(history) {
     '<button class="stats-seg' + (_period === p ? ' active' : '') + '" onclick="setStatsPeriod(\'' + p + '\')">' + t(key) + '</button>';
   const nav = _period === 'all' ? '' :
     '<div class="stats-nav">'
-    + '<button class="stats-nav-btn" onclick="shiftStatsPeriod(-1)" aria-label="Previous">‹</button>'
+    + '<button class="stats-nav-btn" onclick="shiftStatsPeriod(-1)" aria-label="Previous">' + icon('chevronL') + '</button>'
     + '<span class="stats-period-label">' + escapeHtml(_periodLabel()) + '</span>'
-    + '<button class="stats-nav-btn" onclick="shiftStatsPeriod(1)" aria-label="Next">›</button>'
+    + '<button class="stats-nav-btn" onclick="shiftStatsPeriod(1)" aria-label="Next">' + icon('chevronR') + '</button>'
     + '</div>';
   const parishes = parishOptions(history);
   const current = _currentParish(history);
@@ -415,7 +416,7 @@ export function displayStats() {
   const history = getHistory();
 
   if (history.length === 0) {
-    contentEl.innerHTML = '<div class="stats-empty">📊<br><br>' + t('noDataForStats') + '</div>';
+    contentEl.innerHTML = '<div class="stats-empty"><div class="empty-icon">' + icon('chart') + '</div>' + t('noDataForStats') + '</div>';
     return;
   }
 
@@ -432,18 +433,18 @@ export function displayStats() {
   const fmtDate = d => new Date(d + 'T00:00:00').toLocaleDateString(_locale(), { month: 'short', day: 'numeric', year: 'numeric' });
 
   html += '<div class="stats-grid">'
-    + statCard('🙏', s.total, t('statsTotalCommunicants'), t('male') + ': ' + s.male + ' · ' + t('female') + ': ' + s.female, 'full-width')
-    + statCard('⛪', s.n, t('totalServices'), '')
-    + statCard('👥', s.avg, t('avgAttendance'), t('male') + ': ' + s.avgMale + ' · ' + t('female') + ': ' + s.avgFemale, '',
+    + statCard('users', s.total, t('statsTotalCommunicants'), t('male') + ': ' + s.male + ' · ' + t('female') + ': ' + s.female, 'full-width')
+    + statCard('church', s.n, t('totalServices'), '')
+    + statCard('activity', s.avg, t('avgAttendance'), t('male') + ': ' + s.avgMale + ' · ' + t('female') + ': ' + s.avgFemale, '',
         _compareHtml(history, sel, 'avg', s.avg))
-    + statCard('📈', Number(s.maxRecord.total) || 0, t('highestService'), fmtDate(s.maxRecord.date))
-    + statCard('📉', Number(s.minRecord.total) || 0, t('lowestService'), fmtDate(s.minRecord.date))
+    + statCard('trendUp', Number(s.maxRecord.total) || 0, t('highestService'), fmtDate(s.maxRecord.date))
+    + statCard('trendDown', Number(s.minRecord.total) || 0, t('lowestService'), fmtDate(s.minRecord.date))
     + '</div>'
     + _chartHtml(records)
     + '<div class="stats-actions">'
-    +   '<button class="stats-action-btn stats-share-btn" onclick="shareStatsReport()">' + t('statsShare') + '</button>'
-    +   '<button class="stats-action-btn stats-pdf-btn" onclick="exportStatsPDF()">' + t('statsPdf') + '</button>'
-    +   '<button class="stats-action-btn stats-export-btn" onclick="exportStatsCSV()">' + t('statsCsvShort') + '</button>'
+    +   '<button class="stats-action-btn stats-share-btn" onclick="shareStatsReport()">' + icon('share') + '<span>' + t('statsShare') + '</span></button>'
+    +   '<button class="stats-action-btn stats-pdf-btn" onclick="exportStatsPDF()">' + icon('fileDown') + '<span>' + t('statsPdf') + '</span></button>'
+    +   '<button class="stats-action-btn stats-export-btn" onclick="exportStatsCSV()">' + icon('table') + '<span>' + t('statsCsvShort') + '</span></button>'
     + '</div>';
 
   contentEl.innerHTML = html;

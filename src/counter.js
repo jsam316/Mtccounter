@@ -4,6 +4,7 @@ import { triggerHaptic, addHapticAnimation } from './haptic.js';
 import { showSuccessMsg, showErrorMsg } from './utils.js';
 import { withUndo } from './undo.js';
 import { isCountingLocked } from './lock.js';
+import { icon } from './icons.js';
 
 let male = 0;
 let female = 0;
@@ -178,7 +179,7 @@ export function displayRounds() {
     + '<th scope="col" class="male-total" title="' + t('male') + '">♂</th>'
     + '<th scope="col" class="female-total" title="' + t('female') + '">♀</th>'
     + '<th scope="col">' + t('total') + '</th>'
-    + '<th scope="col"><span class="sr-only">✕</span></th>'
+    + '<th scope="col"></th>'
     + '</tr></thead><tbody>';
   if (collapsible) {
     const label = _roundsExpanded ? t('roundShowLess') : t('roundShowAll').replace('{n}', rounds.length);
@@ -194,7 +195,7 @@ export function displayRounds() {
       + '<td class="female-total">' + round.female + '</td>'
       + '<td>' + (round.male + round.female) + '</td>'
       + '<td><button class="round-item-remove" onclick="removeRound(' + i + ')" aria-label="'
-      + t('roundRemoveLabel').replace('{n}', i + 1) + '">✕</button></td>'
+      + t('roundRemoveLabel').replace('{n}', i + 1) + '">' + icon('x') + '</button></td>'
       + '</tr>';
   }
   html += '</tbody><tfoot><tr>'
@@ -203,7 +204,7 @@ export function displayRounds() {
     + '<td class="female-total">' + totalFemale + '</td>'
     + '<td>' + (totalMale + totalFemale) + '</td>'
     + '<td><button class="clear-rounds-btn" onclick="clearRounds()" aria-label="' + t('clearRoundsBtn')
-    + '" title="' + t('clearRoundsBtn') + '">🗑</button></td>'
+    + '" title="' + t('clearRoundsBtn') + '">' + icon('trash') + '</button></td>'
     + '</tr></tfoot></table>';
 
   displayEl.innerHTML = html;
