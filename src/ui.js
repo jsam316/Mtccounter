@@ -58,9 +58,8 @@ export function initWakeLock() {
 
 export function toggleDarkMode() {
   document.body.classList.toggle('light-mode');
+  // The button shows a sun or moon icon via CSS (body.light-mode).
   const isLight = document.body.classList.contains('light-mode');
-  const btn = document.querySelector('.dark-mode-toggle');
-  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
   setString(KEYS.darkMode, isLight ? 'disabled' : 'enabled');
   triggerHaptic('light');
 }
@@ -68,8 +67,6 @@ export function toggleDarkMode() {
 export function initDarkMode() {
   if (getString(KEYS.darkMode) === 'disabled') {
     document.body.classList.add('light-mode');
-    const btn = document.querySelector('.dark-mode-toggle');
-    if (btn) btn.textContent = '🌙';
   }
 }
 
@@ -210,12 +207,12 @@ export function updateOnlineStatus() {
   const indicator = document.getElementById('offlineIndicator');
   if (isOnline) {
     indicator.classList.add('online');
-    indicator.innerHTML = '<span>🟢</span><span>' + t('online') + '</span>';
+    indicator.innerHTML = '<span class="status-dot"></span><span>' + t('online') + '</span>';
     indicator.classList.add('show');
     setTimeout(() => indicator.classList.remove('show'), 3000);
   } else {
     indicator.classList.remove('online');
-    indicator.innerHTML = '<span>🔴</span><span>' + t('offline') + '</span>';
+    indicator.innerHTML = '<span class="status-dot"></span><span>' + t('offline') + '</span>';
     indicator.classList.add('show');
   }
 }

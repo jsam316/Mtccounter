@@ -28,7 +28,6 @@ function _apply() {
   const btn = document.getElementById('lockBtn');
   if (btn) {
     btn.setAttribute('aria-pressed', String(_locked));
-    btn.querySelector('.lock-icon').textContent = _locked ? '🔒' : '🔓';
     btn.querySelector('.lock-label').textContent = t(_locked ? 'lockOn' : 'lockOff');
   }
 }

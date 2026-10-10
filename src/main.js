@@ -37,6 +37,11 @@ import { toggleCountingLock, isCountingLocked,
 import { initCloud, connectCloud, disconnectCloud, backupNow,
          restoreFromCloud, toggleCloudAuto, renderCloudCard }   from './cloud.js';
 
+import { injectIconSprite }                                  from './icons.js';
+
+// Icons first: markup and every render below reference them.
+injectIconSprite();
+
 // Wire switchTab to also trigger renders.
 setTabSwitchCallback(tab => {
   if (tab === 'history') { displayHistory(); renderCloudCard(); }

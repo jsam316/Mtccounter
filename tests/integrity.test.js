@@ -5,6 +5,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { translations } from '../src/translations.js';
+import { ICONS } from '../src/icons.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = p => readFileSync(join(root, p), 'utf8');
@@ -81,4 +82,16 @@ test('the web manifest is valid and its icons exist', () => {
   const manifest = JSON.parse(read('manifest.json'));
   assert.ok(manifest.icons.length > 0);
   for (const icon of manifest.icons) assert.ok(existsSync(join(root, icon.src)), icon.src);
+});
+
+test('every icon the app uses is defined in src/icons.js', () => {
+  const used = new Set();
+  for (const m of read('index.html').matchAll(/href="#i-([A-Za-z]+)"/g)) used.add(m[1]);
+  for (const f of readdirSync(join(root, 'src')).filter(f => f.endsWith('.js'))) {
+    for (const m of read('src/' + f).matchAll(/\bicon\('([a-z][A-Za-z]*)'/g)) used.add(m[1]);
+    for (const m of read('src/' + f).matchAll(/statCard\('([A-Za-z]+)'/g)) used.add(m[1]);
+  }
+  assert.ok(used.size > 20, 'expected to find the icons in use');
+  const missing = [...used].filter(n => !(n in ICONS));
+  assert.deepEqual(missing, [], 'icons used but not defined: ' + missing.join(', '));
 });
