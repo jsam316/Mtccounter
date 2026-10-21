@@ -35,8 +35,36 @@ function _apply() {
 export function toggleCountingLock() {
   _locked = !_locked;
   _apply();
+  if (_locked) centerCountingArea();
   triggerHaptic(_locked ? 'double' : 'light');
   showToast(t(_locked ? 'lockOnToast' : 'lockOffToast'), { type: 'info', duration: 2200 });
+}
+
+/**
+ * Scroll so the counting area (totals, both counters and the rounds) sits in
+ * the middle of the screen. If it is taller than the screen, keep as much as
+ * fits from the top: totals first, or the counters on short screens.
+ */
+export function centerCountingArea() {
+  const total = document.querySelector('.total-box');
+  const counters = document.getElementById('maleBox');
+  const rounds = document.querySelector('.round-total-section');
+  if (!total || !counters || !rounds) return;
+
+  const viewH = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  const margin = 12;
+  const docTop = el => el.getBoundingClientRect().top + window.scrollY;
+  const bottom = rounds.getBoundingClientRect().bottom + window.scrollY;
+
+  let top = docTop(total);
+  if (bottom - top > viewH - 2 * margin) top = docTop(counters);
+  const height = bottom - top;
+  const target = height <= viewH - 2 * margin
+    ? top - (viewH - height) / 2   // fits: centre it
+    : top - margin;                // too tall: start at the top of it
+
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({ top: Math.max(0, target), behavior: reduce ? 'auto' : 'smooth' });
 }
 
 /** Re-apply labels after a language change. */
