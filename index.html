@@ -112,10 +112,11 @@
 
         <div class="co-celebrants-field" id="coCelebrantsField">
           <div class="input-group">
-            <label data-i18n="coCelebrantsInputLabel">Co-Celebrants Names</label>
+            <label id="coCelebrantsHeading" data-i18n="coCelebrantsInputLabel">Co-Celebrants Names</label>
             <div style="display: flex; gap: 8px; align-items: flex-start;">
-              <select id="coCelebrants" multiple size="3" style="flex: 1;">
-              </select>
+              <!-- Tappable name chips: a <select multiple> shows as a closed
+                   "0 Items" box on iPhone, hiding who is selected. -->
+              <div id="coCelebrants" class="co-chips" role="group" aria-labelledby="coCelebrantsHeading"></div>
               <button class="manage-celebrants-btn" onclick="openCelebrantManager()" title="Manage Celebrants" aria-label="Manage celebrants"><svg class="icon" aria-hidden="true"><use href="#i-sliders"></use></svg></button>
             </div>
           </div>

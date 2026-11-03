@@ -33,7 +33,10 @@ function _restoreLastDetails() {
   for (const [id, value] of [['parishName', last.parishName], ['celebrant', last.celebrant]]) {
     const select = document.getElementById(id);
     if (!select || select.value || !value) continue;
-    if ([...select.options].some(o => o.value === value)) select.value = value;
+    if (![...select.options].some(o => o.value === value)) continue;
+    select.value = value;
+    // Let other parts react as if picked by hand (e.g. the co-celebrant chips).
+    select.dispatchEvent(new Event('change', { bubbles: true }));
   }
 }
 
