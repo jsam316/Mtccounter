@@ -3,6 +3,7 @@ import { t } from './translations.js';
 import { triggerHaptic } from './haptic.js';
 import { showSuccessMsg, showErrorMsg, escapeHtml } from './utils.js';
 import { withUndo } from './undo.js';
+import { icon } from './icons.js';
 
 export function getSavedCelebrants() {
   return load(KEYS.celebrants, []);
@@ -29,21 +30,60 @@ export function updateCelebrantDatalist() {
   });
   if (currentValue) select.value = currentValue;
 
-  const coSelect = document.getElementById('coCelebrants');
-  const selectedValues = Array.from(coSelect.selectedOptions).map(o => o.value);
-  coSelect.innerHTML = '';
-  celebrants.forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    if (selectedValues.includes(name)) opt.selected = true;
-    coSelect.appendChild(opt);
-  });
+  // A name deleted from the list disappears from the chips (and the saved
+  // value) but keeps its tick, so Undo brings it back exactly as it was.
+  renderCoCelebrants();
+}
+
+// ── Co-celebrants: one chip per saved celebrant, tap to select ───────────────
+
+const _coSelected = new Set();
+let _coExtra = []; // names on a loaded record that aren't in the saved list
+
+/** Names offered as chips, in list order. The main celebrant is left out. */
+function _coNames() {
+  const main = document.getElementById('celebrant')?.value || '';
+  const names = [...getSavedCelebrants()];
+  for (const n of _coExtra) if (!names.includes(n)) names.push(n);
+  return names.filter(n => n !== main);
+}
+
+export function renderCoCelebrants() {
+  const box = document.getElementById('coCelebrants');
+  if (!box) return;
+  const names = _coNames();
+  if (names.length === 0) {
+    box.innerHTML = '<p class="co-chips-empty" data-i18n="coCelebrantsEmpty">' + t('coCelebrantsEmpty') + '</p>';
+    return;
+  }
+  box.innerHTML = names.map(n => {
+    const on = _coSelected.has(n);
+    return '<button type="button" class="co-chip" aria-pressed="' + on + '" data-name="' + escapeHtml(n) + '">'
+      + icon('check', 'co-chip-check') + '<span>' + escapeHtml(n) + '</span></button>';
+  }).join('');
+}
+
+function _onCoChipTap(e) {
+  const chip = e.target.closest('.co-chip');
+  if (!chip) return;
+  const name = chip.dataset.name;
+  if (_coSelected.has(name)) _coSelected.delete(name); else _coSelected.add(name);
+  chip.setAttribute('aria-pressed', String(_coSelected.has(name)));
+  triggerHaptic('light');
+}
+
+/** Select exactly these names (used when a saved record is loaded). */
+export function setCoCelebrants(names) {
+  const list = (names || []).map(n => n.trim()).filter(Boolean);
+  const saved = getSavedCelebrants();
+  _coExtra = list.filter(n => !saved.includes(n));
+  _coSelected.clear();
+  list.forEach(n => _coSelected.add(n));
+  renderCoCelebrants();
 }
 
 export function getCoCelebrantsValue() {
-  const coSelect = document.getElementById('coCelebrants');
-  return Array.from(coSelect.selectedOptions).map(o => o.value).join(', ');
+  return _coNames().filter(n => _coSelected.has(n)).join(', ');
 }
 
 export function openCelebrantManager() {
@@ -120,6 +160,9 @@ export function toggleCoCelebrants() {
 }
 
 export function initCoCelebrantsToggle() {
+  document.getElementById('coCelebrants').addEventListener('click', _onCoChipTap);
+  // The main celebrant can't also be a co-celebrant: refresh the chips.
+  document.getElementById('celebrant').addEventListener('change', renderCoCelebrants);
   if (localStorage.getItem('coCelebrantsEnabled') === 'true') {
     const toggle = document.getElementById('coCelebrantsToggle');
     toggle.classList.add('active');

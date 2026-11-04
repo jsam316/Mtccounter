@@ -4,7 +4,7 @@ import { triggerHaptic } from './haptic.js';
 import { isNotSpecified, escapeHtml, recordKey, showSuccessMsg, showErrorMsg } from './utils.js';
 import { withUndo } from './undo.js';
 import { getMale, getFemale, getRounds, resetCounters } from './counter.js';
-import { getCoCelebrantsValue } from './celebrants.js';
+import { getCoCelebrantsValue, setCoCelebrants } from './celebrants.js';
 import { updateChapterOptions, updateVerseOptions } from './scripture.js';
 import { switchTab } from './ui.js';
 import { updateLectionaryHint } from './lectionary.js';
@@ -178,11 +178,9 @@ export function loadRecord(index) {
   document.getElementById('parishName').value = isNotSpecified(record.parishName) ? '' : record.parishName;
   document.getElementById('celebrant').value  = isNotSpecified(record.celebrant)  ? '' : record.celebrant;
 
-  const coSelect = document.getElementById('coCelebrants');
-  Array.from(coSelect.options).forEach(o => { o.selected = false; });
-  if (record.coCelebrants && !isNotSpecified(record.coCelebrants)) {
-    const names = record.coCelebrants.split(',').map(n => n.trim());
-    Array.from(coSelect.options).forEach(o => { if (names.includes(o.value)) o.selected = true; });
+  const hasCo = record.coCelebrants && !isNotSpecified(record.coCelebrants);
+  setCoCelebrants(hasCo ? record.coCelebrants.split(',') : []);
+  if (hasCo) {
     if (!document.getElementById('coCelebrantsToggle').classList.contains('active')) {
       // Import side-effect: toggleCoCelebrants is exposed globally
       window.toggleCoCelebrants && window.toggleCoCelebrants();

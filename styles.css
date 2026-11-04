@@ -440,7 +440,29 @@ input:focus, select:focus {
   opacity: 0;
   margin-bottom: 0;
 }
-.co-celebrants-field.active { max-height: 220px; opacity: 1; margin-bottom: 16px; }
+.co-celebrants-field.active { max-height: 520px; opacity: 1; margin-bottom: 16px; }
+
+/* Co-celebrant chips: tap a name to select it */
+.co-chips { flex: 1; display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.co-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px; font-weight: 600; font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.co-chip .co-chip-check { width: 15px; height: 15px; stroke-width: 3; display: none; }
+.co-chip[aria-pressed="true"] { background: var(--accent); border-color: transparent; color: #fff; }
+.co-chip[aria-pressed="true"] .co-chip-check { display: block; }
+.light-mode .co-chip { background: rgba(255, 255, 255, 0.85); border-color: rgba(0, 0, 0, 0.1); color: #1e293b; }
+.light-mode .co-chip[aria-pressed="true"] { background: var(--accent); border-color: transparent; color: #fff; }
+.co-chips-empty { font-size: 13px; line-height: 1.45; color: rgba(255, 255, 255, 0.5); padding: 10px 0; }
+.light-mode .co-chips-empty { color: rgba(0, 0, 0, 0.45); }
 
 /* Grand Total Box */
 .total-box {
