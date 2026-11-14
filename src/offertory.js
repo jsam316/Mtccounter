@@ -43,20 +43,20 @@ const CURRENCY_DATA = {
 export const CURRENCIES = Object.freeze(Object.keys(CURRENCY_DATA).map(code => [code, CURRENCY_DATA[code][0]]));
 /**
  * The columns that are counted. The first four are the paper form's; Family
- * Day and Upokshanam are extra ones, printed only when something was counted
+ * Day and Upakoshanam are extra ones, printed only when something was counted
  * in them so an ordinary week's sheet still looks like the form.
  */
-export const COLUMNS = Object.freeze(['offertory', 'birthday', 'wedding', 'special', 'familyDay', 'upokshanam']);
-const EXTRA_COLUMNS = Object.freeze(['familyDay', 'upokshanam']);
+export const COLUMNS = Object.freeze(['offertory', 'birthday', 'wedding', 'special', 'familyDay', 'upakoshanam']);
+const EXTRA_COLUMNS = Object.freeze(['familyDay', 'upakoshanam']);
 export const OFFERTORY_LABEL_KEYS = Object.freeze({
   offertory: 'offertoryColOffertory', birthday: 'offertoryBirthday', wedding: 'offertoryWedding',
-  special: 'offertorySpecial', familyDay: 'offertoryFamilyDay', upokshanam: 'offertoryUpokshanam',
+  special: 'offertorySpecial', familyDay: 'offertoryFamilyDay', upakoshanam: 'offertoryUpakoshanam',
   total: 'offertoryColTotal',
 });
 const COLUMN_LABEL = OFFERTORY_LABEL_KEYS;
 const COLUMN_PDF = {
   offertory: 'OFFERTORY', birthday: 'BIRTHDAY', wedding: 'WEDDING', special: 'SPECIAL',
-  familyDay: 'FAMILY DAY', upokshanam: 'UPOKSHANAM', total: 'TOTAL',
+  familyDay: 'FAMILY DAY', upakoshanam: 'UPAKOSHANAM', total: 'TOTAL',
 };
 const MAX_UNITS = 99999;
 
