@@ -146,7 +146,8 @@ export async function exportPDF() {
 
   doc.setFontSize(20);
   doc.setFont(undefined, 'bold');
-  doc.text(lang === 'ml' ? 'മാർത്തോമ്മാ പള്ളി' : '⛪ MarThoma Church', 105, 20, { align: 'center' });
+  // Plain Latin text only: the PDF fonts cannot draw emoji or Malayalam.
+  doc.text('MarThoma Church', 105, 20, { align: 'center' });
   doc.setFontSize(16);
   doc.text(t('serviceDetails'), 105, 30, { align: 'center' });
   doc.setLineWidth(0.5);
