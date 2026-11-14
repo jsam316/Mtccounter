@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {
   parseUnits, denominations, splitAmount, formatAmount, formatMoney, normalizeOffertory, offertorySheet,
   isOffertoryEmpty, numberToWords, amountInWords, currencyDecimals, minorUnitName, guessCurrency,
-  formDate, buildOffertoryReport, CURRENCIES, COLUMNS,
+  formDate, buildOffertoryReport, offertorySummary, CURRENCIES, COLUMNS,
 } from '../src/offertory.js';
 import { translations } from '../src/translations.js';
 
@@ -141,6 +141,19 @@ test('PDF contents reproduce the form', () => {
   assert.equal(plain.columns[3], 'SPECIAL');
   assert.deepEqual(plain.subheads, ['UNIT', 'INR', 'PAISE']);
   assert.deepEqual(plain.totals[1], { major: '', minor: '' }); // empty column left blank
+});
+
+test('summary for the service exports: column totals as plain text', () => {
+  const sum = offertorySummary(sample);
+  assert.deepEqual(sum.columns, [
+    { column: 'offertory', label: '', amount: 'KWD 72.200' },
+    { column: 'birthday', label: '', amount: 'KWD 10.000' },
+    { column: 'wedding', label: '', amount: 'KWD 40.000' },
+    { column: 'special', label: 'Family Day', amount: 'KWD 100.000' },
+  ]);
+  assert.equal(sum.total, 'KWD 222.200');
+  assert.equal(sum.words, 'Two hundred and twenty-two Kuwaiti Dinars and 200/1000 fils');
+  assert.match(sum.total, /^[A-Z]{3} [\d,.]+$/); // letters and digits only, safe for the PDF
 });
 
 test('offertory strings exist in both languages', () => {
