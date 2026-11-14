@@ -30,14 +30,12 @@ function getScriptureText(fallback) {
   return s;
 }
 
+// Same total as the screen and the saved record: every round plus whatever
+// is on the counters and not yet added to a round.
 function getFormTotals() {
-  const rounds = getRounds();
   let totalMale   = getMale();
   let totalFemale = getFemale();
-  if (rounds.length > 0) {
-    totalMale = 0; totalFemale = 0;
-    rounds.forEach(r => { totalMale += r.male; totalFemale += r.female; });
-  }
+  getRounds().forEach(r => { totalMale += r.male; totalFemale += r.female; });
   return { totalMale, totalFemale };
 }
 
