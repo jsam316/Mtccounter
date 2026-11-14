@@ -5,6 +5,7 @@ import { showSuccessMsg, showErrorMsg } from './utils.js';
 import { withUndo } from './undo.js';
 import { isCountingLocked } from './lock.js';
 import { icon } from './icons.js';
+import { hasOffertory, clearOffertory } from './offertory.js';
 
 let male = 0;
 let female = 0;
@@ -80,11 +81,12 @@ export function updateDisplay() {
 }
 
 export function newRecord() {
-  if (male === 0 && female === 0 && rounds.length === 0) return; // nothing to clear
+  if (male === 0 && female === 0 && rounds.length === 0 && !hasOffertory()) return; // nothing to clear
   withUndo(t('newRecordDone'), () => {
     male = 0;
     female = 0;
     rounds = [];
+    clearOffertory();
     saveLiveCounts();
     saveRounds();
     updateDisplay();

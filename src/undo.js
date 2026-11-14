@@ -14,6 +14,7 @@ import { triggerHaptic } from './haptic.js';
 // Everything an undoable action can change.
 export const UNDO_KEYS = Object.freeze([
   KEYS.history, KEYS.celebrants, KEYS.parishes, KEYS.rounds, KEYS.liveCounts,
+  KEYS.offertory,
 ]);
 
 const UNDO_SECONDS = 7;

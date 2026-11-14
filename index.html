@@ -276,6 +276,37 @@
         </div>
       </div>
 
+      <!-- Offertory counting sheet (notes and coins per column, like the
+           paper form). Collapsed by default so the counters stay in reach. -->
+      <details id="offertoryDetails" class="service-details offertory-details">
+        <summary class="service-summary">
+          <span class="service-summary-icon off-summary-icon"><svg class="icon" aria-hidden="true"><use href="#i-banknote"></use></svg></span>
+          <span class="service-summary-text">
+            <span class="service-summary-title" data-i18n="offertoryTitle">Offertory</span>
+            <span id="offertorySummary" class="service-summary-recap"></span>
+          </span>
+          <span class="service-summary-chevron"><svg class="icon" aria-hidden="true"><use href="#i-chevronR"></use></svg></span>
+        </summary>
+        <div class="service-details-body">
+          <!-- Sheet heading: label on the left, field on the right -->
+          <div class="off-fields">
+            <label for="offCurrency" data-i18n="offertoryCurrency">Currency</label>
+            <select id="offCurrency" onchange="setOffertoryCurrency(this.value)"></select>
+            <label for="offVenue" data-i18n="offertoryVenue">Venue</label>
+            <input type="text" id="offVenue" data-i18n-placeholder="offertoryVenuePlaceholder" placeholder="e.g. Hall of Peace" autocomplete="off">
+            <label for="offSpecialName" data-i18n="offertorySpecialName">Special name</label>
+            <input type="text" id="offSpecialName" data-i18n-placeholder="offertorySpecialPlaceholder" placeholder="e.g. Family Day" autocomplete="off">
+          </div>
+
+          <!-- The form's columns as tabs; each shows one row per note or coin. -->
+          <div id="offTabs" class="stats-segments off-tabs" role="group" aria-label="Offertory columns"></div>
+          <div id="offRows" class="off-rows"></div>
+
+          <div id="offTotals" class="off-totals"></div>
+          <button type="button" class="off-pdf-btn" onclick="exportOffertoryPDF()"><svg class="icon" aria-hidden="true"><use href="#i-fileDown"></use></svg><span data-i18n="offertoryPdf">Offertory PDF</span></button>
+        </div>
+      </details>
+
       <div class="action-buttons">
         <button class="action-btn save-btn" onclick="saveRecord()" title="Save Record">
           <svg class="icon btn-icon" aria-hidden="true"><use href="#i-save"></use></svg>

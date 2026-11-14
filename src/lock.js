@@ -13,7 +13,7 @@ import { showToast } from './toast.js';
 
 const LOCKED_SELECTORS = [
   '.top-controls', '.tabs', '#serviceDetails', '.assist-launch-btn',
-  '.clear-rounds-btn', '.action-buttons', '.app-footer',
+  '.clear-rounds-btn', '#offertoryDetails', '.action-buttons', '.app-footer',
 ];
 
 let _locked = false;

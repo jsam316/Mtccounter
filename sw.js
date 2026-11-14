@@ -37,6 +37,7 @@ const urlsToCache = [
   './src/undo.js',
   './src/lock.js',
   './src/icons.js',
+  './src/offertory.js',
   './vendor/jspdf.umd.min.js',
   // Note: vendor/tf.min.js and vendor/coco-ssd.min.js are deliberately NOT
   // precached (~1.5 MB) — the fetch handler runtime-caches them on first

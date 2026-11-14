@@ -5,7 +5,7 @@ import { takeSnapshot, restoreSnapshot, UNDO_KEYS } from '../src/undo.js';
 import { KEYS } from '../src/state.js';
 
 test('undo covers records, names, rounds and live counts', () => {
-  for (const k of [KEYS.history, KEYS.celebrants, KEYS.parishes, KEYS.rounds, KEYS.liveCounts]) {
+  for (const k of [KEYS.history, KEYS.celebrants, KEYS.parishes, KEYS.rounds, KEYS.liveCounts, KEYS.offertory]) {
     assert.ok(UNDO_KEYS.includes(k), k);
   }
 });
