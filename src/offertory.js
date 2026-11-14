@@ -41,10 +41,23 @@ const CURRENCY_DATA = {
 };
 
 export const CURRENCIES = Object.freeze(Object.keys(CURRENCY_DATA).map(code => [code, CURRENCY_DATA[code][0]]));
-/** The four columns that are counted; the form's fifth column is their total. */
-export const COLUMNS = Object.freeze(['offertory', 'birthday', 'wedding', 'special']);
-const COLUMN_LABEL = { offertory: 'offertoryColOffertory', birthday: 'offertoryBirthday', wedding: 'offertoryWedding', special: 'offertorySpecial', total: 'offertoryColTotal' };
-const COLUMN_PDF = { offertory: 'OFFERTORY', birthday: 'BIRTHDAY', wedding: 'WEDDING', special: 'SPECIAL', total: 'TOTAL' };
+/**
+ * The columns that are counted. The first four are the paper form's; Family
+ * Day and Upakoshanam are extra ones, printed only when something was counted
+ * in them so an ordinary week's sheet still looks like the form.
+ */
+export const COLUMNS = Object.freeze(['offertory', 'birthday', 'wedding', 'special', 'familyDay', 'upakoshanam']);
+const EXTRA_COLUMNS = Object.freeze(['familyDay', 'upakoshanam']);
+export const OFFERTORY_LABEL_KEYS = Object.freeze({
+  offertory: 'offertoryColOffertory', birthday: 'offertoryBirthday', wedding: 'offertoryWedding',
+  special: 'offertorySpecial', familyDay: 'offertoryFamilyDay', upakoshanam: 'offertoryUpakoshanam',
+  total: 'offertoryColTotal',
+});
+const COLUMN_LABEL = OFFERTORY_LABEL_KEYS;
+const COLUMN_PDF = {
+  offertory: 'OFFERTORY', birthday: 'BIRTHDAY', wedding: 'WEDDING', special: 'SPECIAL',
+  familyDay: 'FAMILY DAY', upakoshanam: 'UPAKOSHANAM', total: 'TOTAL',
+};
 const MAX_UNITS = 99999;
 
 const isCurrency = code => Object.prototype.hasOwnProperty.call(CURRENCY_DATA, code);
@@ -124,7 +137,8 @@ export function normalizeOffertory(raw, fallbackCurrency = 'KWD') {
  * each column and in Total, plus each column's total (all in minor units).
  */
 export function offertorySheet(off) {
-  const columnTotals = { offertory: 0, birthday: 0, wedding: 0, special: 0, total: 0 };
+  const columnTotals = { total: 0 };
+  for (const col of COLUMNS) columnTotals[col] = 0;
   const rows = denominations(off.currency).map(d => {
     const cells = {};
     let units = 0;
@@ -192,13 +206,18 @@ export function formDate(iso) {
   return isNaN(d) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+/** The form's four columns, plus an extra column only when it has a count. */
+export function printedColumns(off, sheet = offertorySheet(off)) {
+  return COLUMNS.filter(col => !EXTRA_COLUMNS.includes(col) || sheet.columnTotals[col] > 0);
+}
+
 /**
  * Everything the PDF prints, in the paper form's layout. English only: the
  * PDF fonts cannot draw Malayalam.
  */
 export function buildOffertoryReport(off, details = {}) {
   const sheet = offertorySheet(off);
-  const cols = [...COLUMNS, 'total'];
+  const cols = [...printedColumns(off, sheet), 'total'];
   const cell = c => c.units === 0 ? { unit: '', major: '', minor: '' } : { unit: String(c.units), ...splitAmount(c.amount, off.currency) };
   return {
     church: (details.parish || 'Mar Thoma Church').toUpperCase(),
@@ -219,12 +238,13 @@ export function buildOffertoryReport(off, details = {}) {
  * plain "KWD 72.200" text. `label` is set only for a renamed Special column.
  */
 export function offertorySummary(off) {
-  const { columnTotals } = offertorySheet(off);
+  const sheet = offertorySheet(off);
+  const { columnTotals } = sheet;
   const money = minor => off.currency + ' ' + formatAmount(minor, off.currency);
   return {
     currency: off.currency,
     venue: off.venue,
-    columns: COLUMNS.map(col => ({
+    columns: printedColumns(off, sheet).map(col => ({
       column: col,
       label: col === 'special' ? off.specialLabel : '',
       amount: money(columnTotals[col]),
@@ -435,11 +455,21 @@ export function drawOffertorySheet(doc, r) {
   doc.text(r.date, LEFT + 56, 27.6);
   doc.text(doc.splitTextToSize(r.venue, RIGHT - 12 - 165)[0] || '', 165, 27.6);
 
-  // Table geometry: Denomination (value + X), then 5 groups of UNIT | major | minor
+  // Table geometry: Denomination (value + X), then one group of UNIT | major |
+  // minor per column (5 as on the paper form, up to 7 with the extra columns).
+  const groups = r.columns.length;
+  // Draw centred text, shrinking it when a narrow cell needs it.
+  const fit = (text, x, y, width, size) => {
+    let s = size;
+    doc.setFontSize(s);
+    while (s > 5 && doc.getTextWidth(String(text)) > width - 1) { s -= 0.5; doc.setFontSize(s); }
+    center(text, x, y);
+    doc.setFontSize(size);
+  };
   const top = 34, headH = 8, subH = 6.5;
   const rowH = Math.min(7.6, (150 - top - headH - subH) / (r.rows.length + 1));
   const denomW = 22, xW = 11;
-  const groupW = (RIGHT - LEFT - denomW - xW) / 5;
+  const groupW = (RIGHT - LEFT - denomW - xW) / groups;
   const subW = [groupW * 0.27, groupW * 0.40, groupW * 0.33];
   const groupX = g => LEFT + denomW + xW + g * groupW;
   const subX = (g, s) => groupX(g) + subW.slice(0, s).reduce((a, b) => a + b, 0);
@@ -450,14 +480,10 @@ export function drawOffertorySheet(doc, r) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.5);
   center('Denomination', LEFT + (denomW + xW) / 2, top + 5.4);
-  r.columns.forEach((name, g) => {
-    const fit = doc.splitTextToSize(name, groupW - 2)[0];
-    center(fit, groupX(g) + groupW / 2, top + 5.4);
-  });
+  r.columns.forEach((name, g) => fit(name, groupX(g) + groupW / 2, top + 5.4, groupW, 9.5));
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  for (let g = 0; g < 5; g++) {
-    r.subheads.forEach((h, s) => center(h, subX(g, s) + subW[s] / 2, top + headH + 4.4));
+  for (let g = 0; g < groups; g++) {
+    r.subheads.forEach((h, s) => fit(h, subX(g, s) + subW[s] / 2, top + headH + 4.4, subW[s], 8));
   }
 
   // Rows
@@ -467,8 +493,8 @@ export function drawOffertorySheet(doc, r) {
     center(row.label, LEFT + denomW / 2, y);
     center('X', LEFT + denomW + xW / 2, y);
     row.cells.forEach((c, g) => {
-      doc.setFont('helvetica', g === 4 ? 'bold' : 'normal');
-      [c.unit, c.major, c.minor].forEach((text, s) => { if (text !== '') center(text, subX(g, s) + subW[s] / 2, y); });
+      doc.setFont('helvetica', g === groups - 1 ? 'bold' : 'normal');
+      [c.unit, c.major, c.minor].forEach((text, s) => { if (text !== '') fit(text, subX(g, s) + subW[s] / 2, y, subW[s], 10.5); });
     });
     doc.setFont('helvetica', 'normal');
   });
@@ -478,11 +504,10 @@ export function drawOffertorySheet(doc, r) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   center(r.totalLabel, LEFT + (denomW + xW) / 2, totalY);
-  doc.setFontSize(11);
   r.totals.forEach((tot, g) => {
     if (tot.major === '') return;
-    center(tot.major, subX(g, 1) + subW[1] / 2, totalY);
-    center(tot.minor, subX(g, 2) + subW[2] / 2, totalY);
+    fit(tot.major, subX(g, 1) + subW[1] / 2, totalY, subW[1], 11);
+    fit(tot.minor, subX(g, 2) + subW[2] / 2, totalY, subW[2], 11);
   });
 
   // Grid lines: thick frame and group dividers, thin cell lines
@@ -490,12 +515,12 @@ export function drawOffertorySheet(doc, r) {
   doc.rect(LEFT, top, RIGHT - LEFT, bottom - top);
   doc.line(LEFT, top + headH, RIGHT, top + headH);
   doc.line(LEFT, bottom - rowH, RIGHT, bottom - rowH);
-  for (let g = 0; g < 5; g++) doc.line(groupX(g), top, groupX(g), bottom);
+  for (let g = 0; g < groups; g++) doc.line(groupX(g), top, groupX(g), bottom);
   doc.setLineWidth(0.2);
   doc.line(LEFT + denomW, bodyTop, LEFT + denomW, bottom - rowH);
   doc.line(LEFT, bodyTop, RIGHT, bodyTop);
   for (let i = 1; i < r.rows.length; i++) doc.line(LEFT, bodyTop + rowH * i, RIGHT, bodyTop + rowH * i);
-  for (let g = 0; g < 5; g++) {
+  for (let g = 0; g < groups; g++) {
     for (let s = 1; s < 3; s++) doc.line(subX(g, s), top + headH, subX(g, s), bottom);
   }
 
