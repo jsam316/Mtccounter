@@ -9,7 +9,7 @@ import { getHistory, saveHistory, displayHistory } from './history.js';
 import { updateCelebrantDatalist } from './celebrants.js';
 import { updateParishDatalist } from './parishes.js';
 import { getCurrentOffertory, offertorySummary, offertoryColumnLabel,
-         buildOffertoryReport, drawOffertorySheet } from './offertory.js';
+         buildOffertoryReport, drawOffertorySheet, OFFERTORY_LABEL_KEYS } from './offertory.js';
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
@@ -195,8 +195,7 @@ export async function exportPDF() {
   const offertory = getCurrentOffertory();
   if (offertory) {
     const sum = offertorySummary(offertory);
-    const colName = c => c.label || en({ offertory: 'offertoryColOffertory', birthday: 'offertoryBirthday',
-      wedding: 'offertoryWedding', special: 'offertorySpecial' }[c.column]);
+    const colName = c => c.label || en(OFFERTORY_LABEL_KEYS[c.column]);
     y += 16;
     doc.setFontSize(12);
     doc.text('Offertory Summary', 20, y); y += 10;

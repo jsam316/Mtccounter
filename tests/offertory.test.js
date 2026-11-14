@@ -156,6 +156,41 @@ test('summary for the service exports: column totals as plain text', () => {
   assert.match(sum.total, /^[A-Z]{3} [\d,.]+$/); // letters and digits only, safe for the PDF
 });
 
+test('Family Day and Upokshanam columns: counted, and printed only when used', () => {
+  assert.deepEqual([...COLUMNS], ['offertory', 'birthday', 'wedding', 'special', 'familyDay', 'upokshanam']);
+  // Not used: the sheet keeps the paper form's five columns.
+  assert.equal(buildOffertoryReport(sample).columns.length, 5);
+  assert.equal(offertorySummary(sample).columns.length, 4);
+
+  const more = normalizeOffertory({
+    ...sample,
+    counts: { ...sample.counts, familyDay: { '20': 1, '0.500': 3 }, upokshanam: { '5': 4 } },
+  });
+  const s = offertorySheet(more);
+  assert.equal(formatAmount(s.columnTotals.familyDay, 'KWD'), '21.500');
+  assert.equal(formatAmount(s.columnTotals.upokshanam, 'KWD'), '20.000');
+  assert.equal(formatAmount(s.columnTotals.total, 'KWD'), '263.700'); // 222.200 + 21.500 + 20.000
+  assert.deepEqual(s.rows.find(r => r.key === '20').cells.total, { units: 3, amount: 60000 });
+
+  const r = buildOffertoryReport(more);
+  assert.deepEqual(r.columns, ['OFFERTORY', 'BIRTHDAY', 'WEDDING', 'FAMILY DAY', 'FAMILY DAY', 'UPOKSHANAM', 'TOTAL']);
+  assert.equal(r.rows[0].cells.length, 7);
+  assert.deepEqual(r.totals.map(x => x.major + '.' + x.minor),
+    ['72.200', '10.000', '40.000', '100.000', '21.500', '20.000', '263.700']);
+  assert.equal(r.words, 'Two hundred and sixty-three Kuwaiti Dinars and 700/1000 fils');
+  assert.deepEqual(offertorySummary(more).columns.slice(4), [
+    { column: 'familyDay', label: '', amount: 'KWD 21.500' },
+    { column: 'upokshanam', label: '', amount: 'KWD 20.000' },
+  ]);
+
+  // Only one of the two used: only that one is printed.
+  const one = normalizeOffertory({ currency: 'KWD', counts: { offertory: { '1': 5 }, upokshanam: { '10': 1 } } });
+  assert.deepEqual(buildOffertoryReport(one).columns, ['OFFERTORY', 'BIRTHDAY', 'WEDDING', 'SPECIAL', 'UPOKSHANAM', 'TOTAL']);
+  assert.ok(!isOffertoryEmpty(normalizeOffertory({ currency: 'KWD', counts: { familyDay: { '1': 1 } } })));
+  // Sheets saved before these columns existed still load.
+  assert.deepEqual(normalizeOffertory({ currency: 'KWD', counts: { offertory: { '1': 2 } } }).counts.upokshanam, {});
+});
+
 test('offertory strings exist in both languages', () => {
   const keys = Object.keys(translations.en).filter(k => k.startsWith('offertory'));
   assert.ok(keys.length >= 15);
