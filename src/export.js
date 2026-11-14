@@ -1,5 +1,5 @@
 import { save, load, KEYS } from './state.js';
-import { t, getCurrentLang } from './translations.js';
+import { t, getCurrentLang, translations } from './translations.js';
 import { triggerHaptic } from './haptic.js';
 import { showSuccessMsg, showErrorMsg } from './utils.js';
 import { withUndo } from './undo.js';
@@ -125,19 +125,19 @@ export async function exportPDF() {
     triggerHaptic('error');
     return;
   }
-  const lang        = getCurrentLang();
+  // English throughout: the PDF fonts cannot draw Malayalam (or emoji).
+  const en          = key => translations.en[key];
   const date        = document.getElementById('date').value;
-  const parishName  = document.getElementById('parishName').value || t('notSpecified');
-  const celebrant   = document.getElementById('celebrant').value  || t('notSpecified');
+  const parishName  = document.getElementById('parishName').value || en('notSpecified');
+  const celebrant   = document.getElementById('celebrant').value  || en('notSpecified');
   let coCelebrants  = '';
   if (document.getElementById('coCelebrantsToggle').classList.contains('active')) {
-    coCelebrants = getCoCelebrantsValue() || t('notSpecified');
+    coCelebrants = getCoCelebrantsValue() || en('notSpecified');
   }
-  const sermon      = document.getElementById('sermon').value || t('notSpecified');
-  const scripture   = getScriptureText(t('notSpecified'));
+  const sermon      = document.getElementById('sermon').value || en('notSpecified');
+  const scripture   = getScriptureText(en('notSpecified'));
   const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString(
-    lang === 'ml' ? 'ml-IN' : 'en-US',
-    { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+    'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
   );
   const { totalMale, totalFemale } = getFormTotals();
 
@@ -146,40 +146,41 @@ export async function exportPDF() {
 
   doc.setFontSize(20);
   doc.setFont(undefined, 'bold');
-  doc.text(lang === 'ml' ? 'മാർത്തോമ്മാ പള്ളി' : '⛪ MarThoma Church', 105, 20, { align: 'center' });
+  // Plain Latin text only: the PDF fonts cannot draw emoji or Malayalam.
+  doc.text('MarThoma Church', 105, 20, { align: 'center' });
   doc.setFontSize(16);
-  doc.text(t('serviceDetails'), 105, 30, { align: 'center' });
+  doc.text(en('serviceDetails'), 105, 30, { align: 'center' });
   doc.setLineWidth(0.5);
   doc.line(20, 35, 190, 35);
 
   doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
-  doc.text(t('serviceDetails'), 20, 45);
+  doc.text(en('serviceDetails'), 20, 45);
   doc.setFont(undefined, 'normal');
 
   let y = 55;
-  doc.text(t('dateLabel')   + ': ' + formattedDate, 20, y); y += 8;
+  doc.text(en('dateLabel')   + ': ' + formattedDate, 20, y); y += 8;
   const service = (document.getElementById('service')?.value || '').trim();
-  if (service) { doc.text(t('service') + ': ' + service, 20, y); y += 8; }
-  doc.text(t('parish')      + ': ' + parishName,    20, y); y += 8;
-  doc.text(t('celebrant')   + ': ' + celebrant,     20, y);
-  if (coCelebrants && coCelebrants !== t('notSpecified') && coCelebrants !== '') {
+  if (service) { doc.text(en('service') + ': ' + service, 20, y); y += 8; }
+  doc.text(en('parish')      + ': ' + parishName,    20, y); y += 8;
+  doc.text(en('celebrant')   + ': ' + celebrant,     20, y);
+  if (coCelebrants && coCelebrants !== en('notSpecified') && coCelebrants !== '') {
     y += 8;
-    doc.text(t('coCelebrantsLabel') + ': ' + coCelebrants, 20, y);
+    doc.text(en('coCelebrantsLabel') + ': ' + coCelebrants, 20, y);
   }
-  y += 8; doc.text(t('sermon')    + ': ' + sermon,    20, y);
-  y += 8; doc.text(t('scripture') + ': ' + scripture, 20, y);
+  y += 8; doc.text(en('sermon')    + ': ' + sermon,    20, y);
+  y += 8; doc.text(en('scripture') + ': ' + scripture, 20, y);
   y += 13;
 
   doc.setFont(undefined, 'bold');
-  doc.text(t('attendanceSummary'), 20, y); y += 10;
+  doc.text(en('attendanceSummary'), 20, y); y += 10;
   doc.setFont(undefined, 'normal');
-  doc.text(t('male')   + ': ' + totalMale,   20, y); y += 8;
-  doc.text(t('female') + ': ' + totalFemale, 20, y); y += 12;
+  doc.text(en('male')   + ': ' + totalMale,   20, y); y += 8;
+  doc.text(en('female') + ': ' + totalFemale, 20, y); y += 12;
 
   doc.setFont(undefined, 'bold');
   doc.setFontSize(14);
-  doc.text(t('totalAttendanceFull') + ': ' + (totalMale + totalFemale), 20, y);
+  doc.text(en('totalAttendanceFull') + ': ' + (totalMale + totalFemale), 20, y);
 
   doc.setFontSize(8);
   doc.setFont(undefined, 'italic');

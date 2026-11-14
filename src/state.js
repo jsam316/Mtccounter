@@ -13,6 +13,8 @@ export const KEYS = Object.freeze({
   coCelebrantsEnabled:    'coCelebrantsEnabled',
   assistSettings:         'mtcAssistSettings',
   cloud:                  'mtcCloud',
+  offertory:              'mtcOffertory',
+  currency:               'mtcCurrency',
 });
 
 function _showStorageWarning() {

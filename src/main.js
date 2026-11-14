@@ -38,6 +38,9 @@ import { initCloud, connectCloud, disconnectCloud, backupNow,
          restoreFromCloud, toggleCloudAuto, renderCloudCard }   from './cloud.js';
 
 import { injectIconSprite }                                  from './icons.js';
+import { initOffertory, loadOffertory, renderOffertory,
+         setOffertoryCurrency, setOffertoryTab,
+         exportOffertoryPDF }                                 from './offertory.js';
 
 // Icons first: markup and every render below reference them.
 injectIconSprite();
@@ -54,6 +57,7 @@ setTabSwitchCallback(tab => {
 document.addEventListener('mtc:data-restored', () => {
   loadLiveCounts();
   loadRounds();
+  loadOffertory();
   updateCelebrantDatalist();
   updateParishDatalist();
   displayHistory();
@@ -66,6 +70,7 @@ document.addEventListener('mtc:data-restored', () => {
 document.addEventListener('mtc:language-changed', () => {
   refreshCountingLock();
   displayRounds();
+  renderOffertory();
   if (document.getElementById('statsTab').classList.contains('active')) displayStats();
   if (document.getElementById('historyTab').classList.contains('active')) { displayHistory(); renderCloudCard(); }
 });
@@ -73,6 +78,7 @@ document.addEventListener('mtc:language-changed', () => {
 // Expose everything called from inline HTML onclick handlers.
 Object.assign(window, {
   toggleCountingLock,
+  setOffertoryCurrency, setOffertoryTab, exportOffertoryPDF,
   changeMale, changeFemale, newRecord, addToRoundTotal,
   removeRound, clearRounds, tapCounterBox, toggleRoundsExpanded,
   saveRecord, loadRecord, deleteRecord, filterHistory,
@@ -159,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
   displayHistory();
   initCloud();
   initServiceDetails();
+  initOffertory();
 
   // Keyboard support for the toggle switches (role="switch").
   const keyToggle = (id, fn) => document.getElementById(id)?.addEventListener('keydown', e => {

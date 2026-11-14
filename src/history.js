@@ -10,6 +10,7 @@ import { switchTab } from './ui.js';
 import { updateLectionaryHint } from './lectionary.js';
 import { refreshServiceSummary, rememberLastDetails } from './details.js';
 import { icon } from './icons.js';
+import { getOffertoryForRecord, setOffertoryFromRecord, formatMoney } from './offertory.js';
 
 export function getHistory() {
   return load(KEYS.history, []);
@@ -67,6 +68,8 @@ export function saveRecord() {
     rounds:    rounds.length > 0 ? rounds.slice() : [],
     timestamp: new Date().toISOString()
   };
+  const offertory = getOffertoryForRecord();
+  if (offertory) record.offertory = offertory;
 
   const key = recordKey(record);
   const commit = () => {
@@ -159,6 +162,10 @@ export function renderHistoryItems(history, listEl) {
       +   '<span class="female-total">' + t('female') + ' <b>' + female + '</b></span>'
       + '</div>'
       + (reading ? '<div class="history-reading">' + reading + '</div>' : '')
+      + (record.offertory && record.offertory.totalMinor > 0
+          ? '<div class="history-reading history-offertory">' + icon('banknote') + '<span>' + t('offertoryTitle') + ': <b>'
+            + escapeHtml(formatMoney(Number(record.offertory.totalMinor) || 0, record.offertory.currency)) + '</b></span></div>'
+          : '')
       + (has(record.coCelebrants) ? '<div class="history-reading">' + escapeHtml(t('coCelebrantsLabel')) + ': ' + escapeHtml(record.coCelebrants) + '</div>' : '')
       + '<div class="history-actions">'
       +   '<button class="history-btn load-btn" onclick="loadRecord(' + realIndex + ')">' + icon('pencil') + '<span>' + t('loadBtn') + '</span></button>'
@@ -213,6 +220,7 @@ export function loadRecord(index) {
   } else {
     resetCounters(record.male, record.female, []);
   }
+  setOffertoryFromRecord(record.offertory);
 
   updateLectionaryHint();
   refreshServiceSummary(); // fields were set in code, so no input event fired
