@@ -129,7 +129,36 @@ export function normalizeOffertory(raw, fallbackCurrency = 'KWD') {
     }
   }
   const text = (v, max) => String(v ?? '').trim().slice(0, max);
-  return { currency, venue: text(raw?.venue, 80), specialLabel: text(raw?.specialLabel, 30), counts };
+  return {
+    currency, venue: text(raw?.venue, 80), specialLabel: text(raw?.specialLabel, 30), counts,
+    signatures: [0, 1].map(i => normalizeSignature(raw?.signatures?.[i])),
+  };
+}
+
+// A signature is the pen strokes drawn on screen, not a picture: each stroke
+// is a flat list x1,y1,x2,y2,… of whole numbers from 0 to SIGN_GRID across a
+// box SIGN_ASPECT times as wide as it is tall. That is small to store and
+// stays sharp at any size, on screen and in the PDF.
+export const SIGN_GRID = 1000;
+export const SIGN_ASPECT = 3;
+const MAX_STROKES = 150;
+const MAX_STROKE_NUMBERS = 4000;
+
+/** Make a stored or imported signature safe to use. */
+export function normalizeSignature(raw) {
+  const clamp = n => Math.min(SIGN_GRID, Math.max(0, Math.round(Number(n)) || 0));
+  const strokes = (Array.isArray(raw?.strokes) ? raw.strokes : [])
+    .filter(Array.isArray)
+    .map(s => s.slice(0, MAX_STROKE_NUMBERS))
+    .map(s => (s.length % 2 ? s.slice(0, -1) : s).map(clamp)) // whole x,y pairs only
+    .filter(s => s.length >= 2)
+    .slice(0, MAX_STROKES);
+  return { name: String(raw?.name ?? '').trim().slice(0, 60), strokes };
+}
+
+/** True once at least one of the two people has signed. */
+export function isSigned(off) {
+  return !!off?.signatures?.some(s => s.strokes.length > 0);
 }
 
 /**
@@ -230,6 +259,7 @@ export function buildOffertoryReport(off, details = {}) {
     totals: cols.map(c => sheet.columnTotals[c] === 0 && c !== 'total' ? { major: '', minor: '' } : splitAmount(sheet.columnTotals[c], off.currency)),
     wordsLabel: '(Amount in words) ' + CURRENCY_DATA[off.currency][0] + ' :',
     words: amountInWords(sheet.columnTotals.total, off.currency),
+    signatures: (off.signatures || []).map(s => ({ name: s.name, strokes: s.strokes })),
   };
 }
 
@@ -331,7 +361,7 @@ export function setOffertoryTab(tab) {
 
 function _onUnitsInput(e) {
   const input = e.target.closest('.off-units');
-  if (!input || _tab === 'total') return;
+  if (!input || _tab === 'total' || isSigned(_off)) return;
   const key = input.closest('.off-row').dataset.key;
   const units = parseUnits(input.value);
   input.classList.toggle('input-invalid', units === null);
@@ -342,6 +372,7 @@ function _onUnitsInput(e) {
 }
 
 function _onTextInput(e) {
+  if (isSigned(_off)) return;
   if (e.target.id === 'offVenue') _off.venue = e.target.value.trim().slice(0, 80);
   else if (e.target.id === 'offSpecialName') { _off.specialLabel = e.target.value.trim().slice(0, 30); _renderTabs(); }
   else return;
@@ -365,6 +396,7 @@ function _renderRows() {
   _renderTabs();
   const sheet = offertorySheet(_off);
   const readOnly = _tab === 'total';
+  const locked = isSigned(_off) ? ' disabled' : '';
   document.getElementById('offRows').innerHTML =
     '<div class="off-row off-row-head"><span>' + t('offertoryDenomination') + '</span><span>'
     + t('offertoryUnit') + '</span><span>' + _off.currency + '</span></div>'
@@ -375,7 +407,7 @@ function _renderRows() {
         + (readOnly
           ? '<span class="off-units-total">' + (c.units || '–') + '</span>'
           : '<input class="off-units" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" placeholder="0"'
-            + ' autocomplete="off" value="' + (c.units || '') + '" aria-label="' + r.label + ' × ' + escapeHtml(t('offertoryUnit')) + '">')
+            + ' autocomplete="off"' + locked + ' value="' + (c.units || '') + '" aria-label="' + r.label + ' × ' + escapeHtml(t('offertoryUnit')) + '">')
         + '<span class="off-row-amount"></span></div>';
     }).join('')
     + '<div class="off-row off-row-foot"><span>' + escapeHtml(_columnLabel(_tab)) + ' ' + _off.currency + '</span>'
@@ -420,12 +452,129 @@ export function renderOffertory() {
   document.getElementById('offVenue').value = _off.venue;
   document.getElementById('offSpecialName').value = _off.specialLabel;
   _renderRows();
+  _renderSignatures();
+}
+
+// ── Signatures ────────────────────────────────────────────────────────────────
+
+const INK = '#1e293b';
+
+/** Draw one signature's strokes on its pad (always dark ink on white, like paper). */
+function _paintPad(canvas, strokes) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.round(rect.width * dpr));
+  const h = Math.max(1, Math.round(rect.height * dpr));
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = INK;
+  ctx.fillStyle = INK;
+  ctx.lineWidth = Math.max(1.5, w / 190);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (const s of strokes) {
+    const X = i => (s[i] / SIGN_GRID) * w, Y = i => (s[i + 1] / SIGN_GRID) * h;
+    if (s.length === 2) { ctx.beginPath(); ctx.arc(X(0), Y(0), ctx.lineWidth * 0.7, 0, 6.3); ctx.fill(); continue; }
+    ctx.beginPath();
+    ctx.moveTo(X(0), Y(0));
+    for (let i = 2; i < s.length; i += 2) ctx.lineTo(X(i), Y(i));
+    ctx.stroke();
+  }
+}
+
+/** Show the stored signatures and names, and lock the sheet's fields while signed. */
+function _renderSignatures() {
+  const signed = isSigned(_off);
+  document.querySelectorAll('.off-sign-box').forEach(box => {
+    const sig = _off.signatures[Number(box.dataset.sig)];
+    _paintPad(box.querySelector('.off-sign-pad'), sig.strokes);
+    box.classList.toggle('is-signed', sig.strokes.length > 0);
+    const name = box.querySelector('.off-sign-name');
+    if (document.activeElement !== name) name.value = sig.name;
+  });
+  for (const id of ['offCurrency', 'offVenue', 'offSpecialName']) document.getElementById(id).disabled = signed;
+  document.getElementById('offSignedNote').hidden = !signed;
+}
+
+let _pen = null; // the stroke being drawn: { index, canvas, points }
+
+function _penPoint(e, canvas) {
+  const r = canvas.getBoundingClientRect();
+  const clamp = n => Math.min(SIGN_GRID, Math.max(0, Math.round(n)));
+  return [clamp(((e.clientX - r.left) / r.width) * SIGN_GRID), clamp(((e.clientY - r.top) / r.height) * SIGN_GRID)];
+}
+
+function _onPenDown(e) {
+  const canvas = e.target.closest('.off-sign-pad');
+  if (!canvas || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  e.preventDefault();
+  if (isOffertoryEmpty(_off)) {
+    showErrorMsg(t('offertorySignCountFirst'));
+    triggerHaptic('error');
+    return;
+  }
+  const index = Number(canvas.closest('.off-sign-box').dataset.sig);
+  if (_off.signatures[index].strokes.length >= MAX_STROKES) return;
+  try { canvas.setPointerCapture(e.pointerId); } catch { /* not supported: still draws */ }
+  _pen = { index, canvas, points: _penPoint(e, canvas) };
+  _paintPad(canvas, [..._off.signatures[index].strokes, _pen.points]);
+}
+
+function _onPenMove(e) {
+  if (!_pen) return;
+  e.preventDefault();
+  const [x, y] = _penPoint(e, _pen.canvas);
+  const n = _pen.points.length;
+  // Skip tiny movements so a signature stays a few hundred numbers.
+  if (Math.abs(x - _pen.points[n - 2]) < 3 && Math.abs(y - _pen.points[n - 1]) < 6) return;
+  if (n >= MAX_STROKE_NUMBERS) return;
+  _pen.points.push(x, y);
+  _paintPad(_pen.canvas, [..._off.signatures[_pen.index].strokes, _pen.points]);
+}
+
+function _onPenUp() {
+  if (!_pen) return;
+  const wasSigned = isSigned(_off);
+  _off.signatures[_pen.index].strokes.push(_pen.points);
+  _pen = null;
+  _persist();
+  if (!wasSigned) _renderRows(); // first signature: the counts become read-only
+  _renderSignatures();
+}
+
+function _onSignNameInput(e) {
+  const input = e.target.closest('.off-sign-name');
+  if (!input) return;
+  _off.signatures[Number(input.closest('.off-sign-box').dataset.sig)].name = input.value.trim().slice(0, 60);
+  _persist();
+}
+
+/** Remove one person's signature (their name stays); Undo puts it back. */
+export function clearSignature(index) {
+  if (!_off.signatures[index] || _off.signatures[index].strokes.length === 0) return;
+  withUndo(t('offertorySignCleared'), () => {
+    _off.signatures[index].strokes = [];
+    _persist();
+    _renderRows();
+    _renderSignatures();
+  });
+  triggerHaptic('light');
 }
 
 export function initOffertory() {
   document.getElementById('offRows').addEventListener('input', _onUnitsInput);
   document.getElementById('offVenue').addEventListener('input', _onTextInput);
   document.getElementById('offSpecialName').addEventListener('input', _onTextInput);
+  const sign = document.getElementById('offSign');
+  sign.addEventListener('pointerdown', _onPenDown);
+  sign.addEventListener('pointermove', _onPenMove);
+  sign.addEventListener('pointerup', _onPenUp);
+  sign.addEventListener('pointercancel', _onPenUp);
+  sign.addEventListener('input', _onSignNameInput);
+  // The pads are sized by the page: repaint when the card opens or the width changes.
+  document.getElementById('offertoryDetails').addEventListener('toggle', _renderSignatures);
+  window.addEventListener('resize', _renderSignatures);
   loadOffertory();
 }
 
@@ -544,6 +693,29 @@ export function drawOffertorySheet(doc, r) {
   doc.line(LEFT + 26, y + 0.8, 125, y + 0.8);
   doc.text('Signature (2):', 160, y);
   doc.line(184, y + 0.8, RIGHT - 12, y + 0.8);
+
+  // Signatures drawn on screen sit on their lines, with the name underneath.
+  const signH = 15, signW = signH * SIGN_ASPECT;
+  [[LEFT + 26, 125], [184, RIGHT - 12]].forEach(([x1, x2], i) => {
+    const sig = r.signatures && r.signatures[i];
+    if (!sig) return;
+    const left = (x1 + x2) / 2 - signW / 2, topY = y + 0.8 - signH;
+    const X = n => left + (n / SIGN_GRID) * signW, Y = n => topY + (n / SIGN_GRID) * signH;
+    doc.setLineWidth(0.35);
+    doc.setLineCap('round');
+    doc.setLineJoin('round');
+    for (const s of sig.strokes) {
+      if (s.length === 2) { doc.circle(X(s[0]), Y(s[1]), 0.2, 'F'); continue; }
+      for (let k = 2; k < s.length; k += 2) doc.line(X(s[k - 2]), Y(s[k - 1]), X(s[k]), Y(s[k + 1]));
+    }
+    doc.setLineCap('butt');
+    doc.setLineJoin('miter');
+    if (sig.name) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      center(doc.splitTextToSize(sig.name, x2 - x1)[0], (x1 + x2) / 2, y + 5);
+    }
+  });
 
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(7);

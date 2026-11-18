@@ -302,7 +302,35 @@
           <div id="offTabs" class="stats-segments off-tabs" role="group" aria-label="Offertory columns"></div>
           <div id="offRows" class="off-rows"></div>
 
+          <p id="offSignedNote" class="off-signed-note" hidden><svg class="icon" aria-hidden="true"><use href="#i-lock"></use></svg><span data-i18n="offertorySignedNote">Signed. Clear the signatures to change the counts.</span></p>
           <div id="offTotals" class="off-totals"></div>
+
+          <!-- Two people sign on screen; the signatures go on the PDF's lines. -->
+          <div id="offSign" class="off-sign">
+            <div class="off-sign-head" data-i18n="offertorySignatures">Signatures</div>
+            <div class="off-sign-box" data-sig="0">
+              <div class="off-sign-top">
+                <span class="off-sign-label" data-i18n="offertorySignature1">Signature (1)</span>
+                <button type="button" class="off-sign-clear" onclick="clearSignature(0)" data-i18n="offertorySignClear">Clear</button>
+              </div>
+              <div class="off-sign-paper">
+                <canvas class="off-sign-pad" role="img" aria-label="Signature 1"></canvas>
+                <span class="off-sign-hint" data-i18n="offertorySignHere">Sign here</span>
+              </div>
+              <input type="text" class="off-sign-name" data-i18n-placeholder="offertorySignName" placeholder="Name (optional)" autocomplete="off" aria-label="Signature 1 name">
+            </div>
+            <div class="off-sign-box" data-sig="1">
+              <div class="off-sign-top">
+                <span class="off-sign-label" data-i18n="offertorySignature2">Signature (2)</span>
+                <button type="button" class="off-sign-clear" onclick="clearSignature(1)" data-i18n="offertorySignClear">Clear</button>
+              </div>
+              <div class="off-sign-paper">
+                <canvas class="off-sign-pad" role="img" aria-label="Signature 2"></canvas>
+                <span class="off-sign-hint" data-i18n="offertorySignHere">Sign here</span>
+              </div>
+              <input type="text" class="off-sign-name" data-i18n-placeholder="offertorySignName" placeholder="Name (optional)" autocomplete="off" aria-label="Signature 2 name">
+            </div>
+          </div>
           <button type="button" class="off-pdf-btn" onclick="exportOffertoryPDF()"><svg class="icon" aria-hidden="true"><use href="#i-fileDown"></use></svg><span data-i18n="offertoryPdf">Offertory PDF</span></button>
         </div>
       </details>

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {
   parseUnits, denominations, splitAmount, formatAmount, formatMoney, normalizeOffertory, offertorySheet,
   isOffertoryEmpty, numberToWords, amountInWords, currencyDecimals, minorUnitName, guessCurrency,
-  formDate, buildOffertoryReport, offertorySummary, CURRENCIES, COLUMNS,
+  formDate, buildOffertoryReport, offertorySummary, normalizeSignature, isSigned, SIGN_GRID, CURRENCIES, COLUMNS,
 } from '../src/offertory.js';
 import { translations } from '../src/translations.js';
 
@@ -189,6 +189,39 @@ test('Family Day and Upakoshanam columns: counted, and printed only when used', 
   assert.ok(!isOffertoryEmpty(normalizeOffertory({ currency: 'KWD', counts: { familyDay: { '1': 1 } } })));
   // Sheets saved before these columns existed still load.
   assert.deepEqual(normalizeOffertory({ currency: 'KWD', counts: { offertory: { '1': 2 } } }).counts.upakoshanam, {});
+});
+
+test('signatures: stored as pen strokes, cleaned up, and carried to the PDF', () => {
+  // A new sheet has two empty signatures and is not signed.
+  assert.deepEqual(normalizeOffertory(null).signatures, [{ name: '', strokes: [] }, { name: '', strokes: [] }]);
+  assert.ok(!isSigned(sample));
+  assert.ok(!isSigned(normalizeOffertory({ signatures: [{ name: 'Only a name' }] })));
+
+  const signed = normalizeOffertory({
+    ...sample,
+    signatures: [
+      { name: '  Thomas Mathew  ', strokes: [[100, 500, 300, 200, 520, 800], [900, 500]] },
+      { name: 'x'.repeat(100), strokes: [] },
+    ],
+  });
+  assert.ok(isSigned(signed));
+  assert.deepEqual(signed.signatures[0], { name: 'Thomas Mathew', strokes: [[100, 500, 300, 200, 520, 800], [900, 500]] });
+  assert.equal(signed.signatures[1].name.length, 60);
+
+  // Bad data: out-of-range and non-numbers are clamped, odd tails and junk strokes dropped.
+  const messy = normalizeSignature({ strokes: [[-5, 2000, 'x', 10.6, 7], 'nope', [1], [], null, [3, 4]] });
+  assert.deepEqual(messy.strokes, [[0, SIGN_GRID, 0, 11], [3, 4]]);
+  assert.equal(normalizeSignature({ strokes: Array.from({ length: 500 }, () => [1, 2]) }).strokes.length, 150);
+  assert.deepEqual(normalizeSignature('junk'), { name: '', strokes: [] });
+
+  const r = buildOffertoryReport(signed);
+  assert.equal(r.signatures.length, 2);
+  assert.equal(r.signatures[0].name, 'Thomas Mathew');
+  assert.equal(r.signatures[0].strokes.length, 2);
+  // Signing does not change any amount.
+  assert.deepEqual(r.totals, buildOffertoryReport(sample).totals);
+  // A sheet saved before signatures existed still loads, unsigned.
+  assert.ok(!isSigned(normalizeOffertory({ currency: 'KWD', counts: { offertory: { '1': 2 } } })));
 });
 
 test('offertory strings exist in both languages', () => {

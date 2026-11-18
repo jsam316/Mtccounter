@@ -40,7 +40,7 @@ import { initCloud, connectCloud, disconnectCloud, backupNow,
 import { injectIconSprite }                                  from './icons.js';
 import { initOffertory, loadOffertory, renderOffertory,
          setOffertoryCurrency, setOffertoryTab,
-         exportOffertoryPDF }                                 from './offertory.js';
+         exportOffertoryPDF, clearSignature }                 from './offertory.js';
 
 // Icons first: markup and every render below reference them.
 injectIconSprite();
@@ -78,7 +78,7 @@ document.addEventListener('mtc:language-changed', () => {
 // Expose everything called from inline HTML onclick handlers.
 Object.assign(window, {
   toggleCountingLock,
-  setOffertoryCurrency, setOffertoryTab, exportOffertoryPDF,
+  setOffertoryCurrency, setOffertoryTab, exportOffertoryPDF, clearSignature,
   changeMale, changeFemale, newRecord, addToRoundTotal,
   removeRound, clearRounds, tapCounterBox, toggleRoundsExpanded,
   saveRecord, loadRecord, deleteRecord, filterHistory,
@@ -110,15 +110,18 @@ document.getElementById('date').valueAsDate = new Date();
 // Swipe detection state.
 let touchStartX = 0, touchEndX = 0, touchStartY = 0, touchEndY = 0;
 
+let swipeBlocked = false; // a stroke on a signature pad is not a tab swipe
+
 document.addEventListener('touchstart', e => {
   touchStartX = e.changedTouches[0].screenX;
   touchStartY = e.changedTouches[0].screenY;
+  swipeBlocked = !!(e.target.closest && e.target.closest('.off-sign-paper'));
 }, { passive: true });
 
 document.addEventListener('touchend', e => {
   touchEndX = e.changedTouches[0].screenX;
   touchEndY = e.changedTouches[0].screenY;
-  _handleSwipe();
+  if (!swipeBlocked) _handleSwipe();
 }, { passive: true });
 
 function _handleSwipe() {
