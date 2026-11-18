@@ -1910,6 +1910,52 @@ button:active { transform: scale(0.96); }
   color: rgba(255, 255, 255, 0.45);
 }
 .light-mode .off-words span { color: rgba(0, 0, 0, 0.45); }
+/* Signatures: sign on screen, always dark ink on white like the paper form */
+.off-signed-note {
+  display: flex; align-items: center; gap: 7px; margin: 0 0 10px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  background: rgba(251, 191, 36, 0.14); border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fcd34d; font-size: 12.5px; font-weight: 600; line-height: 1.35;
+}
+.off-signed-note[hidden] { display: none; }
+.off-signed-note .icon { width: 15px; height: 15px; }
+.light-mode .off-signed-note { background: rgba(251, 191, 36, 0.14); border-color: rgba(217, 119, 6, 0.35); color: #b45309; }
+.off-rows .off-units:disabled, .off-fields :disabled { opacity: 0.75; cursor: not-allowed; }
+.off-sign { margin-bottom: 12px; }
+.off-sign-head {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45); margin-bottom: 6px;
+}
+.light-mode .off-sign-head { color: rgba(0, 0, 0, 0.45); }
+.off-sign-box { margin-bottom: 10px; }
+.off-sign-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+.off-sign-label { font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, 0.85); }
+.light-mode .off-sign-label { color: rgba(0, 0, 0, 0.75); }
+.off-sign-clear {
+  padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  background: transparent; border: 1px solid rgba(248, 113, 113, 0.4); color: #f87171;
+  visibility: hidden;
+}
+.light-mode .off-sign-clear { border-color: rgba(220, 38, 38, 0.3); color: #dc2626; }
+.off-sign-box.is-signed .off-sign-clear { visibility: visible; }
+.off-sign-paper {
+  position: relative; aspect-ratio: 3 / 1; margin-bottom: 6px;
+  background: #fff; border-radius: 12px; overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.light-mode .off-sign-paper { border-color: rgba(0, 0, 0, 0.15); }
+/* touch-action none: the finger draws, the page does not scroll under it */
+.off-sign-pad { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.off-sign-paper::after {
+  content: ""; position: absolute; left: 8%; right: 8%; bottom: 22%;
+  border-bottom: 1px dashed rgba(30, 41, 59, 0.3); pointer-events: none;
+}
+.off-sign-hint {
+  position: absolute; left: 0; right: 0; bottom: 5%; text-align: center;
+  font-size: 11.5px; font-weight: 600; color: rgba(30, 41, 59, 0.45); pointer-events: none;
+}
+.off-sign-box.is-signed .off-sign-hint { display: none; }
+.off-sign-box .off-sign-name { width: 100%; padding-top: 9px; padding-bottom: 9px; }
 .off-pdf-btn {
   width: 100%; margin-bottom: 12px;
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
