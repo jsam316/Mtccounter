@@ -144,6 +144,15 @@ export const SIGN_ASPECT = 3;
 const MAX_STROKES = 150;
 const MAX_STROKE_NUMBERS = 4000;
 
+// Pen colours a signer can pick: the usual ink colours, all readable on
+// white and in print. [screen colour, PDF red/green/blue]
+export const INKS = Object.freeze({
+  black: ['#111827', [17, 24, 39]],
+  blue:  ['#1d4ed8', [29, 78, 216]],
+  navy:  ['#1e3a8a', [30, 58, 138]],
+});
+const isInk = name => Object.prototype.hasOwnProperty.call(INKS, name);
+
 /** Make a stored or imported signature safe to use. */
 export function normalizeSignature(raw) {
   const clamp = n => Math.min(SIGN_GRID, Math.max(0, Math.round(Number(n)) || 0));
@@ -153,7 +162,7 @@ export function normalizeSignature(raw) {
     .map(s => (s.length % 2 ? s.slice(0, -1) : s).map(clamp)) // whole x,y pairs only
     .filter(s => s.length >= 2)
     .slice(0, MAX_STROKES);
-  return { name: String(raw?.name ?? '').trim().slice(0, 60), strokes };
+  return { name: String(raw?.name ?? '').trim().slice(0, 60), strokes, color: isInk(raw?.color) ? raw.color : 'black' };
 }
 
 /** True once at least one of the two people has signed. */
@@ -259,7 +268,7 @@ export function buildOffertoryReport(off, details = {}) {
     totals: cols.map(c => sheet.columnTotals[c] === 0 && c !== 'total' ? { major: '', minor: '' } : splitAmount(sheet.columnTotals[c], off.currency)),
     wordsLabel: '(Amount in words) ' + CURRENCY_DATA[off.currency][0] + ' :',
     words: amountInWords(sheet.columnTotals.total, off.currency),
-    signatures: (off.signatures || []).map(s => ({ name: s.name, strokes: s.strokes })),
+    signatures: (off.signatures || []).map(s => ({ name: s.name, strokes: s.strokes, color: s.color })),
   };
 }
 
@@ -457,10 +466,9 @@ export function renderOffertory() {
 
 // ── Signatures ────────────────────────────────────────────────────────────────
 
-const INK = '#1e293b';
-
-/** Draw one signature's strokes on its pad (always dark ink on white, like paper). */
-function _paintPad(canvas, strokes) {
+/** Draw one signature's strokes on its pad, in its pen colour on white like paper. */
+function _paintPad(canvas, strokes, color) {
+  const INK = INKS[color][0];
   const rect = canvas.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   const w = Math.max(1, Math.round(rect.width * dpr));
@@ -488,8 +496,9 @@ function _renderSignatures() {
   const signed = isSigned(_off);
   document.querySelectorAll('.off-sign-box').forEach(box => {
     const sig = _off.signatures[Number(box.dataset.sig)];
-    _paintPad(box.querySelector('.off-sign-pad'), sig.strokes);
+    _paintPad(box.querySelector('.off-sign-pad'), sig.strokes, sig.color);
     box.classList.toggle('is-signed', sig.strokes.length > 0);
+    box.querySelectorAll('.off-ink').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ink === sig.color)));
     const name = box.querySelector('.off-sign-name');
     if (document.activeElement !== name) name.value = sig.name;
   });
@@ -518,7 +527,7 @@ function _onPenDown(e) {
   if (_off.signatures[index].strokes.length >= MAX_STROKES) return;
   try { canvas.setPointerCapture(e.pointerId); } catch { /* not supported: still draws */ }
   _pen = { index, canvas, points: _penPoint(e, canvas) };
-  _paintPad(canvas, [..._off.signatures[index].strokes, _pen.points]);
+  _paintPad(canvas, [..._off.signatures[index].strokes, _pen.points], _off.signatures[index].color);
 }
 
 function _onPenMove(e) {
@@ -530,7 +539,7 @@ function _onPenMove(e) {
   if (Math.abs(x - _pen.points[n - 2]) < 3 && Math.abs(y - _pen.points[n - 1]) < 6) return;
   if (n >= MAX_STROKE_NUMBERS) return;
   _pen.points.push(x, y);
-  _paintPad(_pen.canvas, [..._off.signatures[_pen.index].strokes, _pen.points]);
+  _paintPad(_pen.canvas, [..._off.signatures[_pen.index].strokes, _pen.points], _off.signatures[_pen.index].color);
 }
 
 function _onPenUp() {
@@ -550,7 +559,16 @@ function _onSignNameInput(e) {
   _persist();
 }
 
-/** Remove one person's signature (their name stays); Undo puts it back. */
+/** Pick the pen colour for one signature; an existing signature is recoloured. */
+export function setSignatureColor(index, color) {
+  if (!_off.signatures[index] || !isInk(color)) return;
+  _off.signatures[index].color = color;
+  _persist();
+  _renderSignatures();
+  triggerHaptic('light');
+}
+
+/** Remove one person's signature (their name and pen colour stay); Undo puts it back. */
 export function clearSignature(index) {
   if (!_off.signatures[index] || _off.signatures[index].strokes.length === 0) return;
   withUndo(t('offertorySignCleared'), () => {
@@ -701,6 +719,9 @@ export function drawOffertorySheet(doc, r) {
     if (!sig) return;
     const left = (x1 + x2) / 2 - signW / 2, topY = y + 0.8 - signH;
     const X = n => left + (n / SIGN_GRID) * signW, Y = n => topY + (n / SIGN_GRID) * signH;
+    const rgb = (INKS[sig.color] || INKS.black)[1];
+    doc.setDrawColor(...rgb);
+    doc.setFillColor(...rgb);
     doc.setLineWidth(0.35);
     doc.setLineCap('round');
     doc.setLineJoin('round');
@@ -710,6 +731,8 @@ export function drawOffertorySheet(doc, r) {
     }
     doc.setLineCap('butt');
     doc.setLineJoin('miter');
+    doc.setDrawColor(0, 0, 0);
+    doc.setFillColor(0, 0, 0);
     if (sig.name) {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);

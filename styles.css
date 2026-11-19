@@ -1929,8 +1929,27 @@ button:active { transform: scale(0.96); }
 .light-mode .off-sign-head { color: rgba(0, 0, 0, 0.45); }
 .off-sign-box { margin-bottom: 10px; }
 .off-sign-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
-.off-sign-label { font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, 0.85); }
+.off-sign-label { font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, 0.85); white-space: nowrap; }
 .light-mode .off-sign-label { color: rgba(0, 0, 0, 0.75); }
+/* Pen colour swatches */
+.off-inks { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.off-ink {
+  width: 26px; height: 26px; padding: 0; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: none;
+}
+.off-ink-black { background: #111827; }
+.off-ink-blue { background: #1d4ed8; }
+.off-ink-navy { background: #1e3a8a; }
+.off-ink[aria-pressed="true"] { border-color: #fff; box-shadow: 0 0 0 2px var(--accent-light); }
+.light-mode .off-ink { border-color: rgba(0, 0, 0, 0.15); }
+.light-mode .off-ink[aria-pressed="true"] { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+@media (max-width: 350px) {
+  .off-inks { gap: 5px; }
+  .off-ink { width: 22px; height: 22px; }
+  .off-sign-top { gap: 6px; }
+  .off-sign-top .off-sign-clear { padding: 4px 9px; }
+}
 .off-sign-clear {
   padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
   background: transparent; border: 1px solid rgba(248, 113, 113, 0.4); color: #f87171;

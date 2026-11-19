@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {
   parseUnits, denominations, splitAmount, formatAmount, formatMoney, normalizeOffertory, offertorySheet,
   isOffertoryEmpty, numberToWords, amountInWords, currencyDecimals, minorUnitName, guessCurrency,
-  formDate, buildOffertoryReport, offertorySummary, normalizeSignature, isSigned, SIGN_GRID, CURRENCIES, COLUMNS,
+  formDate, buildOffertoryReport, offertorySummary, normalizeSignature, isSigned, SIGN_GRID, INKS, CURRENCIES, COLUMNS,
 } from '../src/offertory.js';
 import { translations } from '../src/translations.js';
 
@@ -193,7 +193,8 @@ test('Family Day and Upakoshanam columns: counted, and printed only when used', 
 
 test('signatures: stored as pen strokes, cleaned up, and carried to the PDF', () => {
   // A new sheet has two empty signatures and is not signed.
-  assert.deepEqual(normalizeOffertory(null).signatures, [{ name: '', strokes: [] }, { name: '', strokes: [] }]);
+  assert.deepEqual(normalizeOffertory(null).signatures,
+    [{ name: '', strokes: [], color: 'black' }, { name: '', strokes: [], color: 'black' }]);
   assert.ok(!isSigned(sample));
   assert.ok(!isSigned(normalizeOffertory({ signatures: [{ name: 'Only a name' }] })));
 
@@ -205,14 +206,15 @@ test('signatures: stored as pen strokes, cleaned up, and carried to the PDF', ()
     ],
   });
   assert.ok(isSigned(signed));
-  assert.deepEqual(signed.signatures[0], { name: 'Thomas Mathew', strokes: [[100, 500, 300, 200, 520, 800], [900, 500]] });
+  assert.deepEqual(signed.signatures[0],
+    { name: 'Thomas Mathew', strokes: [[100, 500, 300, 200, 520, 800], [900, 500]], color: 'black' });
   assert.equal(signed.signatures[1].name.length, 60);
 
   // Bad data: out-of-range and non-numbers are clamped, odd tails and junk strokes dropped.
   const messy = normalizeSignature({ strokes: [[-5, 2000, 'x', 10.6, 7], 'nope', [1], [], null, [3, 4]] });
   assert.deepEqual(messy.strokes, [[0, SIGN_GRID, 0, 11], [3, 4]]);
   assert.equal(normalizeSignature({ strokes: Array.from({ length: 500 }, () => [1, 2]) }).strokes.length, 150);
-  assert.deepEqual(normalizeSignature('junk'), { name: '', strokes: [] });
+  assert.deepEqual(normalizeSignature('junk'), { name: '', strokes: [], color: 'black' });
 
   const r = buildOffertoryReport(signed);
   assert.equal(r.signatures.length, 2);
@@ -222,6 +224,25 @@ test('signatures: stored as pen strokes, cleaned up, and carried to the PDF', ()
   assert.deepEqual(r.totals, buildOffertoryReport(sample).totals);
   // A sheet saved before signatures existed still loads, unsigned.
   assert.ok(!isSigned(normalizeOffertory({ currency: 'KWD', counts: { offertory: { '1': 2 } } })));
+});
+
+test('signature pen colour: a fixed set, black by default, carried to the PDF', () => {
+  assert.deepEqual(Object.keys(INKS), ['black', 'blue', 'navy']);
+  for (const [screen, rgb] of Object.values(INKS)) {
+    assert.match(screen, /^#[0-9a-f]{6}$/);
+    // The screen colour and the PDF colour are the same colour.
+    assert.equal(screen, '#' + rgb.map(n => n.toString(16).padStart(2, '0')).join(''));
+    // Dark enough to read on white paper.
+    assert.ok(0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] < 110, screen);
+  }
+  assert.equal(normalizeSignature({ color: 'blue', strokes: [[1, 2]] }).color, 'blue');
+  for (const bad of ['yellow', '#fff', '', null, 7, 'constructor']) {
+    assert.equal(normalizeSignature({ color: bad }).color, 'black', String(bad));
+  }
+  const off = normalizeOffertory({ ...sample, signatures: [{ strokes: [[1, 2, 3, 4]], color: 'navy' }, { color: 'blue' }] });
+  assert.deepEqual(buildOffertoryReport(off).signatures.map(x => x.color), ['navy', 'blue']);
+  // A signature saved before colours existed is black.
+  assert.equal(normalizeOffertory({ signatures: [{ strokes: [[1, 2]] }] }).signatures[0].color, 'black');
 });
 
 test('offertory strings exist in both languages', () => {
