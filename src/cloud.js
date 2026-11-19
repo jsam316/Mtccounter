@@ -18,6 +18,7 @@ import { updateCelebrantDatalist } from './celebrants.js';
 import { updateParishDatalist } from './parishes.js';
 import { buildBackupPayload } from './export.js';
 import { GOOGLE_CLIENT_ID } from './config.js';
+import { sanitizeBackup } from './sanitize.js';
 
 // ── Merge (pure, unit-tested) ─────────────────────────────────────────────────
 
@@ -252,9 +253,10 @@ export async function connectCloud() {
   if (getHistory().length === 0) {
     try {
       const { fileId, payload } = await provider.download(null);
-      if (payload && payload.data) {
+      const clean = sanitizeBackup(payload); // never trust the file as-is
+      if (clean) {
         _setState({ fileId });
-        _applyRemote(payload);
+        _applyRemote(clean);
         return;
       }
     } catch { /* fall through to a fresh backup */ }
@@ -280,9 +282,11 @@ export async function restoreFromCloud() {
   renderCloudCard();
   try {
     const { fileId, payload } = await provider.download(_getState().fileId);
-    if (!payload || !payload.data) { showErrorMsg(t('cloudNoBackup')); return; }
+    // The Drive file is treated like any outside file: rebuilt field by field.
+    const clean = sanitizeBackup(payload);
+    if (!clean) { showErrorMsg(t('cloudNoBackup')); return; }
     _setState({ fileId });
-    _applyRemote(payload);
+    _applyRemote(clean);
   } catch (err) {
     showErrorMsg(err.message === 'auth-failed' || err.message === 'unauthorized' ? t('cloudAuthFailed') : t('cloudBackupFailed'));
     triggerHaptic('error');
@@ -292,16 +296,12 @@ export async function restoreFromCloud() {
   }
 }
 
-function _applyRemote(payload) {
+/** @param remote a backup already made safe by sanitizeBackup() */
+function _applyRemote(remote) {
   const local = {
     history:    getHistory(),
     celebrants: load(KEYS.celebrants, []),
     parishes:   load(KEYS.parishes, []),
-  };
-  const remote = {
-    history:    payload.data.mtcHistory      || [],
-    celebrants: payload.data.savedCelebrants || [],
-    parishes:   payload.data.savedParishes   || [],
   };
   const merged = mergeBackups(local, remote);
   saveHistory(merged.history);

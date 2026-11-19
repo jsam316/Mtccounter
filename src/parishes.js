@@ -5,7 +5,8 @@ import { showSuccessMsg, showErrorMsg, escapeHtml } from './utils.js';
 import { withUndo } from './undo.js';
 
 export function getSavedParishes() {
-  return load(KEYS.parishes, []);
+  const stored = load(KEYS.parishes, []);
+  return Array.isArray(stored) ? stored.filter(n => typeof n === 'string' && n) : [];
 }
 
 function _saveParishes(parishes) {

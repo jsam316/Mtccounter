@@ -1,10 +1,12 @@
 import { t, getCurrentLang, translations } from './translations.js';
 import { getHistory } from './history.js';
 import { downloadFile, loadJsPDF } from './export.js';
-import { showSuccessMsg, showErrorMsg, escapeHtml, isNotSpecified } from './utils.js';
+import { showSuccessMsg, showErrorMsg, escapeHtml, isNotSpecified, csvCell } from './utils.js';
 import { triggerHaptic } from './haptic.js';
 import { getString, setString } from './state.js';
 import { icon } from './icons.js';
+import { normalizeOffertory, offertorySheet, formatAmount, formatMoney, currencyDecimals,
+         COLUMNS, OFFERTORY_LABEL_KEYS } from './offertory.js';
 
 // ── Pure helpers (exported for tests) ─────────────────────────────────────────
 
@@ -48,6 +50,56 @@ export function summarize(records) {
   };
 }
 
+// ── Offertory figures (amounts in whole minor units: fils, paise, cents) ──────
+
+/**
+ * A record's offertory worked out from its counted notes and coins:
+ * { currency, total, columns }, or null when none was counted.
+ */
+export function recordOffertory(record) {
+  const o = record && record.offertory;
+  if (!o || !o.counts) return null;
+  const off = normalizeOffertory(o);
+  const { columnTotals } = offertorySheet(off);
+  return columnTotals.total > 0 ? { currency: off.currency, total: columnTotals.total, columns: columnTotals } : null;
+}
+
+/** Currencies offertories were counted in, most used first: [['KWD', 4], ['INR', 1]]. */
+export function offertoryCurrencies(records) {
+  const n = new Map();
+  for (const r of records) {
+    const o = recordOffertory(r);
+    if (o) n.set(o.currency, (n.get(o.currency) || 0) + 1);
+  }
+  return [...n].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+}
+
+/**
+ * Offertory totals for the services counted in one currency. Amounts in
+ * different currencies are never added together.
+ */
+export function summarizeOffertory(records, currency) {
+  const columns = {};
+  for (const col of COLUMNS) columns[col] = 0;
+  let n = 0, total = 0, maxRecord = null, minRecord = null, max = 0, min = 0;
+  for (const r of records) {
+    const o = recordOffertory(r);
+    if (!o || o.currency !== currency) continue;
+    n += 1;
+    total += o.total;
+    for (const col of COLUMNS) columns[col] += o.columns[col];
+    if (!maxRecord || o.total > max) { maxRecord = r; max = o.total; }
+    if (!minRecord || o.total < min) { minRecord = r; min = o.total; }
+  }
+  return { currency, n, total, avg: n ? Math.round(total / n) : 0, columns, maxRecord, minRecord, max, min };
+}
+
+// The paper form's columns are always listed; the extra ones only when used.
+const FORM_COLUMNS = ['offertory', 'birthday', 'wedding', 'special'];
+export function offertoryColumnsShown(summary) {
+  return COLUMNS.filter(col => FORM_COLUMNS.includes(col) || summary.columns[col] > 0);
+}
+
 /** Whole-percent change from prev to cur; null when there's nothing to compare with. */
 export function percentChange(cur, prev) {
   if (!prev) return null;
@@ -82,6 +134,7 @@ const PARISH_KEY = 'mtcStatsParish';
 let _period = 'month';
 let _cursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let _parish = null; // loaded lazily from storage
+let _offCurrency = null; // offertory currency shown; null = the most used in the period
 
 function _locale(lang = getCurrentLang()) { return lang === 'ml' ? 'ml-IN' : 'en-US'; }
 
@@ -131,6 +184,12 @@ export function shiftStatsPeriod(delta) {
   triggerHaptic('light');
 }
 
+export function setStatsOffertoryCurrency(code) {
+  _offCurrency = code || null;
+  displayStats();
+  triggerHaptic('light');
+}
+
 export function setStatsParish(parish) {
   _parish = parish || '';
   try { setString(PARISH_KEY, _parish); } catch { /* best-effort */ }
@@ -148,12 +207,20 @@ function _periodRecordsOrWarn() {
 export function exportStatsCSV() {
   const records = _periodRecordsOrWarn();
   if (!records) return;
-  const headers = ['Date', 'Service', 'Parish', 'Celebrant', 'Co-Celebrants', 'Sermon', 'Scripture', 'Male', 'Female', 'Total'];
-  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const rows = records.map(r => [
-    r.date, q(r.service), q(r.parishName), q(r.celebrant), q(r.coCelebrants), q(r.sermon), q(r.scripture),
-    Number(r.male) || 0, Number(r.female) || 0, Number(r.total) || 0,
-  ].join(','));
+  const headers = ['Date', 'Service', 'Parish', 'Celebrant', 'Co-Celebrants', 'Sermon', 'Scripture', 'Male', 'Female', 'Total',
+    'Offertory Currency', ...COLUMNS.map(col => 'Offertory: ' + translations.en[OFFERTORY_LABEL_KEYS[col]]), 'Offertory Total'];
+  const q = csvCell;
+  // Plain decimal amounts (no thousands commas) so a spreadsheet reads them as numbers.
+  const amount = (minor, code) => (minor / 10 ** currencyDecimals(code)).toFixed(currencyDecimals(code));
+  const rows = records.map(r => {
+    const o = recordOffertory(r);
+    return [
+      q(r.date), q(r.service), q(r.parishName), q(r.celebrant), q(r.coCelebrants), q(r.sermon), q(r.scripture),
+      Number(r.male) || 0, Number(r.female) || 0, Number(r.total) || 0,
+      ...(o ? [o.currency, ...COLUMNS.map(col => amount(o.columns[col], o.currency)), amount(o.total, o.currency)]
+            : ['', ...COLUMNS.map(() => ''), '']),
+    ].join(',');
+  });
   downloadFile([headers.join(','), ...rows].join('\n'), 'text/csv;charset=utf-8;',
     'MTC_Attendance_' + _periodSlug() + '.csv');
   showSuccessMsg(t('csvExported'));
@@ -190,6 +257,17 @@ export function buildStatsReport(history, sel, lang = getCurrentLang()) {
     if (pc !== null) lines.push(tr('statsAveragePerService') + ' ' + tr('statsCompareVs').replace('{label}', _periodLabel(c.period, c.cursor, lang)) + ': ' + (pc > 0 ? '+' : '') + pc + '%');
   }
 
+  // Offertory, one block per currency it was counted in.
+  const plain = (minor, code) => code + ' ' + formatAmount(minor, code);
+  for (const [code] of offertoryCurrencies(records)) {
+    const o = summarizeOffertory(records, code);
+    lines.push('');
+    lines.push(tr('offertoryTitle') + ' (' + code + '):');
+    lines.push(tr('statsOffertoryTotal') + ': ' + plain(o.total, code) + ' (' + o.n + ' ' + tr(o.n === 1 ? 'statsServiceWord' : 'statsServicesWord') + ')');
+    lines.push(tr('statsAveragePerService') + ': ' + plain(o.avg, code));
+    for (const col of offertoryColumnsShown(o)) lines.push('• ' + tr(OFFERTORY_LABEL_KEYS[col]) + ': ' + plain(o.columns[col], code));
+  }
+
   if (s.n) {
     lines.push('');
     if (sel.period === 'month') {
@@ -199,7 +277,8 @@ export function buildStatsReport(history, sel, lang = getCurrentLang()) {
           + (r.service ? ' · ' + r.service : '')
           + (!sel.parish && r.parishName ? ' · ' + r.parishName : '')
           + ' — ' + (Number(r.total) || 0)
-          + ' (' + tr('male') + ' ' + (Number(r.male) || 0) + ' · ' + tr('female') + ' ' + (Number(r.female) || 0) + ')');
+          + ' (' + tr('male') + ' ' + (Number(r.male) || 0) + ' · ' + tr('female') + ' ' + (Number(r.female) || 0) + ')'
+          + (recordOffertory(r) ? ' · ' + plain(recordOffertory(r).total, recordOffertory(r).currency) : ''));
       }
     } else {
       lines.push(tr(sel.period === 'year' ? 'statsReportByMonth' : 'statsReportByYear') + ':');
@@ -232,7 +311,7 @@ export async function shareStatsReport() {
     try { await navigator.share({ title: t('statsReportTitle'), text }); return; }
     catch (e) { if (e && e.name === 'AbortError') return; /* fall back to WhatsApp */ }
   }
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
 }
 
 /**
@@ -280,27 +359,51 @@ export async function exportStatsPDF() {
     line(k + ':', 20, 11, 'bold'); line(String(v), 80, 11, 'normal'); y += 7;
   }
 
-  // Table of services
+  // Offertory, one block per currency it was counted in.
+  const plain = (minor, code) => code + ' ' + formatAmount(minor, code);
+  const currencies = offertoryCurrencies(records);
+  for (const [code] of currencies) {
+    const o = summarizeOffertory(records, code);
+    y += 4;
+    line('Offertory (' + code + ')', 20, 12, 'bold'); y += 7;
+    const rows = [
+      ['Total offertory', plain(o.total, code) + '  (' + o.n + (o.n === 1 ? ' service)' : ' services)')],
+      [en('statsAveragePerService'), plain(o.avg, code)],
+      [en('highestService'), plain(o.max, code) + '  -  ' + fmt(o.maxRecord.date)],
+      ...offertoryColumnsShown(o).map(col => [en(OFFERTORY_LABEL_KEYS[col]), plain(o.columns[col], code)]),
+    ];
+    for (const [k, v] of rows) { line(k + ':', 20, 11, 'bold'); line(String(v), 80, 11, 'normal'); y += 7; }
+  }
+
+  // Table of services: [heading, x, right-aligned?]. With an offertory in the
+  // period the columns move left to make room for an Offertory column.
   y += 6;
   const showParish = !sel.parish && parishOptions(records).length > 1;
+  const withOff = currencies.length > 0;
   const cols = showParish
-    ? [['Date', 20], ['Service', 62], ['Parish', 92], ['Celebrant', 128], ['M', 166], ['F', 176], ['Total', 186]]
-    : [['Date', 20], ['Service', 62], ['Celebrant', 100], ['Male', 156], ['Female', 168], ['Total', 186]];
+    ? (withOff
+      ? [['Date', 20], ['Service', 55], ['Parish', 78], ['Celebrant', 104], ['M', 138, 1], ['F', 148, 1], ['Total', 160, 1], ['Offertory', 190, 1]]
+      : [['Date', 20], ['Service', 62], ['Parish', 92], ['Celebrant', 128], ['M', 166, 1], ['F', 176, 1], ['Total', 186, 1]])
+    : (withOff
+      ? [['Date', 20], ['Service', 56], ['Celebrant', 84], ['Male', 134, 1], ['Female', 147, 1], ['Total', 160, 1], ['Offertory', 190, 1]]
+      : [['Date', 20], ['Service', 62], ['Celebrant', 100], ['Male', 156, 1], ['Female', 168, 1], ['Total', 186, 1]]);
   const header = () => {
     doc.setFontSize(10); doc.setFont(undefined, 'bold');
-    for (const [h, x] of cols) doc.text(h, x, y, h.length <= 6 && x > 150 ? { align: 'right' } : undefined);
+    for (const [h, x, right] of cols) doc.text(h, x, y, right ? { align: 'right' } : undefined);
     y += 2; doc.line(20, y, 190, y); y += 6; doc.setFont(undefined, 'normal');
   };
   header();
   const clip = (txt, n) => (txt.length > n ? txt.slice(0, n - 1) + '…' : txt);
   for (const r of records) {
     if (y > 280) { doc.addPage(); y = 20; header(); }
+    const o = recordOffertory(r);
     const cells = showParish
-      ? [fmt(r.date), clip(r.service || '', 14), clip(r.parishName || '', 16), clip(r.celebrant || '', 18), r.male || 0, r.female || 0, r.total || 0]
-      : [fmt(r.date), clip(r.service || '', 16), clip(r.celebrant || '', 26), r.male || 0, r.female || 0, r.total || 0];
+      ? [fmt(r.date), clip(r.service || '', withOff ? 11 : 14), clip(r.parishName || '', withOff ? 12 : 16), clip(r.celebrant || '', withOff ? 13 : 18), r.male || 0, r.female || 0, r.total || 0]
+      : [fmt(r.date), clip(r.service || '', withOff ? 13 : 16), clip(r.celebrant || '', withOff ? 19 : 26), r.male || 0, r.female || 0, r.total || 0];
+    if (withOff) cells.push(o ? plain(o.total, o.currency) : '-');
     cells.forEach((c, i) => {
-      const [, x] = cols[i];
-      doc.text(String(c), x, y, typeof c === 'number' ? { align: 'right' } : undefined);
+      const [, x, right] = cols[i];
+      doc.text(String(c), x, y, right ? { align: 'right' } : undefined);
     });
     y += 6;
   }
@@ -367,18 +470,18 @@ function _controlsHtml(history) {
 }
 
 /** Bars for the chart: per service (month), per month (year), per year (all). */
-function _chartGroups(records) {
+function _chartGroups(records, valueOf = r => Number(r.total) || 0) {
   if (_period === 'month') {
     return records.map(r => ({
       label: new Date(r.date + 'T00:00:00').toLocaleDateString(_locale(), { day: 'numeric', month: 'short' })
         + (r.service ? ' ' + r.service : ''),
-      value: Number(r.total) || 0,
+      value: valueOf(r),
     }));
   }
   const sums = new Map();
   for (const r of records) {
     const key = _period === 'year' ? r.date.slice(0, 7) : r.date.slice(0, 4);
-    sums.set(key, (sums.get(key) || 0) + (Number(r.total) || 0));
+    sums.set(key, (sums.get(key) || 0) + valueOf(r));
   }
   if (_period === 'year') {
     // Always show all 12 months so gaps are visible.
@@ -394,21 +497,81 @@ function _chartGroups(records) {
   return [...sums.keys()].sort().map(k => ({ label: k, value: sums.get(k) }));
 }
 
-function _chartHtml(records) {
-  const groups = _chartGroups(records);
+// (The option is `amountOf`, not `valueOf`: every object already has a valueOf.)
+function _chartHtml(records, { titles = ['statsChartMonth', 'statsChartYear', 'statsChartAll'], amountOf, format = v => v } = {}) {
+  const groups = _chartGroups(records, amountOf);
   if (groups.length === 0) return '';
   const max = Math.max(...groups.map(g => g.value), 0);
-  const title = _period === 'month' ? t('statsChartMonth') : _period === 'year' ? t('statsChartYear') : t('statsChartAll');
+  const title = t(titles[_period === 'month' ? 0 : _period === 'year' ? 1 : 2]);
   let html = '<div class="trend-section"><div class="trend-title">' + title + '</div><div class="trend-bars">';
   for (const g of groups) {
     const px = max > 0 ? Math.max(g.value > 0 ? 4 : 2, Math.round((g.value / max) * 60)) : 2;
     html += '<div class="trend-bar-wrap">'
-      + '<div class="trend-bar-val">' + (g.value || '') + '</div>'
+      + '<div class="trend-bar-val">' + (g.value ? format(g.value) : '') + '</div>'
       + '<div class="trend-bar-inner"><div class="trend-bar" style="height:' + px + 'px"></div></div>'
       + '<div class="trend-bar-label">' + escapeHtml(g.label) + '</div>'
       + '</div>';
   }
   return html + '</div></div>';
+}
+
+/** The Offertory part of the Stats tab for the period on screen. */
+function _offertoryHtml(history, sel, records) {
+  const title = '<div class="stats-section-title stats-off-title">' + t('statsOffertoryTitle') + '</div>';
+  const currencies = offertoryCurrencies(records);
+  if (currencies.length === 0) {
+    // Say so only if offertories are being recorded at all.
+    return history.some(r => recordOffertory(r))
+      ? title + '<div class="stats-empty stats-empty-small">' + t('statsOffertoryNone') + '</div>' : '';
+  }
+  const code = currencies.some(c => c[0] === _offCurrency) ? _offCurrency : currencies[0][0];
+  const o = summarizeOffertory(records, code);
+  const money = minor => escapeHtml(formatMoney(minor, code));
+  const fmtDate = d => new Date(d + 'T00:00:00').toLocaleDateString(_locale(), { month: 'short', day: 'numeric', year: 'numeric' });
+
+  // Amounts in different currencies are never added, so pick which to show.
+  const picker = currencies.length < 2 ? '' :
+    '<select class="stats-parish" aria-label="' + escapeHtml(t('offertoryCurrency')) + '" onchange="setStatsOffertoryCurrency(this.value)">'
+    + currencies.map(([c, n]) => '<option value="' + c + '"' + (c === code ? ' selected' : '') + '>' + c + ' (' + n + ')</option>').join('')
+    + '</select>';
+
+  let compare = '';
+  for (const c of comparisonPeriods(sel.period, sel.cursor)) {
+    const prev = summarizeOffertory(filterRecords(history, { ...sel, period: c.period, cursor: c.cursor }), code).avg;
+    const pc = percentChange(o.avg, prev);
+    if (pc === null) continue;
+    const cls = pc > 0 ? 'up' : pc < 0 ? 'down' : 'same';
+    compare += '<div class="stat-compare ' + cls + '">' + (pc > 0 ? '▲' : pc < 0 ? '▼' : '=') + ' ' + Math.abs(pc) + '% '
+      + escapeHtml(t('statsCompareVs').replace('{label}', _compareLabel(c))) + '</div>';
+  }
+
+  // Share of each kind of offering.
+  const shown = offertoryColumnsShown(o);
+  const breakdown = '<div class="trend-section"><div class="trend-title">' + t('statsOffertoryByType') + '</div>'
+    + shown.map(col => {
+      const pct = o.total ? Math.round((o.columns[col] / o.total) * 100) : 0;
+      return '<div class="off-stat-row"><span class="off-stat-name">' + t(OFFERTORY_LABEL_KEYS[col]) + '</span>'
+        + '<span class="off-stat-bar"><span style="width:' + pct + '%"></span></span>'
+        + '<span class="off-stat-amount">' + escapeHtml(formatAmount(o.columns[col], code)) + '</span>'
+        + '<span class="off-stat-pct">' + pct + '%</span></div>';
+    }).join('') + '</div>';
+
+  const factor = 10 ** currencyDecimals(code);
+  const offRecords = records.filter(r => { const x = recordOffertory(r); return x && x.currency === code; });
+  return title + picker
+    + '<div class="stats-grid">'
+    + statCard('banknote', money(o.total), t('statsOffertoryTotal'), '', 'full-width stat-money')
+    + statCard('church', o.n, t('statsOffertoryServices'), '')
+    + statCard('activity', money(o.avg), t('statsAveragePerService'), '', 'stat-money', compare)
+    + statCard('trendUp', money(o.max), t('highestService'), fmtDate(o.maxRecord.date), 'stat-money')
+    + statCard('trendDown', money(o.min), t('lowestService'), fmtDate(o.minRecord.date), 'stat-money')
+    + '</div>'
+    + breakdown
+    + _chartHtml(offRecords, {
+      titles: ['statsOffertoryChartMonth', 'statsOffertoryChartYear', 'statsOffertoryChartAll'],
+      amountOf: r => recordOffertory(r).total / factor,
+      format: v => Math.round(v).toLocaleString('en-US'),
+    });
 }
 
 export function displayStats() {
@@ -441,6 +604,7 @@ export function displayStats() {
     + statCard('trendDown', Number(s.minRecord.total) || 0, t('lowestService'), fmtDate(s.minRecord.date))
     + '</div>'
     + _chartHtml(records)
+    + _offertoryHtml(history, sel, records)
     + '<div class="stats-actions">'
     +   '<button class="stats-action-btn stats-share-btn" onclick="shareStatsReport()">' + icon('share') + '<span>' + t('statsShare') + '</span></button>'
     +   '<button class="stats-action-btn stats-pdf-btn" onclick="exportStatsPDF()">' + icon('fileDown') + '<span>' + t('statsPdf') + '</span></button>'
