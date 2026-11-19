@@ -3,7 +3,9 @@ import SwiftUI
 struct CounterView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var showingSaveSheet = false
+    @State private var showingDetails = false
+    @State private var showingSaveConfirm = false
+    @State private var savedMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -16,9 +18,41 @@ struct CounterView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
         }
-        .sheet(isPresented: $showingSaveSheet) {
-            SaveRecordView()
+        .sheet(isPresented: $showingDetails) {
+            ServiceDetailsView()
         }
+        .confirmationDialog("Save this service?", isPresented: $showingSaveConfirm, titleVisibility: .visible) {
+            Button("Save") { save() }
+            Button("Edit service details") {
+                // Let this dialog finish closing before the sheet opens.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { showingDetails = true }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(saveSummary)
+        }
+        .alert("Saved", isPresented: Binding(get: { savedMessage != nil }, set: { if !$0 { savedMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(savedMessage ?? "")
+        }
+    }
+
+    /// What is about to be saved, shown before saving.
+    private var saveSummary: String {
+        var lines = [appState.details.recap,
+                     "Total \(appState.grandTotal) (Male \(appState.grandMale), Female \(appState.grandFemale))"]
+        if !appState.offertory.isEmpty {
+            lines.append("Offertory \(OffertoryMoney.plain(appState.offertory.totalMinor, appState.offertory.currencyInfo))")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private func save() {
+        let summary = saveSummary
+        appState.saveCurrentRecord()
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        savedMessage = summary
     }
 
     // MARK: - Layout variants
@@ -26,6 +60,7 @@ struct CounterView: View {
     private var phoneContent: some View {
         VStack(spacing: 20) {
             headerView
+            serviceDetailsCard
             grandTotalCard
             CounterRow(label: "Male", count: $appState.male, color: .blue)
             CounterRow(label: "Female", count: $appState.female, color: .pink)
@@ -56,6 +91,7 @@ struct CounterView: View {
 
     @ViewBuilder private var counterColumnContent: some View {
         headerView
+        serviceDetailsCard
         grandTotalCard
         CounterRow(label: "Male", count: $appState.male, color: .blue)
         CounterRow(label: "Female", count: $appState.female, color: .pink)
@@ -73,6 +109,44 @@ struct CounterView: View {
                 .foregroundColor(.secondary)
         }
         .padding(.top, 8)
+    }
+
+    /// Service details come first: tap to enter the date, parish, celebrant,
+    /// sermon and reading before counting.
+    private var serviceDetailsCard: some View {
+        Button(action: { showingDetails = true }) {
+            HStack(spacing: 12) {
+                Image(systemName: "doc.text")
+                    .font(.title3)
+                    .foregroundColor(.indigo)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("SERVICE DETAILS")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundColor(.secondary)
+                    Text(appState.details.recap)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                    if appState.details.parish.isEmpty && appState.details.celebrant.isEmpty {
+                        Text("Tap to add parish, celebrant and sermon")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(Color(.systemGray6))
+            .cornerRadius(16)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Service details: \(appState.details.recap)")
+        .accessibilityHint("Opens the service details")
     }
 
     private var grandTotalCard: some View {
@@ -107,12 +181,13 @@ struct CounterView: View {
             .buttonStyle(.borderedProminent)
             .tint(.indigo)
 
-            Button(action: { showingSaveSheet = true }) {
+            Button(action: { showingSaveConfirm = true }) {
                 Label("Save Record", systemImage: "square.and.arrow.down.fill")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
             .tint(.green)
+            .disabled(appState.grandTotal == 0)
         }
     }
 }

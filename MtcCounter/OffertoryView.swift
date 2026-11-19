@@ -8,7 +8,6 @@ struct OffertoryView: View {
 
     /// Column on screen: one of the counted columns' raw value, or "total".
     @State private var selected = OffertoryColumn.offertory.rawValue
-    @State private var collectionDate = Date()
     @State private var shareItems: [Any] = []
     @State private var showingShare = false
     @State private var pendingCurrency: String?
@@ -75,13 +74,15 @@ struct OffertoryView: View {
             }
             TextField("Venue (e.g. Hall of Peace)", text: $appState.offertory.venue)
             TextField("Special column name (e.g. Harvest Festival)", text: $appState.offertory.specialLabel)
-            DatePicker("Collection date", selection: $collectionDate, displayedComponents: .date)
+            LabeledContent("Service", value: appState.details.recap)
         } header: {
             Text("Sheet")
         } footer: {
             if signed {
                 Label("Signed. Clear the signatures to change the counts.", systemImage: "lock.fill")
                     .foregroundColor(.orange)
+            } else {
+                Text("The date and church name on the sheet come from Service details on the Counter tab.")
             }
         }
         .disabled(signed)
@@ -291,7 +292,7 @@ struct OffertoryView: View {
     }
 
     private func exportPDF() {
-        let iso = Lectionary.isoString(collectionDate)
+        let iso = appState.details.isoDate
         let report = sheet.report(parish: appState.offertoryChurchName, isoDate: iso)
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("MTC_Offertory_\(iso).pdf")
         do {

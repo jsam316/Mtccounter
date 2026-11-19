@@ -12,5 +12,6 @@ swiftc -o "$OUT" \
   MtcCounter/Models/Backup.swift \
   MtcCounter/Models/Offertory.swift \
   MtcCounter/Models/OffertoryData.swift \
+  MtcCounter/Models/ServiceDetails.swift \
   tools/swift-tests/main.swift
 "$OUT"

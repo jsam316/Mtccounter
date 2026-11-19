@@ -13,6 +13,10 @@ class AppState: ObservableObject {
     @Published var celebrants: [String] = []
     @Published var parishes: [String] = []
 
+    /// Details of the service being recorded. Entered before counting, saved
+    /// on every change, and stored with the record when the service is saved.
+    @Published var details = ServiceDetails() { didSet { if details != oldValue { saveDetails() } } }
+
     /// The offertory counting sheet for the service in progress. Saved on
     /// every change, and stored with the record when the service is saved.
     @Published var offertory: Offertory = Offertory.empty() { didSet { saveOffertory() } }
@@ -86,6 +90,32 @@ class AppState: ObservableObject {
         rememberLastDetails(parish: parish, celebrant: celebrant)
     }
 
+    /// Save the service in progress using the details entered beforehand,
+    /// then start fresh details for the next service.
+    func saveCurrentRecord() {
+        let d = details
+        saveRecord(date: d.displayDate, isoDate: d.isoDate, service: d.service, parish: d.parish,
+                   celebrant: d.celebrant, coCelebrants: d.coCelebrants(fromList: !celebrants.isEmpty),
+                   sermon: d.sermon, scripture: d.scriptureString, notes: d.notes)
+        details = d.nextService()
+        prepareDetails()
+    }
+
+    /// True while a service is being recorded (something counted).
+    var serviceInProgress: Bool {
+        male > 0 || female > 0 || !rounds.isEmpty || !offertory.isEmpty
+    }
+
+    /// Get the details ready to use: offer the parish and celebrant used
+    /// last (if still listed) and fill in the lectionary's suggestion.
+    func prepareDetails() {
+        var d = details
+        if d.parish.isEmpty, parishes.contains(lastParish) { d.parish = lastParish }
+        if d.celebrant.isEmpty, celebrants.contains(lastCelebrant) { d.celebrant = lastCelebrant }
+        d.applyLectionary()
+        if d != details { details = d }
+    }
+
     func rememberLastDetails(parish: String, celebrant: String) {
         if !parish.isEmpty { lastParish = parish }
         if !celebrant.isEmpty { lastCelebrant = celebrant }
@@ -110,6 +140,7 @@ class AppState: ObservableObject {
     /// Church name printed on the offertory sheet: the parish used last, or
     /// the only saved parish.
     var offertoryChurchName: String {
+        if !details.parish.isEmpty { return details.parish }
         if !lastParish.isEmpty { return lastParish }
         return parishes.count == 1 ? parishes[0] : ""
     }
@@ -135,6 +166,12 @@ class AppState: ObservableObject {
         return OffertoryCurrency.fallback.code
     }
 
+    private func saveDetails() {
+        if let data = try? JSONEncoder().encode(details) {
+            defaults.set(data, forKey: "mtc_service_details")
+        }
+    }
+
     private func saveOffertory() {
         if let data = try? JSONEncoder().encode(offertory) {
             defaults.set(data, forKey: "mtc_offertory")
@@ -154,6 +191,9 @@ class AppState: ObservableObject {
     func deleteCelebrant(_ name: String) {
         celebrants.removeAll { $0 == name }
         saveCelebrants()
+        // Don't leave a deleted name selected in the service details.
+        if details.celebrant == name { details.celebrant = "" }
+        details.selectedCoCelebrants.removeAll { $0 == name }
     }
 
     // MARK: - Parish Management
@@ -169,6 +209,7 @@ class AppState: ObservableObject {
     func deleteParish(_ name: String) {
         parishes.removeAll { $0 == name }
         saveParishes()
+        if details.parish == name { details.parish = "" }
     }
 
     // MARK: - Persistence
@@ -229,6 +270,19 @@ class AppState: ObservableObject {
         female = max(0, defaults.integer(forKey: "mtc_live_female"))
         lastParish = defaults.string(forKey: "mtc_last_parish") ?? ""
         lastCelebrant = defaults.string(forKey: "mtc_last_celebrant") ?? ""
+
+        // Service details: carry on a service that is in progress; otherwise
+        // start from today with the usual parish and celebrant.
+        var saved = ServiceDetails()
+        if let data = defaults.data(forKey: "mtc_service_details"),
+           let decoded = try? JSONDecoder().decode(ServiceDetails.self, from: data) {
+            saved = decoded
+        }
+        if !serviceInProgress && !Calendar.current.isDateInToday(saved.serviceDate) {
+            saved = saved.nextService()
+        }
+        details = saved
+        prepareDetails()
     }
 
     // MARK: - Backup (web app format)

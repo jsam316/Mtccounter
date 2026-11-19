@@ -293,5 +293,64 @@ check(stINR.services == 1 && stINR.total == 250000 && stINR.average == 250000, "
 let stNone = OffertorySummary.summarize(sheets, currency: "USD")
 check(stNone.services == 0 && stNone.total == 0 && stNone.average == 0, "no services in a currency")
 
+// MARK: Service details (entered before counting starts)
+
+var sd = ServiceDetails()
+sd.serviceDate = day("2026-01-18")
+sd.applyLectionary()
+check(sd.sermon == "Trusting in a Caring God" && sd.scriptureString == "Matthew 6:19-34", "lectionary fills the theme and Gospel")
+check(sd.isoDate == "2026-01-18", "service date as ISO")
+sd.serviceDate = day("2026-01-07")
+sd.applyLectionary()
+check(sd.sermon == "" && sd.scriptureString == "", "its own suggestion is removed on a day without an entry")
+sd.sermon = "My own title"
+sd.serviceDate = day("2026-01-18")
+sd.applyLectionary()
+check(sd.sermon == "My own title" && sd.scriptureString == "Matthew 6:19-34", "a typed title is kept; the empty reading is filled")
+sd.applyLectionary(force: true)
+check(sd.sermon == "Trusting in a Caring God", "tapping the hint replaces the title")
+var fri = ServiceDetails()
+fri.serviceDate = day("2026-01-16")
+fri.applyLectionary()
+check(fri.sermon == "Trusting in a Caring God" && fri.scriptureString == "", "Friday: the week's theme, no reading")
+
+var sc = ServiceDetails()
+check(sc.scriptureString == "", "no book, no reference")
+sc.scriptureBook = "Psalms"
+sc.scriptureChapter = 23
+check(sc.scriptureString == "Psalms 23", "book and chapter")
+sc.verseFrom = "1"
+sc.verseTo = "1"
+check(sc.scriptureString == "Psalms 23:1", "single verse")
+sc.verseTo = "6"
+check(sc.scriptureString == "Psalms 23:1-6", "verse range")
+
+var co = ServiceDetails()
+co.selectedCoCelebrants = ["Rev. B", "Rev. A"]
+co.coCelebrantsText = "typed names"
+check(co.coCelebrants(fromList: true) == "", "co-celebrants switched off")
+co.coCelebrantsEnabled = true
+check(co.coCelebrants(fromList: true) == "Rev. A, Rev. B" && co.coCelebrants(fromList: false) == "typed names", "picked or typed co-celebrants")
+
+var rc = ServiceDetails()
+rc.serviceDate = day("2026-11-10")
+rc.service = " Morning "
+rc.parish = "St. Thomas"
+check(rc.recap.hasSuffix(" · Morning · St. Thomas") && rc.recap.contains("10"), "one-line recap: \(rc.recap)")
+check(ServiceDetails().isBlank && !rc.isBlank, "blank until something is entered")
+
+var done = rc
+done.celebrant = "Rev. A"
+done.sermon = "S"
+done.notes = "n"
+done.lastThemeFill = "S"
+let nextDetails = done.nextService(on: day("2026-11-17"))
+check(nextDetails.parish == "St. Thomas" && nextDetails.celebrant == "Rev. A", "next service keeps the parish and celebrant")
+check(nextDetails.sermon == "" && nextDetails.service == "" && nextDetails.notes == "" && nextDetails.lastThemeFill == nil
+      && nextDetails.isoDate == "2026-11-17", "next service starts otherwise empty on the new date")
+check((try? JSONDecoder().decode(ServiceDetails.self, from: try! JSONEncoder().encode(done))) == done, "details save and load")
+let lenientDetails = try? JSONDecoder().decode(ServiceDetails.self, from: "{\"service\":5,\"scriptureChapter\":-3,\"parish\":\"P\"}".data(using: .utf8)!)
+check(lenientDetails?.service == "" && lenientDetails?.scriptureChapter == 1 && lenientDetails?.parish == "P", "damaged saved details fall back to defaults")
+
 print("\(passed) passed, \(failures) failed")
 exit(failures == 0 ? 0 : 1)
