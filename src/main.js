@@ -40,7 +40,8 @@ import { initCloud, connectCloud, disconnectCloud, backupNow,
 import { injectIconSprite }                                  from './icons.js';
 import { initOffertory, loadOffertory, renderOffertory,
          setOffertoryCurrency, setOffertoryTab,
-         exportOffertoryPDF, clearSignature }                 from './offertory.js';
+         exportOffertoryPDF, clearSignature,
+         setSignatureColor }                                  from './offertory.js';
 
 // Icons first: markup and every render below reference them.
 injectIconSprite();
@@ -78,7 +79,7 @@ document.addEventListener('mtc:language-changed', () => {
 // Expose everything called from inline HTML onclick handlers.
 Object.assign(window, {
   toggleCountingLock,
-  setOffertoryCurrency, setOffertoryTab, exportOffertoryPDF, clearSignature,
+  setOffertoryCurrency, setOffertoryTab, exportOffertoryPDF, clearSignature, setSignatureColor,
   changeMale, changeFemale, newRecord, addToRoundTotal,
   removeRound, clearRounds, tapCounterBox, toggleRoundsExpanded,
   saveRecord, loadRecord, deleteRecord, filterHistory,
