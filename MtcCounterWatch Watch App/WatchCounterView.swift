@@ -13,6 +13,11 @@ struct WatchCounterView: View {
                 .contentTransition(.numericText())
                 .animation(.spring(response: 0.3), value: appState.grandTotal)
 
+            // Male and female across every round and the current count
+            Text("M \(appState.grandMale)  ·  F \(appState.grandFemale)")
+                .font(.caption2.monospacedDigit())
+                .foregroundColor(.secondary)
+
             Divider()
 
             // Male row
@@ -31,8 +36,8 @@ struct WatchCounterView: View {
 
             // Add round button
             Button(action: {
-                appState.addRound()
-                WKInterfaceDevice.current().play(.success)
+                // Nothing counted: no empty round, and a different tap to say so.
+                WKInterfaceDevice.current().play(appState.addRound() ? .success : .failure)
             }) {
                 Label("+ Round", systemImage: "plus.circle")
                     .font(.caption.bold())

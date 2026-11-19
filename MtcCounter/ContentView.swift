@@ -8,6 +8,11 @@ struct ContentView: View {
                     Label("Counter", systemImage: "person.2.fill")
                 }
 
+            OffertoryView()
+                .tabItem {
+                    Label("Offertory", systemImage: "banknote.fill")
+                }
+
             HistoryView()
                 .tabItem {
                     Label("History", systemImage: "clock.fill")

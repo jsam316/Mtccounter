@@ -23,6 +23,29 @@ struct SettingsView: View {
     private var totalMale: Int { appState.records.reduce(0) { $0 + $1.totalMale } }
     private var totalFemale: Int { appState.records.reduce(0) { $0 + $1.totalFemale } }
 
+    // Offertory statistics
+    @State private var offertoryCurrency = ""
+    private var offertoryCurrencies: [String] {
+        OffertorySummary.currencies(in: appState.offertorySheets).map { $0.code }
+    }
+    /// The currency on show: the one picked, else the most used.
+    private var shownCurrency: String {
+        offertoryCurrencies.contains(offertoryCurrency) ? offertoryCurrency : (offertoryCurrencies.first ?? "")
+    }
+    private var offertoryStats: OffertorySummary {
+        OffertorySummary.summarize(appState.offertorySheets, currency: shownCurrency)
+    }
+    private func money(_ minor: Int) -> String {
+        OffertoryMoney.plain(minor, OffertoryCurrency.find(shownCurrency) ?? OffertoryCurrency.fallback)
+    }
+    /// "KWD 254.700 (60%)": a column's amount and its share of the total.
+    private func share(of column: OffertoryColumn) -> String {
+        let amount = offertoryStats.columns[column] ?? 0
+        let total = offertoryStats.total
+        let percent = total > 0 ? Int((Double(amount) / Double(total) * 100).rounded()) : 0
+        return "\(money(amount)) (\(percent)%)"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -37,6 +60,31 @@ struct SettingsView: View {
                         if let high = highestRecord {
                             LabeledContent("Highest Service", value: "\(high.total) on \(high.date)")
                         }
+                    }
+                }
+
+                // MARK: Offertory statistics (one currency at a time)
+                if !offertoryCurrencies.isEmpty {
+                    Section {
+                        if offertoryCurrencies.count > 1 {
+                            Picker("Currency", selection: Binding(get: { shownCurrency }, set: { offertoryCurrency = $0 })) {
+                                ForEach(offertoryCurrencies, id: \.self) { code in
+                                    Text(code).tag(code)
+                                }
+                            }
+                        }
+                        LabeledContent("Total offertory", value: money(offertoryStats.total))
+                        LabeledContent("Services with offertory", value: "\(offertoryStats.services)")
+                        LabeledContent("Average per service", value: money(offertoryStats.average))
+                        LabeledContent("Highest", value: money(offertoryStats.highest))
+                        LabeledContent("Lowest", value: money(offertoryStats.lowest))
+                        ForEach(offertoryStats.columnsShown, id: \.rawValue) { column in
+                            LabeledContent(column.title, value: share(of: column))
+                        }
+                    } header: {
+                        Text("Offertory statistics")
+                    } footer: {
+                        Text("Amounts in different currencies are never added together.")
                     }
                 }
 
@@ -168,6 +216,8 @@ struct SettingsView: View {
             backupMessage = changed == 0
                 ? "Nothing new: everything in this backup is already here."
                 : "Merged \(changed) record\(changed == 1 ? "" : "s") from the backup."
+        } catch BackupError.tooLarge {
+            backupMessage = "That file is too large to be an MTC Counter backup."
         } catch BackupError.notAnMtcBackup {
             backupMessage = "That file isn't an MTC Counter backup."
         } catch {
@@ -207,7 +257,10 @@ struct SettingsView: View {
                     ctx.beginPage()
                     y = 40
                 }
-                let line = "\(record.date)  |  M:\(record.totalMale)  F:\(record.totalFemale)  T:\(record.total)"
+                var line = "\(record.date)  |  M:\(record.totalMale)  F:\(record.totalFemale)  T:\(record.total)"
+                if let sheet = record.offertory {
+                    line += "  |  Offertory: \(OffertoryMoney.plain(sheet.totalMinor, sheet.currencyInfo))"
+                }
                 line.draw(at: CGPoint(x: left, y: y), withAttributes: subAttrs)
                 y += 18
                 if !record.celebrant.isEmpty {

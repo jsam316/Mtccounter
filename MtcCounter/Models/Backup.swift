@@ -18,6 +18,23 @@ struct WebBackup: Codable {
     }
 }
 
+/// One list entry that may be malformed: it decodes to nil instead of
+/// making the whole backup unreadable.
+struct Lossy<T: Decodable>: Decodable {
+    let value: T?
+    init(from decoder: Decoder) throws { value = try? T(from: decoder) }
+}
+
+extension WebBackup.Payload {
+    /// Lenient: unusable records and names are skipped, not fatal.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        mtcHistory = ((try? c.decode([Lossy<WebRecord>].self, forKey: .mtcHistory)) ?? []).compactMap { $0.value }
+        savedCelebrants = (try? c.decode([Lossy<String>].self, forKey: .savedCelebrants))?.compactMap { $0.value }
+        savedParishes = (try? c.decode([Lossy<String>].self, forKey: .savedParishes))?.compactMap { $0.value }
+    }
+}
+
 struct WebRound: Codable {
     var male: Int
     var female: Int
@@ -41,19 +58,21 @@ struct WebRecord: Codable {
     var rounds: [WebRound]?
     var timestamp: String?
     var notes: String?
+    /// The offertory counting sheet, in the web app's own shape.
+    var offertory: Offertory?
 
     enum CodingKeys: String, CodingKey {
         case date, service, parishName, celebrant, coCelebrants, sermon, scripture
-        case male, female, total, rounds, timestamp, notes
+        case male, female, total, rounds, timestamp, notes, offertory
     }
 
     init(date: String, service: String?, parishName: String?, celebrant: String?, coCelebrants: String?,
          sermon: String?, scripture: String?, male: Int, female: Int, total: Int?, rounds: [WebRound]?,
-         timestamp: String?, notes: String?) {
+         timestamp: String?, notes: String?, offertory: Offertory? = nil) {
         self.date = date; self.service = service; self.parishName = parishName; self.celebrant = celebrant
         self.coCelebrants = coCelebrants; self.sermon = sermon; self.scripture = scripture
         self.male = male; self.female = female; self.total = total; self.rounds = rounds
-        self.timestamp = timestamp; self.notes = notes
+        self.timestamp = timestamp; self.notes = notes; self.offertory = offertory
     }
 
     /// Lenient decoding: numbers may have been stored as text by older versions.
@@ -65,25 +84,66 @@ struct WebRecord: Codable {
             if let v = try? c.decode(String.self, forKey: k), let n = Int(v) { return n }
             return 0
         }
+        // A text field of the wrong type is treated as absent, not as an error.
+        func text(_ k: CodingKeys) -> String? { try? c.decode(String.self, forKey: k) }
         date = try c.decode(String.self, forKey: .date)
-        service = try c.decodeIfPresent(String.self, forKey: .service)
-        parishName = try c.decodeIfPresent(String.self, forKey: .parishName)
-        celebrant = try c.decodeIfPresent(String.self, forKey: .celebrant)
-        coCelebrants = try c.decodeIfPresent(String.self, forKey: .coCelebrants)
-        sermon = try c.decodeIfPresent(String.self, forKey: .sermon)
-        scripture = try c.decodeIfPresent(String.self, forKey: .scripture)
+        service = text(.service)
+        parishName = text(.parishName)
+        celebrant = text(.celebrant)
+        coCelebrants = text(.coCelebrants)
+        sermon = text(.sermon)
+        scripture = text(.scripture)
         male = int(.male)
         female = int(.female)
-        total = (try? c.decode(Int.self, forKey: .total)) ?? male + female
-        rounds = try? c.decodeIfPresent([WebRound].self, forKey: .rounds)
-        timestamp = try c.decodeIfPresent(String.self, forKey: .timestamp)
-        notes = try c.decodeIfPresent(String.self, forKey: .notes)
+        total = male + female
+        rounds = (try? c.decode([Lossy<WebRound>].self, forKey: .rounds))?.compactMap { $0.value }
+        timestamp = text(.timestamp)
+        notes = text(.notes)
+        offertory = (try? c.decodeIfPresent(Offertory.self, forKey: .offertory)) ?? nil
     }
 }
 
-enum BackupError: Error { case notAnMtcBackup }
+enum BackupError: Error { case notAnMtcBackup, tooLarge }
 
 enum BackupCodec {
+    // Limits on what a backup may contain (the same as the web app's).
+    static let maxFileBytes = 5 * 1024 * 1024
+    static let maxRecords = 5000
+    static let maxNames = 500
+    static let maxRounds = 500
+    static let maxCount = 1_000_000
+
+    /// A short piece of text from a backup: control characters removed,
+    /// trimmed and capped.
+    static func cleanText(_ value: String?, _ max: Int) -> String {
+        let kept = (value ?? "").unicodeScalars.filter { $0 == "\n" || $0 == "\t" || !CharacterSet.controlCharacters.contains($0) }
+        return String(String(String.UnicodeScalarView(kept)).trimmingCharacters(in: .whitespacesAndNewlines).prefix(max))
+    }
+
+    static func cleanCount(_ n: Int) -> Int { min(max(0, n), maxCount) }
+
+    /// A list of names: non-empty text, no repeats, capped.
+    static func cleanNames(_ names: [String]?) -> [String] {
+        var seen = Set<String>()
+        var out: [String] = []
+        for raw in names ?? [] {
+            let name = cleanText(raw, 120)
+            if name.isEmpty || seen.contains(name) { continue }
+            seen.insert(name)
+            out.append(name)
+            if out.count == maxNames { break }
+        }
+        return out
+    }
+
+    /// One text cell for a CSV file. A cell that starts with = + - @ gets a
+    /// leading apostrophe, so a spreadsheet shows it as text instead of
+    /// running it as a formula.
+    static func csvCell(_ value: String) -> String {
+        var s = value
+        if let first = s.first, "=+-@\t\r".contains(first) { s = "'" + s }
+        return "\"" + s.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+    }
     private static let iso8601: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -117,28 +177,37 @@ enum BackupCodec {
             total: r.total,
             rounds: r.rounds.map { WebRound(male: $0.male, female: $0.female, total: $0.total, timestamp: iso8601.string(from: $0.timestamp)) },
             timestamp: iso8601.string(from: r.savedDate),
-            notes: r.notes.isEmpty ? nil : r.notes
+            notes: r.notes.isEmpty ? nil : r.notes,
+            offertory: r.offertory
         )
     }
 
-    static func attendanceRecord(from w: WebRecord) -> AttendanceRecord {
-        let isISO = Lectionary.date(fromISO: w.date) != nil
+    /// A record rebuilt from a backup with every value checked for size and
+    /// range; nil when it has no usable date.
+    static func attendanceRecord(from w: WebRecord) -> AttendanceRecord? {
+        let date = cleanText(w.date, 60)
+        guard !date.isEmpty else { return nil }
+        let isISO = Lectionary.date(fromISO: date) != nil
+        var sheet = w.offertory
+        sheet?.normalize()
         return AttendanceRecord(
-            date: isISO ? displayDate(fromISO: w.date) : w.date,
-            isoDate: isISO ? w.date : "",
-            service: w.service ?? "",
-            parish: w.parishName ?? "",
-            celebrant: w.celebrant ?? "",
-            coCelebrants: w.coCelebrants ?? "",
-            sermon: w.sermon ?? "",
-            scriptureReference: w.scripture ?? "",
-            rounds: (w.rounds ?? []).map {
-                Round(male: $0.male, female: $0.female, timestamp: parseTimestamp($0.timestamp) ?? Date(timeIntervalSince1970: 0))
+            date: isISO ? displayDate(fromISO: date) : date,
+            isoDate: isISO ? date : "",
+            service: cleanText(w.service, 60),
+            parish: cleanText(w.parishName, 120),
+            celebrant: cleanText(w.celebrant, 120),
+            coCelebrants: cleanText(w.coCelebrants, 400),
+            sermon: cleanText(w.sermon, 200),
+            scriptureReference: cleanText(w.scripture, 80),
+            rounds: (w.rounds ?? []).prefix(maxRounds).map {
+                Round(male: cleanCount($0.male), female: cleanCount($0.female),
+                      timestamp: parseTimestamp($0.timestamp) ?? Date(timeIntervalSince1970: 0))
             },
-            totalMale: w.male,
-            totalFemale: w.female,
-            notes: w.notes ?? "",
-            savedDate: parseTimestamp(w.timestamp) ?? Date(timeIntervalSince1970: 0)
+            totalMale: cleanCount(w.male),
+            totalFemale: cleanCount(w.female),
+            notes: cleanText(w.notes, 2000),
+            savedDate: parseTimestamp(w.timestamp) ?? Date(timeIntervalSince1970: 0),
+            offertory: (sheet?.isEmpty ?? true) ? nil : sheet
         )
     }
 
@@ -153,6 +222,8 @@ enum BackupCodec {
     }
 
     static func decode(_ data: Data) throws -> WebBackup {
+        // A real backup is a few hundred KB at most; refuse anything huge.
+        guard data.count <= maxFileBytes else { throw BackupError.tooLarge }
         let backup = try JSONDecoder().decode(WebBackup.self, from: data)
         guard backup.app == "MTC Counter" else { throw BackupError.notAnMtcBackup }
         return backup
@@ -171,8 +242,8 @@ enum BackupCodec {
             order.append(r.mergeKey)
         }
         var changed = 0
-        for w in backup.data.mtcHistory {
-            let incoming = attendanceRecord(from: w)
+        for w in backup.data.mtcHistory.prefix(maxRecords) {
+            guard let incoming = attendanceRecord(from: w) else { continue }
             let key = incoming.mergeKey
             if let existing = byKey[key] {
                 if incoming.savedDate > existing.savedDate {
@@ -192,7 +263,7 @@ enum BackupCodec {
             ($0.resolvedISODate ?? "") > ($1.resolvedISODate ?? "")
         }
         let union: ([String], [String]?) -> [String] = { a, b in
-            Array(Set(a + (b ?? [])).filter { !$0.isEmpty }).sorted()
+            Array(Set(a + cleanNames(b)).filter { !$0.isEmpty }).sorted()
         }
         return (records, union(localCelebrants, backup.data.savedCelebrants),
                 union(localParishes, backup.data.savedParishes), changed)

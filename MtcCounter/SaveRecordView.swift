@@ -295,6 +295,28 @@ struct SaveRecordView: View {
                             .fontWeight(.bold)
                     }
                 }
+
+                // The offertory counted on the Offertory tab is saved with the record.
+                if !appState.offertory.isEmpty {
+                    Section {
+                        HStack {
+                            Text("Total offertory")
+                            Spacer()
+                            Text(OffertoryMoney.plain(appState.offertory.totalMinor, appState.offertory.currencyInfo))
+                                .foregroundColor(.green)
+                                .fontWeight(.semibold)
+                        }
+                        if !appState.offertory.isSigned {
+                            Label("Not signed yet", systemImage: "signature")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+                    } header: {
+                        Text("Offertory")
+                    } footer: {
+                        Text("Saved with this record. The sheet then starts empty for the next service.")
+                    }
+                }
             }
             .navigationTitle("Save Record")
             .navigationBarTitleDisplayMode(.inline)
