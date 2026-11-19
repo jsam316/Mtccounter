@@ -1,7 +1,7 @@
 import { t, getCurrentLang, translations } from './translations.js';
 import { getHistory } from './history.js';
 import { downloadFile, loadJsPDF } from './export.js';
-import { showSuccessMsg, showErrorMsg, escapeHtml, isNotSpecified } from './utils.js';
+import { showSuccessMsg, showErrorMsg, escapeHtml, isNotSpecified, csvCell } from './utils.js';
 import { triggerHaptic } from './haptic.js';
 import { getString, setString } from './state.js';
 import { icon } from './icons.js';
@@ -209,13 +209,13 @@ export function exportStatsCSV() {
   if (!records) return;
   const headers = ['Date', 'Service', 'Parish', 'Celebrant', 'Co-Celebrants', 'Sermon', 'Scripture', 'Male', 'Female', 'Total',
     'Offertory Currency', ...COLUMNS.map(col => 'Offertory: ' + translations.en[OFFERTORY_LABEL_KEYS[col]]), 'Offertory Total'];
-  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const q = csvCell;
   // Plain decimal amounts (no thousands commas) so a spreadsheet reads them as numbers.
   const amount = (minor, code) => (minor / 10 ** currencyDecimals(code)).toFixed(currencyDecimals(code));
   const rows = records.map(r => {
     const o = recordOffertory(r);
     return [
-      r.date, q(r.service), q(r.parishName), q(r.celebrant), q(r.coCelebrants), q(r.sermon), q(r.scripture),
+      q(r.date), q(r.service), q(r.parishName), q(r.celebrant), q(r.coCelebrants), q(r.sermon), q(r.scripture),
       Number(r.male) || 0, Number(r.female) || 0, Number(r.total) || 0,
       ...(o ? [o.currency, ...COLUMNS.map(col => amount(o.columns[col], o.currency)), amount(o.total, o.currency)]
             : ['', ...COLUMNS.map(() => ''), '']),
@@ -311,7 +311,7 @@ export async function shareStatsReport() {
     try { await navigator.share({ title: t('statsReportTitle'), text }); return; }
     catch (e) { if (e && e.name === 'AbortError') return; /* fall back to WhatsApp */ }
   }
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
 }
 
 /**

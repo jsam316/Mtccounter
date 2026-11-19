@@ -307,6 +307,11 @@ function _inject(src) {
 function _loadLibs() {
   if (window.cocoSsd) return Promise.resolve();
   if (!_libsLoader) {
+    // TensorFlow sets this global as it starts; if the name doesn't exist it
+    // falls back to eval, which the page's content security policy forbids
+    // (and which would stop the library loading). Creating the name first
+    // keeps it on the plain path.
+    if (!('regeneratorRuntime' in window)) window.regeneratorRuntime = undefined;
     _libsLoader = _inject('./vendor/tf.min.js')
       .then(() => _inject('./vendor/coco-ssd.min.js'))
       .catch(err => { _libsLoader = null; throw err; });

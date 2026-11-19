@@ -1,7 +1,8 @@
 import { save, load, KEYS } from './state.js';
 import { t, getCurrentLang, translations } from './translations.js';
 import { triggerHaptic } from './haptic.js';
-import { showSuccessMsg, showErrorMsg } from './utils.js';
+import { showSuccessMsg, showErrorMsg, csvCell } from './utils.js';
+import { sanitizeBackup, LIMITS } from './sanitize.js';
 import { withUndo } from './undo.js';
 import { getMale, getFemale, getRounds } from './counter.js';
 import { getCoCelebrantsValue } from './celebrants.js';
@@ -100,7 +101,8 @@ export function exportData() {
 
 export function shareToWhatsApp() {
   const text = buildReportText();
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  // noopener: the opened page gets no handle back to this app's window.
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
   triggerHaptic('success');
 }
 
@@ -234,14 +236,9 @@ export function exportCSV() {
 
   const headers = ['Date','Service','Parish','Celebrant','Co-Celebrants','Sermon','Scripture','Male','Female','Total'];
   const rows = history.map(r => [
-    r.date,
-    '"' + (r.service      || '').replace(/"/g, '""') + '"',
-    '"' + (r.parishName   || '').replace(/"/g, '""') + '"',
-    '"' + (r.celebrant    || '').replace(/"/g, '""') + '"',
-    '"' + (r.coCelebrants || '').replace(/"/g, '""') + '"',
-    '"' + (r.sermon       || '').replace(/"/g, '""') + '"',
-    '"' + (r.scripture    || '').replace(/"/g, '""') + '"',
-    r.male, r.female, r.total
+    csvCell(r.date), csvCell(r.service), csvCell(r.parishName), csvCell(r.celebrant),
+    csvCell(r.coCelebrants), csvCell(r.sermon), csvCell(r.scripture),
+    Number(r.male) || 0, Number(r.female) || 0, Number(r.total) || 0
   ].join(','));
 
   _download(
@@ -278,18 +275,22 @@ export function exportBackupJSON() {
 export function importBackup(event) {
   const file = event.target.files[0];
   if (!file) return;
+  const fail = () => { showErrorMsg(t('restoreError')); triggerHaptic('error'); event.target.value = ''; };
+  // A real backup is a few hundred KB at most; refuse anything huge unread.
+  if (file.size > LIMITS.fileBytes) { fail(); return; }
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const backup = JSON.parse(e.target.result);
-      if (!backup?.data || backup.app !== 'MTC Counter') {
-        showErrorMsg(t('restoreError')); triggerHaptic('error'); event.target.value = ''; return;
-      }
+      // Nothing in the file is trusted: it is rebuilt field by field.
+      const clean = sanitizeBackup(JSON.parse(e.target.result));
+      const empty = !clean || (!clean.hasHistory && !clean.hasCelebrants && !clean.hasParishes);
+      // A file whose records are all unusable must not wipe the real ones.
+      if (empty || (clean.hasHistory && clean.history.length === 0 && clean.rejected > 0)) { fail(); return; }
       // Replaces all records; Undo puts the previous data back.
       withUndo(t('restoreSuccess'), () => {
-        if (backup.data.mtcHistory)      save(KEYS.history,    backup.data.mtcHistory);
-        if (backup.data.savedCelebrants) save(KEYS.celebrants, backup.data.savedCelebrants);
-        if (backup.data.savedParishes)   save(KEYS.parishes,   backup.data.savedParishes);
+        if (clean.hasHistory)    save(KEYS.history,    clean.history);
+        if (clean.hasCelebrants) save(KEYS.celebrants, clean.celebrants);
+        if (clean.hasParishes)   save(KEYS.parishes,   clean.parishes);
         displayHistory();
         updateCelebrantDatalist();
         updateParishDatalist();
@@ -301,6 +302,7 @@ export function importBackup(event) {
     }
     event.target.value = '';
   };
+  reader.onerror = fail;
   reader.readAsText(file);
 }
 

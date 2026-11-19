@@ -26,6 +26,17 @@ export function escapeHtml(value) {
 }
 
 /**
+ * One text cell for a CSV file. Besides the usual quoting, a cell that
+ * starts with = + - @ (or a tab/return) gets a leading apostrophe, so a
+ * spreadsheet shows it as text instead of running it as a formula.
+ */
+export function csvCell(value) {
+  let s = String(value ?? '');
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
+/**
  * Identity key for a record: date + service label. Several services can be
  * recorded on one date (e.g. Morning and Evening); the service label is
  * optional, case-insensitive, and blank means the main service.

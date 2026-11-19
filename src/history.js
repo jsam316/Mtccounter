@@ -13,7 +13,11 @@ import { icon } from './icons.js';
 import { getOffertoryForRecord, setOffertoryFromRecord, formatMoney } from './offertory.js';
 
 export function getHistory() {
-  return load(KEYS.history, []);
+  // Tolerate damaged storage: only real records with a date are used.
+  const stored = load(KEYS.history, []);
+  return Array.isArray(stored)
+    ? stored.filter(r => r && typeof r === 'object' && typeof r.date === 'string' && r.date)
+    : [];
 }
 
 export function saveHistory(records) {

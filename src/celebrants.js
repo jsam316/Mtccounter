@@ -6,7 +6,8 @@ import { withUndo } from './undo.js';
 import { icon } from './icons.js';
 
 export function getSavedCelebrants() {
-  return load(KEYS.celebrants, []);
+  const stored = load(KEYS.celebrants, []);
+  return Array.isArray(stored) ? stored.filter(n => typeof n === 'string' && n) : [];
 }
 
 function _saveCelebrants(celebrants) {
