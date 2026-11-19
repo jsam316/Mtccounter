@@ -24,7 +24,7 @@ import { openParishManager, closeParishManager,
 import { exportData, shareToWhatsApp, exportPDF,
          exportCSV, exportBackupJSON, importBackup }            from './export.js';
 import { displayStats, setStatsPeriod, shiftStatsPeriod,
-         exportStatsCSV, setStatsParish, shareStatsReport,
+         exportStatsCSV, setStatsParish, shareStatsReport, setStatsOffertoryCurrency,
          exportStatsPDF }                                       from './stats.js';
 import { updateLectionaryHint, applyLectionaryTheme }           from './lectionary.js';
 import { openAssist, closeAssist, resetAssist,
@@ -95,7 +95,7 @@ Object.assign(window, {
   exportData, shareToWhatsApp, exportPDF,
   exportCSV, exportBackupJSON, importBackup,
   displayStats, setStatsPeriod, shiftStatsPeriod, exportStatsCSV,
-  setStatsParish, shareStatsReport, exportStatsPDF,
+  setStatsParish, shareStatsReport, exportStatsPDF, setStatsOffertoryCurrency,
   applyLectionaryTheme,
   openAssist, closeAssist, resetAssist, changeAssistDirection,
   assistAddMale, assistAddFemale, assistStageTap, assistTagPerson,
