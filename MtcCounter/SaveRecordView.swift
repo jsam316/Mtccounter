@@ -1,56 +1,22 @@
 import SwiftUI
 
-struct SaveRecordView: View {
+/// Service details: date, parish, celebrant, sermon and reading. Opened from
+/// the top of the Counter tab and filled in before counting starts; the
+/// details are kept as they are typed and stored with the record on Save.
+struct ServiceDetailsView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
 
-    @State private var serviceDate = Date()
-    @State private var service = ""
-    @State private var parish = ""
-    @State private var celebrant = ""
-    @State private var coCelebrantsEnabled = false
-    @State private var coCelebrants = ""
-    @State private var sermon = ""
-    @State private var scriptureBook = ""
-    @State private var scriptureChapter = 1
-    @State private var verseFrom = ""
-    @State private var verseTo = ""
-    @State private var notes = ""
-
-    @State private var selectedCoCelebrants: Set<String> = []
     @State private var showingManageCelebrants = false
     @State private var showingManageParishes = false
     @State private var showingCoCelebrantPicker = false
 
-    // What the lectionary last filled in, so a date change can replace its
-    // own suggestion but never something typed or picked by hand.
-    @State private var lastThemeFill: String?
-    @State private var lastScriptureFill: String?
-
-    var scriptureString: String {
-        guard !scriptureBook.isEmpty else { return "" }
-        var ref = "\(scriptureBook) \(scriptureChapter)"
-        if !verseFrom.isEmpty {
-            ref += ":\(verseFrom)"
-            if !verseTo.isEmpty && verseTo != verseFrom {
-                ref += "-\(verseTo)"
-            }
-        }
-        return ref
-    }
-
-    private var displayDate: String {
-        let f = DateFormatter()
-        f.dateStyle = .long
-        return f.string(from: serviceDate)
-    }
-
-    private var lectionaryEntry: LectionaryEntry? { Lectionary.entry(for: serviceDate) }
+    private var details: ServiceDetails { appState.details }
 
     /// One-line lectionary suggestion for the chosen date, or a notice when
     /// that year's lectionary hasn't been added yet.
     private var lectionaryHint: (text: String, missing: Bool)? {
-        if let e = lectionaryEntry {
+        if let e = details.lectionaryEntry {
             var parts: [String] = []
             if let o = e.occasion { parts.append(o) }
             if let t = e.theme { parts.append(e.weekly ? "Weekly theme: \(t)" : t) }
@@ -58,8 +24,8 @@ struct SaveRecordView: View {
             if let g = e.gospel { text += (text.isEmpty ? "" : " · ") + "Gospel: \(g)" }
             return text.isEmpty ? nil : (text, false)
         }
-        if !Lectionary.isYearLoaded(serviceDate) {
-            let year = Calendar(identifier: .gregorian).component(.year, from: serviceDate)
+        if !Lectionary.isYearLoaded(details.serviceDate) {
+            let year = Calendar(identifier: .gregorian).component(.year, from: details.serviceDate)
             return ("The \(year) lectionary hasn't been added yet — sermon themes won't fill in automatically.", true)
         }
         return nil
@@ -68,55 +34,27 @@ struct SaveRecordView: View {
     // Picker/Stepper bindings that reset the dependent fields only when the
     // user changes them (not when the lectionary sets a whole reference).
     private var bookBinding: Binding<String> {
-        Binding(get: { scriptureBook }, set: { newBook in
-            scriptureBook = newBook
-            scriptureChapter = 1
-            verseFrom = ""
-            verseTo = ""
+        Binding(get: { appState.details.scriptureBook }, set: { newBook in
+            var d = appState.details
+            d.scriptureBook = newBook
+            d.scriptureChapter = 1
+            d.verseFrom = ""
+            d.verseTo = ""
+            appState.details = d
         })
     }
     private var chapterBinding: Binding<Int> {
-        Binding(get: { scriptureChapter }, set: { newChapter in
-            scriptureChapter = newChapter
-            verseFrom = ""
-            verseTo = ""
+        Binding(get: { appState.details.scriptureChapter }, set: { newChapter in
+            var d = appState.details
+            d.scriptureChapter = newChapter
+            d.verseFrom = ""
+            d.verseTo = ""
+            appState.details = d
         })
     }
-
-    private func setScripture(_ ref: ScriptureRef?) {
-        scriptureBook = ref?.book ?? ""
-        scriptureChapter = ref?.chapter ?? 1
-        verseFrom = ref?.verseFrom.map(String.init) ?? ""
-        verseTo = ref?.verseTo.map(String.init) ?? ""
-    }
-
-    /// Fill the sermon title and reading from the lectionary when they are
-    /// empty or still hold our earlier suggestion; `force` (tapping the hint)
-    /// applies them regardless.
-    private func applyLectionary(force: Bool = false) {
-        let e = lectionaryEntry
-        let themeIsOurs = lastThemeFill != nil && sermon == lastThemeFill
-        if let theme = e?.theme {
-            if force || sermon.trimmingCharacters(in: .whitespaces).isEmpty || themeIsOurs {
-                sermon = theme
-                lastThemeFill = theme
-            }
-        } else if themeIsOurs {
-            sermon = ""
-            lastThemeFill = nil
-        }
-
-        // Readings only from the day's own entry (not weekly Friday/Tuesday).
-        let scriptureIsOurs = lastScriptureFill != nil && scriptureString == lastScriptureFill
-        if let gospel = e?.gospel, let ref = ScriptureRef.parse(gospel) {
-            if force || scriptureBook.isEmpty || scriptureIsOurs {
-                setScripture(ref)
-                lastScriptureFill = scriptureString
-            }
-        } else if scriptureIsOurs {
-            setScripture(nil)
-            lastScriptureFill = nil
-        }
+    private var coCelebrantSelection: Binding<Set<String>> {
+        Binding(get: { Set(appState.details.selectedCoCelebrants) },
+                set: { appState.details.selectedCoCelebrants = $0.sorted() })
     }
 
     var body: some View {
@@ -124,22 +62,22 @@ struct SaveRecordView: View {
             Form {
                 // Service Details
                 Section("Service Details") {
-                    DatePicker("Date", selection: $serviceDate, displayedComponents: .date)
-                        .onChange(of: serviceDate) { _ in applyLectionary() }
+                    DatePicker("Date", selection: $appState.details.serviceDate, displayedComponents: .date)
+                        .onChange(of: appState.details.serviceDate) { _ in appState.details.applyLectionary() }
 
-                    TextField("Service (optional) — e.g. Morning, Evening", text: $service)
+                    TextField("Service (optional) — e.g. Morning, Evening", text: $appState.details.service)
 
                     // Parish Picker
                     if appState.parishes.isEmpty {
                         HStack {
-                            TextField("Parish", text: $parish)
+                            TextField("Parish", text: $appState.details.parish)
                             Button("Manage") { showingManageParishes = true }
                                 .font(.caption)
                                 .foregroundColor(.indigo)
                         }
                     } else {
                         HStack {
-                            Picker("Parish", selection: $parish) {
+                            Picker("Parish", selection: $appState.details.parish) {
                                 Text("None").tag("")
                                 ForEach(appState.parishes, id: \.self) { p in
                                     Text(p).tag(p)
@@ -156,14 +94,14 @@ struct SaveRecordView: View {
                     // Celebrant Picker
                     if appState.celebrants.isEmpty {
                         HStack {
-                            TextField("Celebrant", text: $celebrant)
+                            TextField("Celebrant", text: $appState.details.celebrant)
                             Button("Manage") { showingManageCelebrants = true }
                                 .font(.caption)
                                 .foregroundColor(.indigo)
                         }
                     } else {
                         HStack {
-                            Picker("Celebrant", selection: $celebrant) {
+                            Picker("Celebrant", selection: $appState.details.celebrant) {
                                 Text("None").tag("")
                                 ForEach(appState.celebrants, id: \.self) { c in
                                     Text(c).tag(c)
@@ -178,12 +116,12 @@ struct SaveRecordView: View {
                     }
 
                     // Co-Celebrants Toggle
-                    Toggle("Co-Celebrants", isOn: $coCelebrantsEnabled)
+                    Toggle("Co-Celebrants", isOn: $appState.details.coCelebrantsEnabled)
                         .tint(.indigo)
-                    if coCelebrantsEnabled {
+                    if details.coCelebrantsEnabled {
                         if appState.celebrants.isEmpty {
                             HStack {
-                                TextField("Co-celebrant names (comma-separated)", text: $coCelebrants)
+                                TextField("Co-celebrant names (comma-separated)", text: $appState.details.coCelebrantsText)
                                 Button("Manage") { showingManageCelebrants = true }
                                     .font(.caption)
                                     .foregroundColor(.indigo)
@@ -194,10 +132,10 @@ struct SaveRecordView: View {
                                     showingCoCelebrantPicker = true
                                 } label: {
                                     HStack {
-                                        Text(selectedCoCelebrants.isEmpty
+                                        Text(details.selectedCoCelebrants.isEmpty
                                              ? "Select Co-Celebrants"
-                                             : selectedCoCelebrants.sorted().joined(separator: ", "))
-                                            .foregroundColor(selectedCoCelebrants.isEmpty ? .secondary : .primary)
+                                             : details.selectedCoCelebrants.sorted().joined(separator: ", "))
+                                            .foregroundColor(details.selectedCoCelebrants.isEmpty ? Color.secondary : Color.primary)
                                             .multilineTextAlignment(.leading)
                                         Spacer()
                                         Image(systemName: "chevron.right")
@@ -218,7 +156,7 @@ struct SaveRecordView: View {
 
                 // Sermon & Scripture
                 Section("Sermon & Scripture") {
-                    TextField("Sermon Title", text: $sermon)
+                    TextField("Sermon Title", text: $appState.details.sermon)
 
                     if let hint = lectionaryHint {
                         if hint.missing {
@@ -226,7 +164,7 @@ struct SaveRecordView: View {
                                 .font(.footnote)
                                 .foregroundColor(.orange)
                         } else {
-                            Button { applyLectionary(force: true) } label: {
+                            Button { appState.details.applyLectionary(force: true) } label: {
                                 Label(hint.text, systemImage: "book")
                                     .font(.footnote)
                                     .foregroundColor(.indigo)
@@ -243,89 +181,45 @@ struct SaveRecordView: View {
                         }
                     }
 
-                    if !scriptureBook.isEmpty {
-                        Stepper("Chapter: \(scriptureChapter)",
+                    if !details.scriptureBook.isEmpty {
+                        Stepper("Chapter: \(details.scriptureChapter)",
                                 value: chapterBinding,
-                                in: 1...ScriptureData.chapters(for: scriptureBook))
+                                in: 1...max(1, ScriptureData.chapters(for: details.scriptureBook)))
 
                         HStack {
-                            TextField("From verse", text: $verseFrom)
+                            TextField("From verse", text: $appState.details.verseFrom)
                                 .keyboardType(.numberPad)
                             Text("–")
                                 .foregroundColor(.secondary)
-                            TextField("To verse", text: $verseTo)
+                            TextField("To verse", text: $appState.details.verseTo)
                                 .keyboardType(.numberPad)
                         }
                     }
 
-                    if !scriptureString.isEmpty {
-                        LabeledContent("Reference", value: scriptureString)
+                    if !details.scriptureString.isEmpty {
+                        LabeledContent("Reference", value: details.scriptureString)
                             .foregroundColor(.indigo)
                     }
                 }
 
                 // Notes
                 Section("Notes") {
-                    TextEditor(text: $notes)
+                    TextEditor(text: $appState.details.notes)
                         .frame(minHeight: 80)
                 }
 
-                // Current Count Summary
-                Section("Current Count") {
-                    HStack {
-                        Text("Male")
-                        Spacer()
-                        Text("\(appState.grandMale)")
-                            .foregroundColor(.blue)
-                            .fontWeight(.semibold)
-                    }
-                    HStack {
-                        Text("Female")
-                        Spacer()
-                        Text("\(appState.grandFemale)")
-                            .foregroundColor(.pink)
-                            .fontWeight(.semibold)
-                    }
-                    HStack {
-                        Text("Total")
-                            .fontWeight(.bold)
-                        Spacer()
-                        Text("\(appState.grandTotal)")
-                            .foregroundColor(.indigo)
-                            .fontWeight(.bold)
-                    }
+                Section {
+                    EmptyView()
+                } footer: {
+                    Text("These details are kept as you type. They are saved with the count and the offertory when you tap Save Record on the Counter tab.")
                 }
             }
-            .navigationTitle("Save Record")
+            .navigationTitle("Service Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        let coValue: String = {
-                            guard coCelebrantsEnabled else { return "" }
-                            if appState.celebrants.isEmpty {
-                                return coCelebrants
-                            }
-                            return selectedCoCelebrants.sorted().joined(separator: ", ")
-                        }()
-                        appState.saveRecord(
-                            date: displayDate,
-                            isoDate: Lectionary.isoString(serviceDate),
-                            service: service,
-                            parish: parish,
-                            celebrant: celebrant,
-                            coCelebrants: coValue,
-                            sermon: sermon,
-                            scripture: scriptureString.isEmpty ? "" : scriptureString,
-                            notes: notes
-                        )
-                        dismiss()
-                    }
-                    .fontWeight(.bold)
-                    .disabled(appState.grandTotal == 0)
+                    Button("Done") { dismiss() }
+                        .fontWeight(.bold)
                 }
             }
             .sheet(isPresented: $showingManageCelebrants) {
@@ -336,7 +230,7 @@ struct SaveRecordView: View {
             }
             .sheet(isPresented: $showingCoCelebrantPicker) {
                 CoCelebrantPickerView(celebrants: appState.celebrants,
-                                      selected: $selectedCoCelebrants)
+                                      selected: coCelebrantSelection)
             }
             .sheet(isPresented: $showingManageParishes) {
                 ManageListView(title: "Manage Parishes",
@@ -345,12 +239,7 @@ struct SaveRecordView: View {
                                onDelete: { appState.deleteParish($0) })
             }
         }
-        .onAppear {
-            // Start with the parish and celebrant used last time, if still listed.
-            if parish.isEmpty, appState.parishes.contains(appState.lastParish) { parish = appState.lastParish }
-            if celebrant.isEmpty, appState.celebrants.contains(appState.lastCelebrant) { celebrant = appState.lastCelebrant }
-            applyLectionary()
-        }
+        .onAppear { appState.prepareDetails() }
     }
 }
 

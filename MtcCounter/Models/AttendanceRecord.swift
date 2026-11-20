@@ -28,13 +28,16 @@ struct AttendanceRecord: Codable, Identifiable {
     var totalFemale: Int
     var notes: String
     var savedDate: Date
+    /// The offertory counting sheet, when one was counted for this service.
+    var offertory: Offertory?
 
     var total: Int { totalMale + totalFemale }
 
     // Backward-compatibility init with default values for new fields
     init(id: UUID = UUID(), date: String, isoDate: String = "", service: String = "", parish: String = "", celebrant: String,
          coCelebrants: String = "", sermon: String = "", scriptureReference: String,
-         rounds: [Round], totalMale: Int, totalFemale: Int, notes: String, savedDate: Date) {
+         rounds: [Round], totalMale: Int, totalFemale: Int, notes: String, savedDate: Date,
+         offertory: Offertory? = nil) {
         self.id = id
         self.date = date
         self.isoDate = isoDate
@@ -49,12 +52,13 @@ struct AttendanceRecord: Codable, Identifiable {
         self.totalFemale = totalFemale
         self.notes = notes
         self.savedDate = savedDate
+        self.offertory = offertory
     }
 
     // Codable conformance with backward-compatible decoding
     enum CodingKeys: String, CodingKey {
         case id, date, isoDate, service, parish, celebrant, coCelebrants, sermon, scriptureReference
-        case rounds, totalMale, totalFemale, notes, savedDate
+        case rounds, totalMale, totalFemale, notes, savedDate, offertory
     }
 
     init(from decoder: Decoder) throws {
@@ -73,6 +77,9 @@ struct AttendanceRecord: Codable, Identifiable {
         totalFemale = try container.decode(Int.self, forKey: .totalFemale)
         notes = try container.decodeIfPresent(String.self, forKey: .notes) ?? ""
         savedDate = try container.decode(Date.self, forKey: .savedDate)
+        // A damaged offertory must not make the whole record unreadable.
+        let sheet = (try? container.decodeIfPresent(Offertory.self, forKey: .offertory)) ?? nil
+        offertory = (sheet?.isEmpty ?? true) ? nil : sheet
     }
 }
 

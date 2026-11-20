@@ -40,6 +40,17 @@ const CURRENCY_DATA = {
   CHF: ['Swiss Franc', 'Swiss Francs', 'rappen', [1000, 200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1, 0.05]],
 };
 
+/**
+ * Every currency with its names and its notes and coins as printed. The
+ * iPhone app's table (OffertoryData.swift) is generated from this.
+ */
+export function currencyTable() {
+  return Object.keys(CURRENCY_DATA).map(code => {
+    const [name, plural, minor] = CURRENCY_DATA[code];
+    return { code, name, plural, minor, decimals: currencyDecimals(code), denominations: denominations(code).map(d => d.label) };
+  });
+}
+
 export const CURRENCIES = Object.freeze(Object.keys(CURRENCY_DATA).map(code => [code, CURRENCY_DATA[code][0]]));
 /**
  * The columns that are counted. The first four are the paper form's; Family

@@ -19,6 +19,11 @@
 		B00000000000000000000012 /* Lectionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000014 /* Lectionary.swift */; };
 		B00000000000000000000013 /* LectionaryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000015 /* LectionaryData.swift */; };
 		B00000000000000000000014 /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000016 /* Backup.swift */; };
+		B00000000000000000000015 /* Offertory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000017 /* Offertory.swift */; };
+		B00000000000000000000016 /* OffertoryData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000018 /* OffertoryData.swift */; };
+		B00000000000000000000019 /* ServiceDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001B /* ServiceDetails.swift */; };
+		B00000000000000000000017 /* OffertoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000019 /* OffertoryView.swift */; };
+		B00000000000000000000018 /* OffertoryPDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001A /* OffertoryPDF.swift */; };
 		B00000000000000000000009 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000009 /* Assets.xcassets */; };
 		B0000000000000000000000A /* MtcCounterWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000000B /* MtcCounterWatchApp.swift */; };
 		B0000000000000000000000B /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000000C /* WatchContentView.swift */; };
@@ -42,6 +47,11 @@
 		A00000000000000000000014 /* Lectionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lectionary.swift; sourceTree = "<group>"; };
 		A00000000000000000000015 /* LectionaryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LectionaryData.swift; sourceTree = "<group>"; };
 		A00000000000000000000016 /* Backup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
+		A00000000000000000000017 /* Offertory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Offertory.swift; sourceTree = "<group>"; };
+		A00000000000000000000018 /* OffertoryData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffertoryData.swift; sourceTree = "<group>"; };
+		A0000000000000000000001B /* ServiceDetails.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDetails.swift; sourceTree = "<group>"; };
+		A00000000000000000000019 /* OffertoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffertoryView.swift; sourceTree = "<group>"; };
+		A0000000000000000000001A /* OffertoryPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OffertoryPDF.swift; sourceTree = "<group>"; };
 		A00000000000000000000009 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A0000000000000000000000A /* MtcCounter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MtcCounter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0000000000000000000000B /* MtcCounterWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MtcCounterWatchApp.swift; sourceTree = "<group>"; };
@@ -99,6 +109,8 @@
 				A00000000000000000000004 /* HistoryView.swift */,
 				A00000000000000000000005 /* SaveRecordView.swift */,
 				A00000000000000000000006 /* SettingsView.swift */,
+				A00000000000000000000019 /* OffertoryView.swift */,
+				A0000000000000000000001A /* OffertoryPDF.swift */,
 				F00000000000000000000004 /* Models */,
 				A00000000000000000000009 /* Assets.xcassets */,
 			);
@@ -114,6 +126,9 @@
 				A00000000000000000000014 /* Lectionary.swift */,
 				A00000000000000000000015 /* LectionaryData.swift */,
 				A00000000000000000000016 /* Backup.swift */,
+				A00000000000000000000017 /* Offertory.swift */,
+				A00000000000000000000018 /* OffertoryData.swift */,
+				A0000000000000000000001B /* ServiceDetails.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -242,6 +257,11 @@
 				B00000000000000000000012 /* Lectionary.swift in Sources */,
 				B00000000000000000000013 /* LectionaryData.swift in Sources */,
 				B00000000000000000000014 /* Backup.swift in Sources */,
+				B00000000000000000000015 /* Offertory.swift in Sources */,
+				B00000000000000000000016 /* OffertoryData.swift in Sources */,
+				B00000000000000000000019 /* ServiceDetails.swift in Sources */,
+				B00000000000000000000017 /* OffertoryView.swift in Sources */,
+				B00000000000000000000018 /* OffertoryPDF.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -27,24 +27,35 @@ struct WatchRoundsView: View {
                         .font(.caption.bold())
                         .foregroundColor(.indigo)
                 }
+                Text("M \(appState.roundMaleTotal)  ·  F \(appState.roundFemaleTotal)")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundColor(.secondary)
 
-                ScrollView {
-                    VStack(spacing: 4) {
-                        ForEach(Array(appState.rounds.enumerated()), id: \.element.id) { i, round in
-                            HStack {
-                                Text("R\(i + 1)")
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                Text("\(round.male)M \(round.female)F")
-                                    .font(.caption.monospacedDigit())
-                                Text("=\(round.total)")
-                                    .font(.caption.bold())
-                                    .foregroundColor(.indigo)
+                // Swipe a round left to remove just that one.
+                List {
+                    ForEach(Array(appState.rounds.enumerated()), id: \.element.id) { i, round in
+                        HStack {
+                            Text("R\(i + 1)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text("\(round.male)M \(round.female)F")
+                                .font(.caption.monospacedDigit())
+                            Text("=\(round.total)")
+                                .font(.caption.bold())
+                                .foregroundColor(.indigo)
+                        }
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                appState.removeRound(id: round.id)
+                                WKInterfaceDevice.current().play(.click)
+                            } label: {
+                                Label("Remove", systemImage: "trash")
                             }
                         }
                     }
                 }
+                .listStyle(.plain)
 
                 Button(role: .destructive, action: { showingClearConfirm = true }) {
                     Label("Clear", systemImage: "trash")

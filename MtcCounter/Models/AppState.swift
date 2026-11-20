@@ -13,6 +13,14 @@ class AppState: ObservableObject {
     @Published var celebrants: [String] = []
     @Published var parishes: [String] = []
 
+    /// Details of the service being recorded. Entered before counting, saved
+    /// on every change, and stored with the record when the service is saved.
+    @Published var details = ServiceDetails() { didSet { if details != oldValue { saveDetails() } } }
+
+    /// The offertory counting sheet for the service in progress. Saved on
+    /// every change, and stored with the record when the service is saved.
+    @Published var offertory: Offertory = Offertory.empty() { didSet { saveOffertory() } }
+
     /// Parish and celebrant last used, offered again for the next service.
     @Published var lastParish: String = ""
     @Published var lastCelebrant: String = ""
@@ -35,6 +43,7 @@ class AppState: ObservableObject {
     // MARK: - Round Management
 
     func addRound() {
+        guard male > 0 || female > 0 else { return } // nothing counted: no empty round
         let round = Round(male: male, female: female, timestamp: Date())
         rounds.append(round)
         male = 0
@@ -71,12 +80,40 @@ class AppState: ObservableObject {
             totalMale: grandMale,
             totalFemale: grandFemale,
             notes: notes,
-            savedDate: Date()
+            savedDate: Date(),
+            offertory: offertory.isEmpty ? nil : offertory
         )
         records.insert(record, at: 0)
         clearRounds()
+        clearOffertory()
         saveRecords()
         rememberLastDetails(parish: parish, celebrant: celebrant)
+    }
+
+    /// Save the service in progress using the details entered beforehand,
+    /// then start fresh details for the next service.
+    func saveCurrentRecord() {
+        let d = details
+        saveRecord(date: d.displayDate, isoDate: d.isoDate, service: d.service, parish: d.parish,
+                   celebrant: d.celebrant, coCelebrants: d.coCelebrants(fromList: !celebrants.isEmpty),
+                   sermon: d.sermon, scripture: d.scriptureString, notes: d.notes)
+        details = d.nextService()
+        prepareDetails()
+    }
+
+    /// True while a service is being recorded (something counted).
+    var serviceInProgress: Bool {
+        male > 0 || female > 0 || !rounds.isEmpty || !offertory.isEmpty
+    }
+
+    /// Get the details ready to use: offer the parish and celebrant used
+    /// last (if still listed) and fill in the lectionary's suggestion.
+    func prepareDetails() {
+        var d = details
+        if d.parish.isEmpty, parishes.contains(lastParish) { d.parish = lastParish }
+        if d.celebrant.isEmpty, celebrants.contains(lastCelebrant) { d.celebrant = lastCelebrant }
+        d.applyLectionary()
+        if d != details { details = d }
     }
 
     func rememberLastDetails(parish: String, celebrant: String) {
@@ -98,6 +135,49 @@ class AppState: ObservableObject {
         saveRecords()
     }
 
+    // MARK: - Offertory
+
+    /// Church name printed on the offertory sheet: the parish used last, or
+    /// the only saved parish.
+    var offertoryChurchName: String {
+        if !details.parish.isEmpty { return details.parish }
+        if !lastParish.isEmpty { return lastParish }
+        return parishes.count == 1 ? parishes[0] : ""
+    }
+
+    /// An empty sheet for the next service; the currency and venue stay.
+    func clearOffertory() {
+        offertory = Offertory.empty(currency: offertory.currency, venue: offertory.venue)
+    }
+
+    /// Switch the sheet's currency and remember the choice. Counts carry over
+    /// only for notes and coins the new currency also has.
+    func setOffertoryCurrency(_ code: String) {
+        guard OffertoryCurrency.find(code) != nil, code != offertory.currency else { return }
+        offertory = offertory.changingCurrency(to: code)
+        defaults.set(code, forKey: "mtc_currency")
+    }
+
+    /// The currency to start with: the last one chosen, else the phone's
+    /// region, else Kuwaiti Dinar (the church's form).
+    private func preferredCurrency() -> String {
+        if let saved = defaults.string(forKey: "mtc_currency"), OffertoryCurrency.find(saved) != nil { return saved }
+        if let local = Locale.current.currency?.identifier, OffertoryCurrency.find(local) != nil { return local }
+        return OffertoryCurrency.fallback.code
+    }
+
+    private func saveDetails() {
+        if let data = try? JSONEncoder().encode(details) {
+            defaults.set(data, forKey: "mtc_service_details")
+        }
+    }
+
+    private func saveOffertory() {
+        if let data = try? JSONEncoder().encode(offertory) {
+            defaults.set(data, forKey: "mtc_offertory")
+        }
+    }
+
     // MARK: - Celebrant Management
 
     func addCelebrant(_ name: String) {
@@ -111,6 +191,9 @@ class AppState: ObservableObject {
     func deleteCelebrant(_ name: String) {
         celebrants.removeAll { $0 == name }
         saveCelebrants()
+        // Don't leave a deleted name selected in the service details.
+        if details.celebrant == name { details.celebrant = "" }
+        details.selectedCoCelebrants.removeAll { $0 == name }
     }
 
     // MARK: - Parish Management
@@ -126,6 +209,7 @@ class AppState: ObservableObject {
     func deleteParish(_ name: String) {
         parishes.removeAll { $0 == name }
         saveParishes()
+        if details.parish == name { details.parish = "" }
     }
 
     // MARK: - Persistence
@@ -176,10 +260,29 @@ class AppState: ObservableObject {
            let decoded = try? JSONDecoder().decode([String].self, from: data) {
             parishes = decoded
         }
+        if let data = defaults.data(forKey: "mtc_offertory"),
+           let decoded = try? JSONDecoder().decode(Offertory.self, from: data) {
+            offertory = decoded
+        } else {
+            offertory = Offertory.empty(currency: preferredCurrency())
+        }
         male = max(0, defaults.integer(forKey: "mtc_live_male"))
         female = max(0, defaults.integer(forKey: "mtc_live_female"))
         lastParish = defaults.string(forKey: "mtc_last_parish") ?? ""
         lastCelebrant = defaults.string(forKey: "mtc_last_celebrant") ?? ""
+
+        // Service details: carry on a service that is in progress; otherwise
+        // start from today with the usual parish and celebrant.
+        var saved = ServiceDetails()
+        if let data = defaults.data(forKey: "mtc_service_details"),
+           let decoded = try? JSONDecoder().decode(ServiceDetails.self, from: data) {
+            saved = decoded
+        }
+        if !serviceInProgress && !Calendar.current.isDateInToday(saved.serviceDate) {
+            saved = saved.nextService()
+        }
+        details = saved
+        prepareDetails()
     }
 
     // MARK: - Backup (web app format)
@@ -216,18 +319,30 @@ class AppState: ObservableObject {
     // MARK: - Export
 
     func exportCSV() -> String {
-        var csv = "Date,Service,Parish,Celebrant,Co-Celebrants,Sermon,Scripture,Male,Female,Total,Rounds,Notes\n"
+        let columns = OffertoryColumn.allCases
+        var csv = "Date,Service,Parish,Celebrant,Co-Celebrants,Sermon,Scripture,Male,Female,Total,Rounds,Notes,"
+            + "Offertory Currency," + columns.map { "Offertory: \($0.title)" }.joined(separator: ",") + ",Offertory Total\n"
         for record in records {
-            let row = [
+            // Text cells are guarded so a spreadsheet can't run them as formulas.
+            let text: [String] = [
                 record.date, record.service, record.parish, record.celebrant, record.coCelebrants,
-                record.sermon, record.scriptureReference,
-                "\(record.totalMale)", "\(record.totalFemale)", "\(record.total)",
-                "\(record.rounds.count)", record.notes
-            ]
-            .map { "\"\($0.replacingOccurrences(of: "\"", with: "\"\""))\"" }
-            .joined(separator: ",")
-            csv += row + "\n"
+                record.sermon, record.scriptureReference
+            ].map { BackupCodec.csvCell($0) }
+            let numbers: [String] = ["\(record.totalMale)", "\(record.totalFemale)", "\(record.total)", "\(record.rounds.count)"]
+            var money: [String] = [""] + columns.map { _ in "" } + [""]
+            if let sheet = record.offertory {
+                let info = sheet.currencyInfo
+                money = [info.code] + columns.map { OffertoryMoney.decimal(sheet.total(of: $0), info) }
+                    + [OffertoryMoney.decimal(sheet.totalMinor, info)]
+            }
+            let cells: [String] = text + numbers + [BackupCodec.csvCell(record.notes)] + money
+            csv += cells.joined(separator: ",") + "\n"
         }
         return csv
     }
+
+    // MARK: - Offertory statistics
+
+    /// Every saved offertory sheet, for the statistics.
+    var offertorySheets: [Offertory] { records.compactMap { $0.offertory } }
 }

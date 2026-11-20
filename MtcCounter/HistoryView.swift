@@ -149,6 +149,11 @@ struct RecordRow: View {
                     .font(.caption)
                     .foregroundColor(.pink)
             }
+            if let sheet = record.offertory {
+                Label("Offertory \(OffertoryMoney.plain(sheet.totalMinor, sheet.currencyInfo))", systemImage: "banknote")
+                    .font(.caption)
+                    .foregroundColor(.green)
+            }
         }
         .padding(.vertical, 4)
     }
@@ -158,6 +163,22 @@ struct RecordRow: View {
 
 struct RecordDetailView: View {
     let record: AttendanceRecord
+    @State private var shareItems: [Any] = []
+    @State private var showingShare = false
+
+    /// The record's offertory sheet as a PDF in the paper form's layout.
+    private func shareOffertoryPDF(_ sheet: Offertory) {
+        let iso = record.resolvedISODate ?? ""
+        let data = OffertoryPDF.data(for: sheet.report(parish: record.parish, isoDate: iso))
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MTC_Offertory_\(iso.isEmpty ? "sheet" : iso).pdf")
+        if (try? data.write(to: url, options: .atomic)) != nil {
+            shareItems = [url]
+        } else {
+            shareItems = [data]
+        }
+        showingShare = true
+    }
 
     var body: some View {
         List {
@@ -207,6 +228,30 @@ struct RecordDetailView: View {
                 }
             }
 
+            if let sheet = record.offertory {
+                Section("Offertory") {
+                    if !sheet.venue.isEmpty {
+                        LabeledContent("Venue", value: sheet.venue)
+                    }
+                    ForEach(sheet.printedColumns, id: \.rawValue) { column in
+                        LabeledContent(sheet.title(of: column),
+                                       value: OffertoryMoney.plain(sheet.total(of: column), sheet.currencyInfo))
+                    }
+                    LabeledContent("Total offertory", value: OffertoryMoney.plain(sheet.totalMinor, sheet.currencyInfo))
+                    Text(OffertoryMoney.inWords(sheet.totalMinor, sheet.currencyInfo))
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                    if sheet.isSigned {
+                        Label("Signed", systemImage: "signature")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                    Button(action: { shareOffertoryPDF(sheet) }) {
+                        Label("Offertory PDF", systemImage: "doc.richtext")
+                    }
+                }
+            }
+
             if !record.notes.isEmpty {
                 Section("Notes") {
                     Text(record.notes)
@@ -227,6 +272,9 @@ struct RecordDetailView: View {
         }
         .navigationTitle(record.date)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingShare) {
+            ActivityView(activityItems: shareItems)
+        }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 ShareLink(item: record.shareText) {
@@ -260,6 +308,11 @@ extension AttendanceRecord {
             lines.append("Rounds: \(rounds.count)")
         }
         if !notes.isEmpty { lines.append("Notes: \(notes)") }
+        if let sheet = offertory {
+            lines.append("")
+            lines.append("Offertory:")
+            lines.append(contentsOf: sheet.summaryLines)
+        }
         return lines.joined(separator: "\n")
     }
 }

@@ -14,6 +14,8 @@ class WatchAppState: ObservableObject {
     var roundFemaleTotal: Int { rounds.reduce(0) { $0 + $1.female } }
     var roundTotal: Int { rounds.reduce(0) { $0 + $1.total } }
     var grandTotal: Int { roundTotal + total }
+    var grandMale: Int { roundMaleTotal + male }
+    var grandFemale: Int { roundFemaleTotal + female }
 
     private let defaults: UserDefaults
 
@@ -22,11 +24,22 @@ class WatchAppState: ObservableObject {
         loadData()
     }
 
-    func addRound() {
+    /// Banks the current count as a round. Returns false (and adds nothing)
+    /// when nothing has been counted, so there are no empty rounds.
+    @discardableResult
+    func addRound() -> Bool {
+        guard male > 0 || female > 0 else { return false }
         let round = Round(male: male, female: female, timestamp: Date())
         rounds.append(round)
         male = 0
         female = 0
+        saveRounds()
+        return true
+    }
+
+    /// Removes one round (a miscount) and leaves the others.
+    func removeRound(id: UUID) {
+        rounds.removeAll { $0.id == id }
         saveRounds()
     }
 
